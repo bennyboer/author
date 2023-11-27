@@ -1,0 +1,15 @@
+<h1 mat-dialog-title>
+  @if (isEditingLabel) {
+    <input #labelInput matInput (keydown.enter)="stopEditingLabel(labelInput.value)" />
+    <button mat-flat-button (click)="stopEditingLabel(labelInput.value)"><mat-icon>done</mat-icon> Done</button>
+  } @else {
+    {{ label }}
+    <button mat-flat-button (click)="startEditingLabel()"><mat-icon>edit</mat-icon> Edit</button>
+  }
+</h1>
+<div mat-dialog-content>
+  <p>Here will be the nodes notes and a To-Do list to keep track of what is already done/needs to be done.</p>
+</div>
+<div mat-dialog-actions align="center">
+  <button mat-button mat-dialog-close>Close</button>
+</div>

@@ -1,0 +1,6 @@
+<app-tree-graph
+  [tree]="(treeGraph$ | async)!"
+  (doubleClickedNode)="openNodeDetails($event)"
+  (command)="handleCommand($event)"
+>
+</app-tree-graph>

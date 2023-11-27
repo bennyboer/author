@@ -1,0 +1,32 @@
+ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  li {
+    cursor: pointer;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px 0;
+    border-style: solid;
+    border-color: transparent;
+
+    &:hover {
+      border-bottom-color: #33FFCC;
+    }
+
+    &.active-link {
+      border-bottom-color: black;
+
+      &:hover {
+        border-bottom-color: #33FFCC;
+      }
+    }
+  }
+}
