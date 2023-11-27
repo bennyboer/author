@@ -3,7 +3,7 @@ import { catchError, EMPTY, Observable, Subject, takeUntil } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Option } from '../util';
 
-const WS_ENDPOINT: string = 'ws://localhost:8000/ws'; // TODO determine protocol and host based on environment
+const WS_ENDPOINT: string = 'ws://localhost:7070/ws'; // TODO determine protocol and host based on environment
 
 enum WebSocketRequestType {
   HEARTBEAT = 'Heartbeat',
