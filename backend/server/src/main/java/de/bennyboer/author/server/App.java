@@ -1,4 +1,4 @@
-package de.bennyboer.author.app;
+package de.bennyboer.author.server;
 
 import io.javalin.Javalin;
 
