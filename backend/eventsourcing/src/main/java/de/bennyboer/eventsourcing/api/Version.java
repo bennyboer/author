@@ -3,7 +3,7 @@ package de.bennyboer.eventsourcing.api;
 import lombok.Value;
 
 @Value
-public class Version {
+public class Version implements Comparable<Version> {
 
     long value;
 
@@ -24,16 +24,17 @@ public class Version {
     }
 
     public boolean isPreviousTo(Version other) {
-        return value == other.value + 1;
-    }
-
-    public boolean isOlderThan(Version other) {
-        return value < other.value;
+        return value == other.value - 1;
     }
 
     @Override
     public String toString() {
         return String.format("Version(%d)", value);
+    }
+
+    @Override
+    public int compareTo(Version other) {
+        return Long.compare(value, other.value);
     }
 
 }

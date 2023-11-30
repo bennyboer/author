@@ -119,7 +119,7 @@ public class InMemoryEventSourcingRepo implements EventSourcingRepo {
         return getEvents(AggregateIdAndType.of(aggregateId, type))
                 .map(events -> events.subList(
                         (int) fromVersion.getValue(),
-                        (int) version.getValue()
+                        Math.min((int) version.getValue() + 1, events.size())
                 ))
                 .map(Flux::fromIterable)
                 .orElse(Flux.empty());

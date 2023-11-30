@@ -14,7 +14,6 @@ import de.bennyboer.eventsourcing.sample.commands.UpdateTitleCmd;
 import de.bennyboer.eventsourcing.sample.events.*;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.With;
 
@@ -47,7 +46,7 @@ public class SampleAggregate implements Aggregate {
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
-            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
+            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent2.of(c));
             case DeleteCmd ignored -> ApplyCommandResult.of(DeletedEvent.of());
             case UpdateTitleCmd c -> ApplyCommandResult.of(TitleUpdatedEvent.of(c));
             case UpdateDescriptionCmd c -> ApplyCommandResult.of(DescriptionUpdatedEvent.of(c));
@@ -62,9 +61,10 @@ public class SampleAggregate implements Aggregate {
                     .withTitle(e.getTitle())
                     .withDescription(e.getDescription())
                     .withDeletedAt(e.getDeletedAt());
-            case CreatedEvent e -> withId(metadata.getAggregateId().getValue())
+            case CreatedEvent2 e -> withId(metadata.getAggregateId().getValue())
                     .withTitle(e.getTitle())
-                    .withDescription(e.getDescription());
+                    .withDescription(e.getDescription())
+                    .withDeletedAt(e.getDeletedAt());
             case DeletedEvent ignored -> withDeletedAt(metadata.getDate());
             case TitleUpdatedEvent e -> withTitle(e.getTitle());
             case DescriptionUpdatedEvent e -> withDescription(e.getDescription());

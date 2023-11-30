@@ -7,13 +7,17 @@ import de.bennyboer.eventsourcing.api.command.Command;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentId;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentType;
+import de.bennyboer.eventsourcing.api.patch.Patch;
 import de.bennyboer.eventsourcing.api.persistence.EventSourcingRepo;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.eventsourcing.sample.commands.DeleteCmd;
 import de.bennyboer.eventsourcing.sample.commands.UpdateDescriptionCmd;
 import de.bennyboer.eventsourcing.sample.commands.UpdateTitleCmd;
+import de.bennyboer.eventsourcing.sample.patches.CreatedEventPatch1;
 import lombok.Value;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Value
 public class SampleAggregateEventSourcingService {
@@ -21,7 +25,14 @@ public class SampleAggregateEventSourcingService {
     EventSourcingService<SampleAggregate> eventSourcingService;
 
     public SampleAggregateEventSourcingService(EventSourcingRepo repo) {
-        this.eventSourcingService = new EventSourcingService<>(SampleAggregate.TYPE, SampleAggregate.init(), repo);
+        List<Patch> patches = List.of(new CreatedEventPatch1());
+
+        this.eventSourcingService = new EventSourcingService<>(
+                SampleAggregate.TYPE,
+                SampleAggregate.init(),
+                repo,
+                patches
+        );
     }
 
     public Mono<SampleAggregate> get(String id) {
@@ -32,27 +43,36 @@ public class SampleAggregateEventSourcingService {
         return eventSourcingService.aggregate(AggregateId.of(id), Version.of(version));
     }
 
-    public Mono<Void> create(String id, String title, String description, String userId) {
-        return dispatchCommand(id, userId, CreateCmd.of(title, description));
+    public Mono<Long> create(String id, String title, String description, String userId) {
+        return dispatchCommandToLatest(id, userId, CreateCmd.of(title, description, null));
     }
 
-    public Mono<Void> updateTitle(String id, String title, String userId) {
-        return dispatchCommand(id, userId, UpdateTitleCmd.of(title));
+    public Mono<Long> updateTitle(String id, long version, String title, String userId) {
+        return dispatchCommand(id, version, userId, UpdateTitleCmd.of(title));
     }
 
-    public Mono<Void> updateDescription(String id, String description, String userId) {
-        return dispatchCommand(id, userId, UpdateDescriptionCmd.of(description));
+    public Mono<Long> updateDescription(String id, long version, String description, String userId) {
+        return dispatchCommand(id, version, userId, UpdateDescriptionCmd.of(description));
     }
 
-    public Mono<Void> delete(String id, String userId) {
-        return dispatchCommand(id, userId, DeleteCmd.of());
+    public Mono<Long> delete(String id, long version, String userId) {
+        return dispatchCommand(id, version, userId, DeleteCmd.of());
     }
 
-    private Mono<Void> dispatchCommand(String id, String userId, Command cmd) {
+    private Mono<Long> dispatchCommand(String id, long version, String userId, Command cmd) {
         AggregateId aggregateId = AggregateId.of(id);
         var agent = Agent.of(AgentType.USER, AgentId.of(userId));
 
-        return eventSourcingService.dispatchCommand(aggregateId, cmd, agent);
+        return eventSourcingService.dispatchCommand(aggregateId, Version.of(version), cmd, agent)
+                .map(Version::getValue);
+    }
+
+    private Mono<Long> dispatchCommandToLatest(String id, String userId, Command cmd) {
+        AggregateId aggregateId = AggregateId.of(id);
+        var agent = Agent.of(AgentType.USER, AgentId.of(userId));
+
+        return eventSourcingService.dispatchCommandToLatest(aggregateId, cmd, agent)
+                .map(Version::getValue);
     }
 
 }

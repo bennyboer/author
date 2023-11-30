@@ -1,8 +1,8 @@
 package de.bennyboer.eventsourcing.sample.events;
 
+import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.AbstractEvent;
 import de.bennyboer.eventsourcing.api.event.EventName;
-import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -11,9 +11,9 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true)
 public class CreatedEvent extends AbstractEvent {
 
-    private static final EventName NAME = EventName.of("CREATED");
+    public static final EventName NAME = EventName.of("CREATED");
 
-    private static final Version VERSION = Version.zero();
+    public static final Version VERSION = Version.zero();
 
     String title;
 

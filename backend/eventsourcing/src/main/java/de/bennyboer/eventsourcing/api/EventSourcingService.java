@@ -1,6 +1,7 @@
 package de.bennyboer.eventsourcing.api;
 
 import de.bennyboer.eventsourcing.AggregateContainer;
+import de.bennyboer.eventsourcing.EventPatcher;
 import de.bennyboer.eventsourcing.api.aggregate.Aggregate;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
@@ -12,6 +13,7 @@ import de.bennyboer.eventsourcing.api.event.EventWithMetadata;
 import de.bennyboer.eventsourcing.api.event.SnapshotEvent;
 import de.bennyboer.eventsourcing.api.event.metadata.EventMetadata;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
+import de.bennyboer.eventsourcing.api.patch.Patch;
 import de.bennyboer.eventsourcing.api.persistence.EventSourcingRepo;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -35,32 +37,65 @@ public class EventSourcingService<A extends Aggregate> {
 
     EventSourcingRepo repo;
 
+    EventPatcher patcher;
+
+    public EventSourcingService(
+            AggregateType aggregateType,
+            A initialState,
+            EventSourcingRepo repo,
+            List<Patch> patches
+    ) {
+        this.aggregateType = aggregateType;
+        this.initialState = initialState;
+        this.repo = repo;
+        this.patcher = EventPatcher.fromPatches(patches);
+    }
+
     @SuppressWarnings("unchecked")
     public Mono<A> aggregateLatest(AggregateId id) {
-        return aggregateLatestContainer(id)
+        return aggregateLatestInContainer(id)
                 .filter(AggregateContainer::hasSeenEvents)
                 .map(container -> (A) container.getAggregate());
     }
 
     @SuppressWarnings("unchecked")
     public Mono<A> aggregate(AggregateId id, Version version) {
-        return aggregateContainer(id, version)
+        return aggregateInContainer(id, version)
                 .filter(AggregateContainer::hasSeenEvents)
                 .map(container -> (A) container.getAggregate());
     }
 
-    public Mono<Void> dispatchCommand(AggregateId aggregateId, Command cmd, Agent agent) {
-        return aggregateLatestContainer(aggregateId)
-                .flatMap(container -> {
-                    ApplyCommandResult result = container.getAggregate().apply(cmd);
-
-                    return saveEvents(aggregateId, container.getVersion(), agent, result)
-                            .collectList()
-                            .flatMap(events -> snapshotIfNecessary(aggregateId, agent, container, events));
-                });
+    /**
+     * Dispatches a command to the aggregate with the given id in its latest version.
+     */
+    public Mono<Version> dispatchCommandToLatest(AggregateId aggregateId, Command cmd, Agent agent) {
+        return aggregateLatestInContainer(aggregateId)
+                .flatMap(container -> handleCommandInAggregate(aggregateId, container, cmd, agent));
     }
 
-    private Mono<Void> snapshotIfNecessary(
+    /**
+     * Dispatch a command to the aggregate with the given id and version.
+     * If the passed version is not the latest version of the aggregate, the command will be rejected.
+     */
+    public Mono<Version> dispatchCommand(AggregateId aggregateId, Version version, Command cmd, Agent agent) {
+        return aggregateInContainer(aggregateId, version)
+                .flatMap(container -> handleCommandInAggregate(aggregateId, container, cmd, agent));
+    }
+
+    private Mono<Version> handleCommandInAggregate(
+            AggregateId aggregateId,
+            AggregateContainer container,
+            Command cmd,
+            Agent agent
+    ) {
+        ApplyCommandResult result = container.getAggregate().apply(cmd);
+
+        return saveEvents(aggregateId, container, agent, result)
+                .collectList()
+                .flatMap(events -> snapshotIfNecessary(aggregateId, agent, container, events));
+    }
+
+    private Mono<Version> snapshotIfNecessary(
             AggregateId aggregateId,
             Agent agent,
             AggregateContainer container,
@@ -74,28 +109,30 @@ public class EventSourcingService<A extends Aggregate> {
             return snapshot(aggregateId, agent, container);
         }
 
-        return Mono.empty();
+        return Mono.just(container.getVersion());
     }
 
-    private Mono<Void> snapshot(AggregateId aggregateId, Agent agent, AggregateContainer container) {
+    private Mono<Version> snapshot(AggregateId aggregateId, Agent agent, AggregateContainer container) {
         var snapshotCmd = SnapshotCmd.of();
         var result = container.apply(snapshotCmd);
 
-        return saveEvents(aggregateId, container.getVersion(), agent, result).then();
+        return saveEvents(aggregateId, container, agent, result)
+                .last()
+                .map(event -> event.getMetadata().getAggregateVersion());
     }
 
-    private Mono<AggregateContainer> aggregateLatestContainer(AggregateId id) {
+    private Mono<AggregateContainer> aggregateLatestInContainer(AggregateId id) {
         return repo.findLatestSnapshotEventByAggregateIdAndType(id, aggregateType)
                 .map(event -> event.getMetadata().getAggregateVersion())
                 .defaultIfEmpty(Version.zero())
                 .flatMapMany(fromVersion -> repo.findEventsByAggregateIdAndType(id, aggregateType, fromVersion))
                 .reduce(AggregateContainer.init(initialState), (container, event) -> container.apply(
-                        event.getEvent(),
+                        patcher.patch(event.getEvent(), event.getMetadata()),
                         event.getMetadata()
                 ));
     }
 
-    private Mono<AggregateContainer> aggregateContainer(AggregateId id, Version version) {
+    private Mono<AggregateContainer> aggregateInContainer(AggregateId id, Version version) {
         return repo.findNearestSnapshotEventByAggregateIdAndType(id, aggregateType, version)
                 .map(event -> event.getMetadata().getAggregateVersion())
                 .defaultIfEmpty(Version.zero())
@@ -106,14 +143,14 @@ public class EventSourcingService<A extends Aggregate> {
                         version
                 ))
                 .reduce(AggregateContainer.init(initialState), (container, event) -> container.apply(
-                        event.getEvent(),
+                        patcher.patch(event.getEvent(), event.getMetadata()),
                         event.getMetadata()
                 ));
     }
 
     private Flux<EventWithMetadata> saveEvents(
             AggregateId aggregateId,
-            Version aggregateVersion,
+            AggregateContainer container,
             Agent agent,
             ApplyCommandResult result
     ) {
@@ -125,7 +162,7 @@ public class EventSourcingService<A extends Aggregate> {
         }
 
         var eventsWithMetadata = new ArrayList<EventWithMetadata>();
-        var currentVersion = aggregateVersion.increment();
+        var currentVersion = container.hasSeenEvents() ? container.getVersion().increment() : Version.zero();
         for (Event event : events) {
             var metadata = EventMetadata.of(
                     aggregateId,
