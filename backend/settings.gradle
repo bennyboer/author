@@ -11,5 +11,6 @@ rootProject.name = 'backend'
 include(
         'server',
         'eventsourcing',
-        'structure'
+        'structure',
+        'common'
 )

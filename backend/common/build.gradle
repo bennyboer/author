@@ -1,0 +1,3 @@
+plugins {
+    id 'de.bennyboer.author.java-library-conventions'
+}
