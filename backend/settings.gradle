@@ -10,5 +10,6 @@ plugins {
 rootProject.name = 'backend'
 include(
         'server',
-//        'subproject'
+        'eventsourcing',
+        'structure'
 )
