@@ -1,5 +1,9 @@
 package de.bennyboer.author.server.websocket;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import de.bennyboer.author.server.websocket.messages.WebSocketMessage;
 import io.javalin.websocket.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketService {
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
+
+    private final ObjectMapper objectMapper = configureObjectMapper(new ObjectMapper());
 
     public static WebSocketService getInstance() {
         return InstanceHolder.INSTANCE;
@@ -51,7 +57,12 @@ public class WebSocketService {
     public void onMessage(WsMessageContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
 
-        ctx.send(ctx.message());
+        tryDeserializeMessage(ctx).ifPresent(msg -> {
+            // TODO Handle message, for now we just send it back
+            trySerializeMessage(msg).ifPresent(ctx::send);
+        });
+
+        // TODO Deal with heartbeat message from client (the client is responsible for sending the heartbeat messages)
 
         log.debug(
                 "Received message '{}' from session ID '{}'",
@@ -60,10 +71,42 @@ public class WebSocketService {
         );
     }
 
+    private Optional<WebSocketMessage> tryDeserializeMessage(WsMessageContext ctx) {
+        try {
+            var msg = objectMapper.readValue(ctx.message(), WebSocketMessage.class);
+            if (!msg.isValid()) {
+                log.warn("Received invalid WebSocket message: {}", ctx.message());
+                return Optional.empty();
+            }
+
+            return Optional.of(msg);
+        } catch (Exception e) {
+            log.error("Error while reading WebSocket message", e);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> trySerializeMessage(WebSocketMessage message) {
+        try {
+            return Optional.of(objectMapper.writeValueAsString(message));
+        } catch (Exception e) {
+            log.error("Error while writing WebSocket message", e);
+            return Optional.empty();
+        }
+    }
+
     private void closeSessionIfOpen(SessionId sessionId) {
         Optional.ofNullable(sessions.remove(sessionId))
                 .filter(ctx -> ctx.session.isOpen())
                 .ifPresent(ctx -> ctx.session.close());
+    }
+
+    private static ObjectMapper configureObjectMapper(ObjectMapper mapper) {
+        mapper.registerModule(new Jdk8Module());
+
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        return mapper;
     }
 
     private static final class InstanceHolder {
