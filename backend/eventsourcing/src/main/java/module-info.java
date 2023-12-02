@@ -1,5 +1,5 @@
 module de.bennyboer.eventsourcing {
-    requires lombok;
+    requires static lombok;
     requires reactor.core;
     requires org.reactivestreams;
     exports de.bennyboer.eventsourcing.api;

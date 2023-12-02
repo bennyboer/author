@@ -1,24 +1,21 @@
 package de.bennyboer.author.server;
 
+import de.bennyboer.author.server.websocket.WebSocketService;
 import io.javalin.Javalin;
 import lombok.Value;
 
 public class App {
 
     public static void main(String[] args) {
-        @Value
-        class Test {
-
-            String msg;
-        }
+        var webSocketService = WebSocketService.getInstance();
 
         Javalin.create()
                 .get("/", ctx -> ctx.result("Hello World"))
                 .ws("/ws", ws -> {
-                    ws.onConnect(session -> {
-                        System.out.println("Connected");
-                        session.send(new Test("Hello from server"));
-                    });
+                    ws.onConnect(webSocketService::onConnect);
+                    ws.onClose(webSocketService::onClose);
+                    ws.onError(webSocketService::onError);
+                    ws.onMessage(webSocketService::onMessage);
                 })
                 .start(7070);
     }

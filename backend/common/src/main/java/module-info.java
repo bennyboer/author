@@ -1,4 +1,4 @@
 module de.bennyboer.author.common {
-    requires lombok;
+    requires static lombok;
     exports de.bennyboer.author.common;
 }

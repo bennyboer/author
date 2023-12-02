@@ -1,5 +1,5 @@
 module de.bennyboer.author.structure {
-    requires lombok;
+    requires static lombok;
     requires de.bennyboer.eventsourcing;
     requires de.bennyboer.author.common;
     requires jakarta.annotation;
