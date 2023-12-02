@@ -38,12 +38,12 @@ public class TreeService {
         return eventSourcingService.aggregate(AggregateId.of(id.getValue()), version);
     }
 
-    public Mono<TreeId> create(NodeName rootNodeName, UserId userId) {
+    public Mono<TreeIdAndVersion> create(NodeName rootNodeName, UserId userId) {
         TreeId id = TreeId.create();
-        Node rootNode = Node.create(rootNodeName);
+        Node rootNode = Node.createRoot(rootNodeName);
 
         return dispatchCommandToLatest(id, userId, CreateCmd.of(rootNode))
-                .thenReturn(id);
+                .map(version -> TreeIdAndVersion.of(id, version));
     }
 
     public Mono<Version> toggleNode(TreeId id, Version version, NodeId nodeId, UserId userId) {
@@ -57,7 +57,9 @@ public class TreeService {
             NodeName newNodeName,
             UserId userId
     ) {
-        return dispatchCommand(id, version, userId, AddNodeCmd.of(parentNodeId, newNodeName));
+        NodeId newNodeId = NodeId.create();
+
+        return dispatchCommand(id, version, userId, AddNodeCmd.of(parentNodeId, newNodeId, newNodeName));
     }
 
     public Mono<Version> removeNode(

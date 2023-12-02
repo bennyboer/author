@@ -20,10 +20,12 @@ public class NodeAddedEvent implements Event {
 
     NodeId parentNodeId;
 
+    NodeId newNodeId;
+
     NodeName newNodeName;
 
     public static NodeAddedEvent of(AddNodeCmd cmd) {
-        return new NodeAddedEvent(cmd.getParentNodeId(), cmd.getNewNodeName());
+        return new NodeAddedEvent(cmd.getParentNodeId(), cmd.getNewNodeId(), cmd.getNewNodeName());
     }
 
     @Override
