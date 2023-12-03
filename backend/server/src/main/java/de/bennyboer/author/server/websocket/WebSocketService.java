@@ -58,8 +58,7 @@ public class WebSocketService {
         SessionId sessionId = SessionId.of(ctx);
 
         tryDeserializeMessage(ctx).ifPresent(msg -> {
-            // TODO Handle message, for now we just send it back
-            trySerializeMessage(msg).ifPresent(ctx::send);
+            onMessage(ctx, msg);
         });
 
         // TODO Deal with heartbeat message from client (the client is responsible for sending the heartbeat messages)
@@ -69,6 +68,20 @@ public class WebSocketService {
                 ctx.message(),
                 sessionId.getValue()
         );
+    }
+
+    private void onMessage(WsContext ctx, WebSocketMessage msg) {
+        switch (msg.getMethod()) {
+            case HEARTBEAT -> sendHeartbeatResponse(ctx);
+            default -> {
+                // TODO Handle message, for now we just send it back
+                trySerializeMessage(msg).ifPresent(ctx::send);
+            }
+        }
+    }
+
+    private void sendHeartbeatResponse(WsContext ctx) {
+        trySerializeMessage(WebSocketMessage.heartbeat()).ifPresent(ctx::send);
     }
 
     private Optional<WebSocketMessage> tryDeserializeMessage(WsMessageContext ctx) {

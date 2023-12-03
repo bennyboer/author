@@ -33,10 +33,10 @@ public class WebSocketMessage {
     @Nullable
     EventMessage event;
 
-    public static WebSocketMessage heartbeat(HeartbeatMessage heartbeat) {
+    public static WebSocketMessage heartbeat() {
         return new WebSocketMessage(
                 WebSocketMessageMethod.HEARTBEAT,
-                heartbeat,
+                HeartbeatMessage.of(),
                 null,
                 null,
                 null,
