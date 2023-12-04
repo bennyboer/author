@@ -1,5 +1,7 @@
 package de.bennyboer.author.server;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
@@ -11,6 +13,7 @@ import de.bennyboer.author.structure.tree.api.TreeIdAndVersion;
 import de.bennyboer.author.structure.tree.api.TreeService;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
+import io.javalin.json.JavalinJackson;
 
 import java.util.List;
 
@@ -44,6 +47,11 @@ public class App {
                             it.anyHost(); // TODO Restrict to frontend host and only allow for DEV build
                         });
                     });
+
+                    config.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+                        mapper.registerModule(new Jdk8Module());
+                        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                    }));
                 })
                 .get("/", ctx -> ctx.result("Hello World")) // TODO Maybe serve frontend here?
                 .ws("/ws", ws -> {

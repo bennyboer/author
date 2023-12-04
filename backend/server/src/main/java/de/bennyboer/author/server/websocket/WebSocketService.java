@@ -18,8 +18,6 @@ public class WebSocketService {
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
-    private final ObjectMapper objectMapper = configureObjectMapper(new ObjectMapper());
-
     public void onConnect(WsConnectContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
         sessions.put(sessionId, ctx);
@@ -58,45 +56,16 @@ public class WebSocketService {
                 sessionId.getValue()
         );
 
-        tryDeserializeMessage(ctx).ifPresent(msg -> {
-            onMessage(ctx, msg);
-        });
+        WebSocketMessage msg = ctx.messageAsClass(WebSocketMessage.class);
+        onMessage(ctx, msg);
     }
 
     private void onMessage(WsContext ctx, WebSocketMessage msg) {
         switch (msg.getMethod()) {
-            case HEARTBEAT -> sendHeartbeatResponse(ctx);
+            case HEARTBEAT -> ctx.send(WebSocketMessage.heartbeat());
             default -> throw new IllegalArgumentException(
                     "Encountered message with unsupported method from client" + msg.getMethod()
             );
-        }
-    }
-
-    private void sendHeartbeatResponse(WsContext ctx) {
-        trySerializeMessage(WebSocketMessage.heartbeat()).ifPresent(ctx::send);
-    }
-
-    private Optional<WebSocketMessage> tryDeserializeMessage(WsMessageContext ctx) {
-        try {
-            var msg = objectMapper.readValue(ctx.message(), WebSocketMessage.class);
-            if (!msg.isValid()) {
-                log.warn("Received invalid WebSocket message: {}", ctx.message());
-                return Optional.empty();
-            }
-
-            return Optional.of(msg);
-        } catch (Exception e) {
-            log.error("Error while reading WebSocket message", e);
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> trySerializeMessage(WebSocketMessage message) {
-        try {
-            return Optional.of(objectMapper.writeValueAsString(message));
-        } catch (Exception e) {
-            log.error("Error while writing WebSocket message", e);
-            return Optional.empty();
         }
     }
 

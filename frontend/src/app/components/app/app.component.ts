@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { WebSocketService } from '../../modules/shared';
 
 @Component({
   selector: 'app-root',
@@ -7,5 +8,5 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  constructor() {}
+  constructor(private readonly webSocketService: WebSocketService) {}
 }
