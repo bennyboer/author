@@ -1,9 +1,8 @@
 package de.bennyboer.author.structure;
 
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.structure.tree.TreeService;
-import de.bennyboer.author.structure.tree.node.Node;
-import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.author.structure.tree.api.*;
+import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -356,6 +355,25 @@ public class TreeServiceTests {
                 executable
         );
         assertEquals("Cannot swap nodes that are directly related", exception.getMessage());
+    }
+
+    @Test
+    void shouldNotAcceptOtherCommandBeforeCreating() {
+        // when: trying to add a node to a non-existing tree
+        Executable executable = () -> treeService.addNode(
+                TreeId.create(),
+                Version.zero(),
+                NodeId.create(),
+                NodeName.of("Chapter 1"),
+                userId
+        ).block();
+
+        // then: an exception is thrown
+        var exception = assertThrows(
+                IllegalStateException.class,
+                executable
+        );
+        assertEquals("Tree must be initialized with CreateCmd before applying other commands", exception.getMessage());
     }
 
 }

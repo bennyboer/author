@@ -1,13 +1,11 @@
-package de.bennyboer.author.structure.tree;
+package de.bennyboer.author.structure.tree.api;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.structure.tree.commands.*;
-import de.bennyboer.author.structure.tree.node.Node;
-import de.bennyboer.author.structure.tree.node.NodeId;
-import de.bennyboer.author.structure.tree.node.NodeName;
 import de.bennyboer.eventsourcing.api.EventSourcingService;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
+import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.api.command.Command;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentId;
@@ -18,6 +16,8 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public class TreeService {
+
+    public static final AggregateType AGGREGATE_TYPE = Tree.TYPE;
 
     EventSourcingService<Tree> eventSourcingService;
 

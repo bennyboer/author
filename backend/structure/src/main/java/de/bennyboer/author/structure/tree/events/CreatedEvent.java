@@ -1,7 +1,7 @@
 package de.bennyboer.author.structure.tree.events;
 
 import de.bennyboer.author.structure.tree.commands.CreateCmd;
-import de.bennyboer.author.structure.tree.node.Node;
+import de.bennyboer.author.structure.tree.api.Node;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.Event;
 import de.bennyboer.eventsourcing.api.event.EventName;

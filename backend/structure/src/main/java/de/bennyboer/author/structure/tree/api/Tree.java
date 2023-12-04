@@ -1,10 +1,7 @@
-package de.bennyboer.author.structure.tree;
+package de.bennyboer.author.structure.tree.api;
 
 import de.bennyboer.author.structure.tree.commands.*;
 import de.bennyboer.author.structure.tree.events.*;
-import de.bennyboer.author.structure.tree.node.Node;
-import de.bennyboer.author.structure.tree.node.NodeId;
-import de.bennyboer.author.structure.tree.node.NodeName;
 import de.bennyboer.eventsourcing.api.aggregate.Aggregate;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.api.aggregate.ApplyCommandResult;
@@ -31,16 +28,24 @@ public class Tree implements Aggregate {
 
     TreeId id;
 
+    long version;
+
     NodeId rootNodeId;
 
     Map<NodeId, Node> nodes;
 
     public static Tree init() {
-        return new Tree(null, null, null);
+        return new Tree(null, 0L, null, null);
     }
 
     @Override
     public ApplyCommandResult apply(Command cmd) {
+        var isInitialized = Optional.ofNullable(id).isPresent();
+        var isCreateCmd = cmd instanceof CreateCmd;
+        if (!isInitialized && !isCreateCmd) {
+            throw new IllegalStateException("Tree must be initialized with CreateCmd before applying other commands");
+        }
+
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
             case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
@@ -53,8 +58,8 @@ public class Tree implements Aggregate {
     }
 
     @Override
-    public Aggregate apply(Event event, EventMetadata metadata) {
-        return switch (event) {
+    public Tree apply(Event event, EventMetadata metadata) {
+        var updatedTree = switch (event) {
             case SnapshottedEvent e -> withId(TreeId.of(metadata.getAggregateId().getValue()))
                     .withRootNodeId(e.getRootNodeId())
                     .withNodes(e.getNodes());
@@ -67,6 +72,8 @@ public class Tree implements Aggregate {
             case NodesSwappedEvent e -> swapNodes(e.getNodeId1(), e.getNodeId2());
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
+
+        return updatedTree.withVersion(metadata.getAggregateVersion().getValue());
     }
 
     public Optional<Node> getNodeById(NodeId nodeId) {

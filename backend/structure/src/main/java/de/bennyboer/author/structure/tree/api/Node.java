@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.node;
+package de.bennyboer.author.structure.tree.api;
 
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;

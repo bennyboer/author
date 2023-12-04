@@ -4,4 +4,5 @@ module de.bennyboer.author.structure {
     requires de.bennyboer.author.common;
     requires jakarta.annotation;
     requires reactor.core;
+    exports de.bennyboer.author.structure.tree.api;
 }

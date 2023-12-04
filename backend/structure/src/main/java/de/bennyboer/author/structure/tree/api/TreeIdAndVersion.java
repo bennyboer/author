@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree;
+package de.bennyboer.author.structure.tree.api;
 
 import de.bennyboer.eventsourcing.api.Version;
 import lombok.AccessLevel;

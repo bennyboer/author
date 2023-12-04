@@ -1,43 +1,33 @@
-import {Injectable, OnDestroy} from "@angular/core";
-import {catchError, delay, EMPTY, filter, Observable, of, Subject, Subscription, takeUntil, timer} from "rxjs";
-import {webSocket, WebSocketSubject} from "rxjs/webSocket";
-import {Option} from "../util";
+import { Injectable, OnDestroy } from '@angular/core';
+import {
+  catchError,
+  delay,
+  EMPTY,
+  filter,
+  Observable,
+  of,
+  Subject,
+  Subscription,
+  takeUntil,
+  timer,
+} from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { Option } from '../util';
 
-const WS_ENDPOINT: string = "ws://localhost:7070/ws"; // TODO determine protocol and host based on environment
+const WS_ENDPOINT: string = 'ws://localhost:7070/ws'; // TODO determine protocol and host based on environment
 
 enum WebSocketMessageMethod {
-  HEARTBEAT = "HEARTBEAT",
-  SUBSCRIBE = "SUBSCRIBE",
-  UNSUBSCRIBE = "UNSUBSCRIBE",
-  DISPATCH_COMMAND = "DISPATCH_COMMAND",
-  EVENT = "EVENT"
+  HEARTBEAT = 'HEARTBEAT',
+  EVENT = 'EVENT',
 }
 
-interface HeartbeatMessage {
-}
+interface HeartbeatMessage {}
 
-interface SubscribeMessage {
-  test: string;
-}
-
-interface UnsubscribeMessage {
-
-}
-
-interface DispatchCommandMessage {
-
-}
-
-interface EventMessage {
-
-}
+interface EventMessage {}
 
 interface WebSocketMessage {
   method: WebSocketMessageMethod;
   heartbeat?: HeartbeatMessage;
-  subscribe?: SubscribeMessage;
-  unsubscribe?: UnsubscribeMessage;
-  dispatchCommand?: DispatchCommandMessage;
   event?: EventMessage;
 }
 
@@ -45,11 +35,12 @@ const HEARTBEAT_INTERVAL_MS: number = 5000;
 const HEARTBEAT_TIMEOUT_MS: number = 10000;
 
 @Injectable({
-  providedIn: "root",
+  providedIn: 'root',
 })
 export class WebSocketService implements OnDestroy {
   private socket$: Option<Subject<WebSocketMessage>> = Option.none();
-  private readonly messages$: Subject<WebSocketMessage> = new Subject<WebSocketMessage>();
+  private readonly messages$: Subject<WebSocketMessage> =
+    new Subject<WebSocketMessage>();
   private readonly destroy$: Subject<void> = new Subject<void>();
   private reconnectionFailures: number = 0;
   private heartbeatSub: Option<Subscription> = Option.none();
@@ -70,18 +61,6 @@ export class WebSocketService implements OnDestroy {
     return this.messages$.asObservable();
   }
 
-  subscribe(topic: string) {
-    const subscribeMessage: SubscribeMessage = {
-      test: "Hello World",
-    };
-    const msg: WebSocketMessage = {
-      method: WebSocketMessageMethod.SUBSCRIBE,
-      subscribe: subscribeMessage,
-    };
-
-    this.send(msg);
-  }
-
   private send(msg: WebSocketMessage) {
     this.socket$.ifSome((socket) => socket.next(msg));
   }
@@ -91,13 +70,15 @@ export class WebSocketService implements OnDestroy {
       return;
     }
 
-    console.log(`Connecting to WebSocket... Attempt ${this.reconnectionFailures + 1}`);
+    console.log(
+      `Connecting to WebSocket... Attempt ${this.reconnectionFailures + 1}`,
+    );
 
     const socket: WebSocketSubject<WebSocketMessage> = webSocket({
       url: WS_ENDPOINT,
       openObserver: {
         next: () => {
-          console.log("WebSocket connection established");
+          console.log('WebSocket connection established');
           this.reconnectionFailures = 0;
           this.startHeartbeat();
         },
@@ -111,7 +92,9 @@ export class WebSocketService implements OnDestroy {
           this.socket$ = Option.none();
           const backoff = Math.pow(2, this.reconnectionFailures) * 1000;
           this.reconnectionFailures++;
-          of(1).pipe(delay(backoff)).subscribe(() => this.connect());
+          of(1)
+            .pipe(delay(backoff))
+            .subscribe(() => this.connect());
         },
       },
     });
@@ -120,7 +103,7 @@ export class WebSocketService implements OnDestroy {
     socket
       .pipe(
         catchError((e) => {
-          console.error("WebSocket connection error:", e);
+          console.error('WebSocket connection error:', e);
           return EMPTY;
         }),
         takeUntil(this.destroy$),
@@ -138,9 +121,14 @@ export class WebSocketService implements OnDestroy {
 
   private startHeartbeat() {
     this.heartbeatTimeoutSub = Option.none();
-    this.heartbeatSub = Option.some(timer(HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS)
-      .pipe(takeUntil(this.destroy$), filter(() => this.lastHeartbeatReceived()))
-      .subscribe(() => this.sendHeartbeat()));
+    this.heartbeatSub = Option.some(
+      timer(HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS)
+        .pipe(
+          takeUntil(this.destroy$),
+          filter(() => this.lastHeartbeatReceived()),
+        )
+        .subscribe(() => this.sendHeartbeat()),
+    );
   }
 
   private lastHeartbeatReceived(): boolean {
@@ -165,12 +153,16 @@ export class WebSocketService implements OnDestroy {
 
   private startHeartbeatTimeout() {
     this.heartbeatTimeoutSub.ifSome((sub) => sub.unsubscribe());
-    this.heartbeatTimeoutSub = Option.some(timer(HEARTBEAT_TIMEOUT_MS)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        console.error("No heartbeat received in time - closing WebSocket connection");
-        this.socket$.ifSome((socket) => socket.complete());
-      }));
+    this.heartbeatTimeoutSub = Option.some(
+      timer(HEARTBEAT_TIMEOUT_MS)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          console.error(
+            'No heartbeat received in time - closing WebSocket connection',
+          );
+          this.socket$.ifSome((socket) => socket.complete());
+        }),
+    );
   }
 
   private stopHeartbeatTimeout() {

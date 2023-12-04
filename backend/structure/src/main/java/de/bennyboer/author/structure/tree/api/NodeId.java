@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree;
+package de.bennyboer.author.structure.tree.api;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -8,25 +8,25 @@ import java.util.UUID;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TreeId {
+public class NodeId {
 
     String value;
 
-    public static TreeId of(String value) {
+    public static NodeId of(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("TreeId must not be null or blank");
+            throw new IllegalArgumentException("NodeId must not be null or blank");
         }
 
-        return new TreeId(value);
+        return new NodeId(value);
     }
 
-    public static TreeId create() {
+    public static NodeId create() {
         return of(UUID.randomUUID().toString());
     }
 
     @Override
     public String toString() {
-        return String.format("TreeId(%s)", value);
+        return String.format("NodeId(%s)", value);
     }
 
 }

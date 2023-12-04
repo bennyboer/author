@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.node;
+package de.bennyboer.author.structure.tree.api;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

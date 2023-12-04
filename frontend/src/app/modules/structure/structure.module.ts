@@ -16,13 +16,14 @@ import {
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import {
-  LocalStorageRemoteStructureTreeService,
   RemoteStructureTreeService,
   structureStore,
   StructureStoreEffects,
   StructureTreeService,
 } from './store';
 import { CommonModule } from '@angular/common';
+import { BackendRemoteStructureTreeService } from './store/remote';
+import { HttpClientModule } from '@angular/common/http';
 
 const PAGES = [StructurePage];
 const COMPONENTS = [TreeGraphComponent];
@@ -35,6 +36,7 @@ const DIALOGS = [NodeDetailsDialog];
     StoreModule.forFeature(structureStore.featureName, structureStore.reducer),
     EffectsModule.forFeature([StructureStoreEffects]),
     CommonModule,
+    HttpClientModule,
     MatSlideToggleModule,
     MatButtonModule,
     MatIconModule,
@@ -48,7 +50,7 @@ const DIALOGS = [NodeDetailsDialog];
     StructureTreeService,
     {
       provide: RemoteStructureTreeService,
-      useClass: LocalStorageRemoteStructureTreeService,
+      useClass: BackendRemoteStructureTreeService, // LocalStorageRemoteStructureTreeService,
     },
   ],
   exports: [],

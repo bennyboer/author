@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import de.bennyboer.author.server.websocket.messages.WebSocketMessage;
 import io.javalin.websocket.*;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,16 +13,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class WebSocketService {
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
     private final ObjectMapper objectMapper = configureObjectMapper(new ObjectMapper());
-
-    public static WebSocketService getInstance() {
-        return InstanceHolder.INSTANCE;
-    }
 
     public void onConnect(WsConnectContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
@@ -57,26 +52,23 @@ public class WebSocketService {
     public void onMessage(WsMessageContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
 
-        tryDeserializeMessage(ctx).ifPresent(msg -> {
-            onMessage(ctx, msg);
-        });
-
-        // TODO Deal with heartbeat message from client (the client is responsible for sending the heartbeat messages)
-
         log.debug(
                 "Received message '{}' from session ID '{}'",
                 ctx.message(),
                 sessionId.getValue()
         );
+
+        tryDeserializeMessage(ctx).ifPresent(msg -> {
+            onMessage(ctx, msg);
+        });
     }
 
     private void onMessage(WsContext ctx, WebSocketMessage msg) {
         switch (msg.getMethod()) {
             case HEARTBEAT -> sendHeartbeatResponse(ctx);
-            default -> {
-                // TODO Handle message, for now we just send it back
-                trySerializeMessage(msg).ifPresent(ctx::send);
-            }
+            default -> throw new IllegalArgumentException(
+                    "Encountered message with unsupported method from client" + msg.getMethod()
+            );
         }
     }
 
@@ -120,12 +112,6 @@ public class WebSocketService {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         return mapper;
-    }
-
-    private static final class InstanceHolder {
-
-        private static final WebSocketService INSTANCE = new WebSocketService();
-
     }
 
 }
