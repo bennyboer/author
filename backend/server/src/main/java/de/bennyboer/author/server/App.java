@@ -15,8 +15,6 @@ import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
 
-import java.util.List;
-
 import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class App {

@@ -1,5 +1,6 @@
 <app-tree-graph
-  [tree]="(treeGraph$ | async)!"
+  *ngIf="treeGraph$ | async as treeGraph"
+  [tree]="treeGraph"
   (doubleClickedNode)="openNodeDetails($event)"
   (command)="handleCommand($event)"
 >

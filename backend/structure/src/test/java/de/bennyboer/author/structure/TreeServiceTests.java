@@ -354,7 +354,7 @@ public class TreeServiceTests {
                 IllegalArgumentException.class,
                 executable
         );
-        assertEquals("Cannot swap nodes that are directly related", exception.getMessage());
+        assertEquals("Nodes are directly related", exception.getMessage());
     }
 
     @Test

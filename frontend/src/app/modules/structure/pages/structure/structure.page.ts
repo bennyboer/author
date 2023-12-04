@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild,} from "@angular/core";
 import {
   AddNodeCommand,
   RemoveNodeCommand,
@@ -16,12 +10,12 @@ import {
   TreeGraphComponent,
   TreeGraphNode,
   TreeGraphNodeId,
-} from '../../components';
-import { MatDialog } from '@angular/material/dialog';
-import { NodeDetailsDialog } from '../../dialogs';
-import { map, Observable, Subject, takeUntil } from 'rxjs';
-import { StructureTreeService } from '../../store';
-import { StructureTree, StructureTreeNode } from '../../store/state';
+} from "../../components";
+import {MatDialog} from "@angular/material/dialog";
+import {NodeDetailsDialog} from "../../dialogs";
+import {map, Observable, Subject, takeUntil} from "rxjs";
+import {StructureTreeService} from "../../store";
+import {StructureTree, StructureTreeNode} from "../../store/state";
 
 /*
 TODO:
@@ -85,6 +79,8 @@ export class StructurePage implements OnInit, OnDestroy {
 
     const nodes = new Map<TreeGraphNodeId, TreeGraphNode>(nodeList);
     const root = tree.rootId;
+
+    console.log(nodes, root);
 
     return {
       nodes,

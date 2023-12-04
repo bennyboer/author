@@ -372,43 +372,15 @@ export class TreeGraphComponent {
   }
 
   private addNode(nodeId: RenderNodeId) {
-    // this.renderTree.ifSome((tree) => {
-    //   const updatedTree = tree.addNode(
-    //     nodeId,
-    //     TreeGraphComponent.buildRenderNode({
-    //       id: crypto.randomUUID(),
-    //       children: [],
-    //       label: '(New node)',
-    //       expanded: true,
-    //     }),
-    //   );
-    //   this.renderTree = Option.some(updatedTree);
-    //
-    //   this.repaint();
-    // });
-
+    console.log('add node', nodeId);
     this.command.emit(new AddNodeCommand(nodeId, '(New node)'));
   }
 
   private removeNode(nodeId: RenderNodeId) {
-    // this.renderTree.ifSome((tree) => {
-    //   const updatedTree = tree.removeNode(nodeId);
-    //   this.renderTree = Option.some(updatedTree);
-    //
-    //   this.repaint();
-    // });
-
     this.command.emit(new RemoveNodeCommand(nodeId));
   }
 
   private toggleNode(nodeId: RenderNodeId) {
-    // this.renderTree.ifSome((tree) => {
-    //   const updatedTree = tree.toggleNode(nodeId);
-    //   this.renderTree = Option.some(updatedTree);
-    //
-    //   this.repaint();
-    // });
-
     this.command.emit(new ToggleNodeCommand(nodeId));
   }
 
@@ -423,13 +395,6 @@ export class TreeGraphComponent {
   }
 
   private swapNodes(node1: RenderNodeId, node2: RenderNodeId) {
-    // this.renderTree.ifSome((tree) => {
-    //   const updatedTree = tree.swapNodes(node1, node2);
-    //   this.renderTree = Option.some(updatedTree);
-    //
-    //   this.repaint();
-    // });
-
     this.command.emit(new SwapNodesCommand(node1, node2));
   }
 }

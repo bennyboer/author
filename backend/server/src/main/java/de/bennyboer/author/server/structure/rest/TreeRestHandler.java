@@ -19,8 +19,12 @@ public class TreeRestHandler {
         var treeId = ctx.pathParam("treeId");
 
         ctx.future(() -> facade.getTree(treeId)
+                .singleOptional()
                 .toFuture()
-                .thenAccept(ctx::json));
+                .thenAccept(tree -> tree.ifPresentOrElse(
+                        ctx::json,
+                        () -> ctx.status(HttpStatus.NOT_FOUND)
+                )));
     }
 
     public void toggleNode(Context ctx) {

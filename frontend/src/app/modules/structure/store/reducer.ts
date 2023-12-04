@@ -24,9 +24,14 @@ export const reducer = createReducer(
   on(treeLoaded, (state, { tree }) => ({ ...state, tree })),
 
   on(eventReceived, (state, { event }) =>
-    applyEvent(state.tree, event)
-      .map((tree) => ({ ...state, tree }))
-      .orElse(state),
+    Option.someOrNone(state.tree)
+      .flatMap((tree) =>
+        applyEvent(tree, event).map((tree) => ({ ...state, tree })),
+      )
+      .orElse({
+        ...state,
+        tree: state.tree!,
+      }),
   ),
 
   on(toggleNodeFailure, (state, { nodeId, message }) => ({

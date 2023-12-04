@@ -49,10 +49,29 @@ public class Tree implements Aggregate {
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
             case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
-            case AddNodeCmd c -> ApplyCommandResult.of(NodeAddedEvent.of(c));
-            case ToggleNodeCmd c -> ApplyCommandResult.of(NodeToggledEvent.of(c));
-            case RemoveNodeCmd c -> ApplyCommandResult.of(NodeRemovedEvent.of(c));
-            case SwapNodesCmd c -> ApplyCommandResult.of(NodesSwappedEvent.of(c));
+            case AddNodeCmd c -> {
+                assertNodeExists(c.getParentNodeId());
+                yield ApplyCommandResult.of(NodeAddedEvent.of(c));
+            }
+            case ToggleNodeCmd c -> {
+                assertNodeExists(c.getNodeId());
+                yield ApplyCommandResult.of(NodeToggledEvent.of(c));
+            }
+            case RemoveNodeCmd c -> {
+                assertNodeExists(c.getNodeId());
+                assertNodeIsNotRoot(c.getNodeId(), "Cannot remove root node");
+                var parentNodeId = getNodeById(c.getNodeId()).orElseThrow().getParentId().orElseThrow();
+                assertNodeExists(parentNodeId);
+                yield ApplyCommandResult.of(NodeRemovedEvent.of(c));
+            }
+            case SwapNodesCmd c -> {
+                assertNodeExists(c.getNodeId1());
+                assertNodeExists(c.getNodeId2());
+                assertNodesAreNotDirectlyRelated(c.getNodeId1(), c.getNodeId2());
+                assertNodeIsNotRoot(c.getNodeId1(), "Cannot swap root node");
+                assertNodeIsNotRoot(c.getNodeId2(), "Cannot swap root node");
+                yield ApplyCommandResult.of(NodesSwappedEvent.of(c));
+            }
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
         };
     }
@@ -87,9 +106,7 @@ public class Tree implements Aggregate {
     private Tree addNode(NodeId parentNodeId, NodeId newNodeId, NodeName newNodeName) {
         var updatedNodes = new HashMap<>(nodes);
 
-        var parentNode = getNodeById(parentNodeId).orElseThrow(() -> new IllegalArgumentException(
-                "Cannot add node to non-existing parent node"
-        ));
+        var parentNode = getNodeById(parentNodeId).orElseThrow();
         var newNode = Node.of(newNodeId, newNodeName, parentNodeId, List.of(), true);
         var updatedParentNode = parentNode.addChild(newNode.getId());
         updatedNodes.put(parentNodeId, updatedParentNode);
@@ -101,9 +118,7 @@ public class Tree implements Aggregate {
     private Tree toggleNode(NodeId nodeId) {
         var updatedNodes = new HashMap<>(nodes);
 
-        var node = getNodeById(nodeId).orElseThrow(() -> new IllegalArgumentException(
-                "Cannot toggle non-existing node"
-        ));
+        var node = getNodeById(nodeId).orElseThrow();
         var updatedNode = node.toggle();
         updatedNodes.put(nodeId, updatedNode);
 
@@ -113,14 +128,9 @@ public class Tree implements Aggregate {
     private Tree removeNode(NodeId nodeId) {
         var updatedNodes = new HashMap<>(nodes);
 
-        var node = getNodeById(nodeId).orElseThrow(() -> new IllegalArgumentException(
-                "Cannot remove non-existing node"
-        ));
-        var parentNodeId = node.getParentId()
-                .orElseThrow(() -> new IllegalArgumentException("Cannot remove root node"));
-        var parentNode = getNodeById(parentNodeId).orElseThrow(() -> new IllegalStateException(
-                "Cannot remove node with non-existing parent node"
-        ));
+        var node = getNodeById(nodeId).orElseThrow();
+        var parentNodeId = node.getParentId().orElseThrow();
+        var parentNode = getNodeById(parentNodeId).orElseThrow();
         var updatedParentNode = parentNode.removeChild(nodeId);
         updatedNodes.put(parentNode.getId(), updatedParentNode);
         updatedNodes.remove(nodeId);
@@ -141,28 +151,14 @@ public class Tree implements Aggregate {
     }
 
     private Tree swapNodes(NodeId nodeId1, NodeId nodeId2) {
-        if (isNodeDirectlyRelatedTo(nodeId1, nodeId2)) {
-            throw new IllegalArgumentException("Cannot swap nodes that are directly related");
-        }
-
         var updatedNodes = new HashMap<>(nodes);
 
-        var node1 = getNodeById(nodeId1).orElseThrow(() -> new IllegalArgumentException(
-                "Cannot swap non-existing node"
-        ));
-        var node2 = getNodeById(nodeId2).orElseThrow(() -> new IllegalArgumentException(
-                "Cannot swap non-existing node"
-        ));
-        var parentNodeId1 = node1.getParentId()
-                .orElseThrow(() -> new IllegalArgumentException("Cannot swap root node"));
-        var parentNodeId2 = node2.getParentId()
-                .orElseThrow(() -> new IllegalArgumentException("Cannot swap root node"));
-        var parentNode1 = getNodeById(parentNodeId1).orElseThrow(() -> new IllegalStateException(
-                "Cannot swap node with non-existing parent node"
-        ));
-        var parentNode2 = getNodeById(parentNodeId2).orElseThrow(() -> new IllegalStateException(
-                "Cannot swap node with non-existing parent node"
-        ));
+        var node1 = getNodeById(nodeId1).orElseThrow();
+        var node2 = getNodeById(nodeId2).orElseThrow();
+        var parentNodeId1 = node1.getParentId().orElseThrow();
+        var parentNodeId2 = node2.getParentId().orElseThrow();
+        var parentNode1 = getNodeById(parentNodeId1).orElseThrow();
+        var parentNode2 = getNodeById(parentNodeId2).orElseThrow();
 
         if (parentNode1.getId().equals(parentNode2.getId())) {
             var updatedParentNode = parentNode1.swapChildren(nodeId1, nodeId2);
@@ -208,6 +204,24 @@ public class Tree implements Aggregate {
         }
 
         return false;
+    }
+
+    private void assertNodeExists(NodeId nodeId) {
+        if (!nodes.containsKey(nodeId)) {
+            throw new IllegalArgumentException(String.format("Node with ID '%s' does not exist", nodeId.getValue()));
+        }
+    }
+
+    private void assertNodeIsNotRoot(NodeId nodeId, String message) {
+        if (nodeId.equals(rootNodeId)) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private void assertNodesAreNotDirectlyRelated(NodeId nodeId1, NodeId nodeId2) {
+        if (isNodeDirectlyRelatedTo(nodeId1, nodeId2)) {
+            throw new IllegalArgumentException("Nodes are directly related");
+        }
     }
 
 }

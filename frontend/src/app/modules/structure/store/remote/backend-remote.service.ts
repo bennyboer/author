@@ -21,6 +21,7 @@ interface SwapNodesRequest {
 type NodeId = string;
 
 interface TreeDTO {
+  version: number;
   rootNodeId: string;
   nodes: NodeLookup;
 }
@@ -40,7 +41,7 @@ export class BackendRemoteStructureTreeService
   implements RemoteStructureTreeService
 {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = 'bcfe6026-0966-431c-bbc9-8c970aa9c2d9'; // TODO Taken from server log
+  private readonly treeId: string = 'f69481b7-c8c0-43d7-9c12-31285f977301'; // TODO Taken from server log
   private version: number = 0;
 
   constructor(private readonly http: HttpClient) {}
@@ -94,6 +95,8 @@ export class BackendRemoteStructureTreeService
   }
 
   toggleNode(nodeId: string): Observable<void> {
+    console.log(this.version);
+
     return this.http.post<void>(
       this.url(`${this.treeId}/nodes/${nodeId}/toggle`),
       {},
@@ -112,7 +115,7 @@ export class BackendRemoteStructureTreeService
 
   private mapToStructureTree(tree: TreeDTO): StructureTree {
     return {
-      version: 0,
+      version: tree.version,
       rootId: tree.rootNodeId,
       nodes: this.mapToStructureTreeNodeLookup(tree.nodes),
     };
@@ -124,15 +127,15 @@ export class BackendRemoteStructureTreeService
     return Object.entries(nodes).reduce(
       (lookup, [id, node]) => ({
         ...lookup,
-        [id]: this.mapToStructureTreeNode(node),
+        [id]: this.mapToStructureTreeNode(id, node),
       }),
       {},
     );
   }
 
-  private mapToStructureTreeNode(node: NodeDTO): StructureTreeNode {
+  private mapToStructureTreeNode(id: NodeId, node: NodeDTO): StructureTreeNode {
     return {
-      id: node.name,
+      id,
       name: node.name,
       expanded: node.expanded,
       children: node.children,
