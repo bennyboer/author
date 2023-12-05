@@ -43,6 +43,19 @@ export const removeNodeFailure = createAction(
   props<{ nodeId: StructureTreeNodeId; message: string }>(),
 );
 
+export const renameNode = createAction(
+  '[Structure] Rename Node',
+  props<{ nodeId: StructureTreeNodeId; name: string }>(),
+);
+export const renameNodeSuccess = createAction(
+  '[Structure] Rename Node Success',
+  props<{ nodeId: StructureTreeNodeId }>(),
+);
+export const renameNodeFailure = createAction(
+  '[Structure] Rename Node Failure',
+  props<{ nodeId: StructureTreeNodeId; message: string }>(),
+);
+
 export const swapNodes = createAction(
   '[Structure] Swap Nodes',
   props<{ nodeId1: StructureTreeNodeId; nodeId2: StructureTreeNodeId }>(),
@@ -75,4 +88,5 @@ export const actions = {
   addNode,
   removeNode,
   swapNodes,
+  renameNode,
 };

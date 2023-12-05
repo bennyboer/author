@@ -2,6 +2,8 @@ package de.bennyboer.eventsourcing.api;
 
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+
 @Value
 public class Version implements Comparable<Version> {
 
@@ -12,9 +14,7 @@ public class Version implements Comparable<Version> {
     }
 
     public static Version of(long value) {
-        if (value < 0) {
-            throw new IllegalArgumentException("Version must be greater than 0");
-        }
+        checkArgument(value >= 0, "Version must be greater than 0");
 
         return new Version(value);
     }

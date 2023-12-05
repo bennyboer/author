@@ -72,6 +72,10 @@ public class Tree implements Aggregate {
                 assertNodeIsNotRoot(c.getNodeId2(), "Cannot swap root node");
                 yield ApplyCommandResult.of(NodesSwappedEvent.of(c));
             }
+            case RenameNodeCmd c -> {
+                assertNodeExists(c.getNodeId());
+                yield ApplyCommandResult.of(NodeRenamedEvent.of(c));
+            }
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
         };
     }
@@ -89,6 +93,7 @@ public class Tree implements Aggregate {
             case NodeToggledEvent e -> toggleNode(e.getNodeId());
             case NodeRemovedEvent e -> removeNode(e.getNodeId());
             case NodesSwappedEvent e -> swapNodes(e.getNodeId1(), e.getNodeId2());
+            case NodeRenamedEvent e -> renameNode(e.getNodeId(), e.getNewNodeName());
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
 
@@ -174,6 +179,16 @@ public class Tree implements Aggregate {
         return withNodes(updatedNodes);
     }
 
+    private Tree renameNode(NodeId nodeId, NodeName newNodeName) {
+        var updatedNodes = new HashMap<>(nodes);
+
+        var node = getNodeById(nodeId).orElseThrow();
+        var updatedNode = node.rename(newNodeName);
+        updatedNodes.put(nodeId, updatedNode);
+
+        return withNodes(updatedNodes);
+    }
+
     private boolean isNodeDirectlyRelatedTo(NodeId nodeId1, NodeId nodeId2) {
         if (nodeId1.equals(nodeId2)) {
             return true;
@@ -181,11 +196,8 @@ public class Tree implements Aggregate {
         if (nodeId1.equals(rootNodeId) || nodeId2.equals(rootNodeId)) {
             return true;
         }
-        if (isChildOf(nodeId1, nodeId2) || isChildOf(nodeId2, nodeId1)) {
-            return true;
-        }
-
-        return false;
+        
+        return isChildOf(nodeId1, nodeId2) || isChildOf(nodeId2, nodeId1);
     }
 
     private boolean isChildOf(NodeId potentialChildNodeId, NodeId potentialParentNodeId) {

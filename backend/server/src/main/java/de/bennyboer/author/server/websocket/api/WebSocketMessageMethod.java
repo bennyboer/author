@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.websocket.messages;
+package de.bennyboer.author.server.websocket.api;
 
 public enum WebSocketMessageMethod {
     HEARTBEAT,

@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.util.Locale;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventName {
@@ -13,9 +16,8 @@ public class EventName {
     String value;
 
     public static EventName of(String name) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Event name must not be null or empty");
-        }
+        checkNotNull(name, "Event name must not be null");
+        checkArgument(!name.isBlank(), "Event name must not be blank");
 
         name = name.trim()
                 .replaceAll("[^a-zA-Z]", "_")

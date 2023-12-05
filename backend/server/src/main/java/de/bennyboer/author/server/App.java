@@ -2,15 +2,16 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
+import de.bennyboer.author.server.websocket.WebSocketEventPublisher;
 import de.bennyboer.author.server.websocket.WebSocketService;
 import de.bennyboer.author.structure.tree.api.NodeName;
 import de.bennyboer.author.structure.tree.api.TreeId;
 import de.bennyboer.author.structure.tree.api.TreeIdAndVersion;
 import de.bennyboer.author.structure.tree.api.TreeService;
+import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
@@ -20,9 +21,12 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 public class App {
 
     public static void main(String[] args) {
-        var eventSourcingRepo = new InMemoryEventSourcingRepo();
+        var webSocketService = new WebSocketService();
 
-        var treeService = new TreeService(eventSourcingRepo);
+        var eventSourcingRepo = new InMemoryEventSourcingRepo();
+        var eventPublisher = new WebSocketEventPublisher(webSocketService); // TODO Use a messaging system instead
+
+        var treeService = new TreeService(eventSourcingRepo, eventPublisher);
 
         // TODO For now that we do not have projects we need to create a tree here for testing purposes
         // TODO Remove when a tree is created as a side-effect of creating a project
@@ -36,8 +40,6 @@ public class App {
 
         var treeRestHandler = new TreeRestHandler(treeFacade);
         var structureRestRouting = new StructureRestRouting(treeRestHandler);
-
-        var webSocketService = new WebSocketService();
 
         Javalin.create(config -> {
                     config.plugins.enableCors(cors -> {

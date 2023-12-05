@@ -4,17 +4,19 @@ import {
   addNodeFailure,
   eventReceived,
   removeNodeFailure,
+  renameNodeFailure,
   swapNodesFailure,
   toggleNodeFailure,
   treeLoaded,
 } from './actions';
 import {
-  EventType,
   NodeAddedEvent,
   NodeRemovedEvent,
+  NodeRenamedEvent,
   NodesSwappedEvent,
   NodeToggledEvent,
   StructureTreeEvent,
+  StructureTreeEventType,
 } from './remote';
 import { Option } from '../../shared';
 
@@ -53,6 +55,11 @@ export const reducer = createReducer(
     ...state,
     errorMessage: `Failed to swap nodes ${nodeId1} and ${nodeId2}: ${message}`,
   })),
+
+  on(renameNodeFailure, (state, { nodeId, message }) => ({
+    ...state,
+    errorMessage: `Failed to rename node ${nodeId}: ${message}`,
+  })),
 );
 
 const applyEvent = (
@@ -62,25 +69,28 @@ const applyEvent = (
   const treeMutator = new TreeMutator(tree);
 
   switch (event.type) {
-    case EventType.NODE_ADDED:
+    case StructureTreeEventType.NODE_ADDED:
       const nodeAddedEvent = event as NodeAddedEvent;
       return treeMutator.addNode(
         nodeAddedEvent.parentNodeId,
         nodeAddedEvent.id,
         nodeAddedEvent.name,
       );
-    case EventType.NODE_REMOVED:
+    case StructureTreeEventType.NODE_REMOVED:
       const nodeRemovedEvent = event as NodeRemovedEvent;
       return treeMutator.removeNode(nodeRemovedEvent.id);
-    case EventType.NODE_TOGGLED:
+    case StructureTreeEventType.NODE_TOGGLED:
       const nodeToggledEvent = event as NodeToggledEvent;
       return treeMutator.toggleNode(nodeToggledEvent.id);
-    case EventType.NODES_SWAPPED:
+    case StructureTreeEventType.NODES_SWAPPED:
       const nodesSwappedEvent = event as NodesSwappedEvent;
       return treeMutator.swapNodes(
         nodesSwappedEvent.id1,
         nodesSwappedEvent.id2,
       );
+    case StructureTreeEventType.NODE_RENAMED:
+      const nodeRenamedEvent = event as NodeRenamedEvent;
+      return treeMutator.renameNode(nodeRenamedEvent.id, nodeRenamedEvent.name);
     default:
       return Option.none();
   }

@@ -1,9 +1,10 @@
 package de.bennyboer.author.structure;
 
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.structure.tree.api.*;
+import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.eventsourcing.api.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TreeServiceTests {
 
-    private final TreeService treeService = new TreeService(new InMemoryEventSourcingRepo());
+    private final TreeService treeService = new TreeService(new InMemoryEventSourcingRepo(), new TestEventPublisher());
 
     private final UserId userId = UserId.of("TEST_USER_ID");
 
@@ -63,8 +64,41 @@ public class TreeServiceTests {
     }
 
     @Test
+    void shouldRenameNode() {
+        // given: a tree with a root node with a child
+        var rootNodeName = NodeName.of("Alice in Wonderland");
+        var treeIdAndVersion = treeService.create(rootNodeName, userId).block();
+        var treeId = treeIdAndVersion.getId();
+        var version = treeIdAndVersion.getVersion();
+        var initialTree = treeService.get(treeId, version).block();
+        version = treeService.addNode(
+                treeId,
+                version,
+                initialTree.getRootNodeId(),
+                NodeName.of("Chapter 1"),
+                userId
+        ).block();
+        initialTree = treeService.get(treeId, version).block();
+
+        // when: the child node is renamed
+        var newName = NodeName.of("Beginning");
+        version = treeService.renameNode(
+                treeId,
+                version,
+                initialTree.getRootNode().getChildren().getFirst(),
+                newName,
+                userId
+        ).block();
+
+        // then: the child node has the new name
+        var tree = treeService.get(treeId, version).block();
+        var childNodeId = tree.getRootNode().getChildren().getFirst();
+        var childNode = tree.getNodeById(childNodeId);
+        assertEquals(Optional.of(newName), childNode.map(Node::getName));
+    }
+
+    @Test
     void shouldToggleNode() {
-        // TODO Test that a node can be collapsed and expanded again
         // given: a tree with a root node with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
         var treeIdAndVersion = treeService.create(rootNodeName, userId).block();

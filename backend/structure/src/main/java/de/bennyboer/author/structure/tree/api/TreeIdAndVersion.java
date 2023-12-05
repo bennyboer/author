@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TreeIdAndVersion {
@@ -14,12 +16,8 @@ public class TreeIdAndVersion {
     Version version;
 
     public static TreeIdAndVersion of(TreeId id, Version version) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id must not be null");
-        }
-        if (version == null) {
-            throw new IllegalArgumentException("Version must not be null");
-        }
+        checkNotNull(id, "Id must not be null");
+        checkNotNull(version, "Version must not be null");
 
         return new TreeIdAndVersion(id, version);
     }

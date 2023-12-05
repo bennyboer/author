@@ -1,5 +1,5 @@
-import { EventType } from './event-type';
+import { StructureTreeEventType } from './structure-tree-event-type';
 
 export interface StructureTreeEvent {
-  type: EventType;
+  type: StructureTreeEventType;
 }

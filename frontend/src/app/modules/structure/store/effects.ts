@@ -10,6 +10,9 @@ import {
   removeNode,
   removeNodeFailure,
   removeNodeSuccess,
+  renameNode,
+  renameNodeFailure,
+  renameNodeSuccess,
   swapNodes,
   swapNodesFailure,
   swapNodesSuccess,
@@ -68,6 +71,25 @@ export class StructureStoreEffects {
           catchError((error) =>
             of(
               removeNodeFailure({
+                nodeId: error.nodeId,
+                message: error.message,
+              }),
+            ),
+          ),
+        );
+      }),
+    ),
+  );
+
+  renameNode$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(renameNode),
+      mergeMap(({ nodeId, name }) => {
+        return this.remoteStructureTreeService.renameNode(nodeId, name).pipe(
+          map(() => renameNodeSuccess({ nodeId })),
+          catchError((error) =>
+            of(
+              renameNodeFailure({
                 nodeId: error.nodeId,
                 message: error.message,
               }),

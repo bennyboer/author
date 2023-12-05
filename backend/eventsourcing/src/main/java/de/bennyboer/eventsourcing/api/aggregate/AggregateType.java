@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.util.Locale;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AggregateType {
@@ -13,9 +16,8 @@ public class AggregateType {
     String value;
 
     public static AggregateType of(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("AggregateType must not be null or empty");
-        }
+        checkNotNull(value, "AggregateType must not be null");
+        checkArgument(!value.isBlank(), "AggregateType must not be blank");
 
         value = value.trim()
                 .replaceAll("[^a-zA-Z]", "_")

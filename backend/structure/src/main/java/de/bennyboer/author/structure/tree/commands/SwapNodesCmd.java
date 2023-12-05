@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SwapNodesCmd implements Command {
@@ -15,12 +17,8 @@ public class SwapNodesCmd implements Command {
     NodeId nodeId2;
 
     public static SwapNodesCmd of(NodeId nodeId1, NodeId nodeId2) {
-        if (nodeId1 == null) {
-            throw new IllegalArgumentException("NodeId 1 to swap must not be null");
-        }
-        if (nodeId2 == null) {
-            throw new IllegalArgumentException("NodeId 2 to swap with must not be null");
-        }
+        checkNotNull(nodeId1, "NodeId 1 to swap must not be null");
+        checkNotNull(nodeId2, "NodeId 2 to swap with must not be null");
 
         return new SwapNodesCmd(nodeId1, nodeId2);
     }

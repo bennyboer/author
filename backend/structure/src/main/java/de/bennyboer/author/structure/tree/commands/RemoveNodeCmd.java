@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RemoveNodeCmd implements Command {
@@ -13,9 +15,7 @@ public class RemoveNodeCmd implements Command {
     NodeId nodeId;
 
     public static RemoveNodeCmd of(NodeId nodeId) {
-        if (nodeId == null) {
-            throw new IllegalArgumentException("NodeId to remove must not be null");
-        }
+        checkNotNull(nodeId, "NodeId must not be null");
 
         return new RemoveNodeCmd(nodeId);
     }

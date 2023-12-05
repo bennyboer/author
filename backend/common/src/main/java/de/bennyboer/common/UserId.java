@@ -1,4 +1,4 @@
-package de.bennyboer.author.common;
+package de.bennyboer.common;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

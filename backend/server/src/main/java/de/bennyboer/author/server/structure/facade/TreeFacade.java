@@ -1,12 +1,12 @@
 package de.bennyboer.author.server.structure.facade;
 
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.structure.api.TreeDTO;
 import de.bennyboer.author.server.structure.transformer.TreeTransformer;
 import de.bennyboer.author.structure.tree.api.NodeId;
 import de.bennyboer.author.structure.tree.api.NodeName;
 import de.bennyboer.author.structure.tree.api.TreeId;
 import de.bennyboer.author.structure.tree.api.TreeService;
+import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.Version;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -63,6 +63,16 @@ public class TreeFacade {
                 Version.of(version),
                 NodeId.of(nodeId1),
                 NodeId.of(nodeId2),
+                userId
+        ).then();
+    }
+
+    public Mono<Void> renameNode(String treeId, Long treeVersion, String nodeId, String newNodeName, UserId userId) {
+        return treeService.renameNode(
+                TreeId.of(treeId),
+                Version.of(treeVersion),
+                NodeId.of(nodeId),
+                NodeName.of(newNodeName),
                 userId
         ).then();
     }

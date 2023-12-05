@@ -19,6 +19,7 @@ public class StructureRestRouting implements EndpointGroup {
             path("/nodes", () -> {
                 post("/swap", treeHandler::swapNodes);
                 path("/{nodeId}", () -> {
+                    post("/rename", treeHandler::renameNode);
                     post("/toggle", treeHandler::toggleNode);
                     post("/add-child", treeHandler::addChild);
                     delete(treeHandler::removeNode);

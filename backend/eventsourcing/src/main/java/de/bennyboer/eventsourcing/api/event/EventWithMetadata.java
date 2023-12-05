@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventWithMetadata {
@@ -14,12 +16,8 @@ public class EventWithMetadata {
     EventMetadata metadata;
 
     public static EventWithMetadata of(Event event, EventMetadata metadata) {
-        if (event == null) {
-            throw new IllegalArgumentException("Event must not be null");
-        }
-        if (metadata == null) {
-            throw new IllegalArgumentException("EventMetadata must not be null");
-        }
+        checkNotNull(event, "Event must not be null");
+        checkNotNull(metadata, "EventMetadata must not be null");
 
         return new EventWithMetadata(event, metadata);
     }

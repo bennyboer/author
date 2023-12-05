@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.websocket.messages;
+package de.bennyboer.author.server.structure.api.events;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,10 +10,10 @@ import lombok.extern.jackson.Jacksonized;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Jacksonized
-public class HeartbeatMessage {
+public class NodesSwappedEventDTO {
 
-    public static HeartbeatMessage of() {
-        return new HeartbeatMessage();
-    }
+    String nodeId1;
+
+    String nodeId2;
 
 }

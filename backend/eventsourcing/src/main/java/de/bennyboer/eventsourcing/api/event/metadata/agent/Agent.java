@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 /**
  * An agent is a user or a system that performs commands on an aggregate.
  */
@@ -16,12 +18,8 @@ public class Agent {
     AgentId id;
 
     public static Agent of(AgentType type, AgentId id) {
-        if (type == null) {
-            throw new IllegalArgumentException("AgentType must not be null");
-        }
-        if (id == null) {
-            throw new IllegalArgumentException("AgentId must not be null");
-        }
+        checkNotNull(type, "AgentType must not be null");
+        checkNotNull(id, "AgentId must not be null");
 
         return new Agent(type, id);
     }

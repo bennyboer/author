@@ -1,13 +1,16 @@
 package de.bennyboer.author.server.websocket;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import de.bennyboer.author.server.websocket.messages.WebSocketMessage;
+import de.bennyboer.author.server.websocket.api.EventMessage;
+import de.bennyboer.author.server.websocket.api.EventTopicDTO;
+import de.bennyboer.author.server.websocket.api.WebSocketMessage;
+import de.bennyboer.author.server.websocket.subscriptions.EventTopic;
+import de.bennyboer.eventsourcing.api.Version;
+import de.bennyboer.eventsourcing.api.event.EventName;
 import io.javalin.websocket.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,6 +63,42 @@ public class WebSocketService {
         onMessage(ctx, msg);
     }
 
+    public void publishEvent(
+            EventTopic eventTopic,
+            EventName eventName,
+            Version eventVersion,
+            Map<String, Object> payload
+    ) {
+        var topic = EventTopicDTO.builder()
+                .aggregateType(eventTopic.getAggregateType().getValue())
+                .aggregateId(eventTopic.getAggregateId().getValue())
+                .version(eventTopic.getVersion().getValue())
+                .build();
+
+        var msg = WebSocketMessage.event(EventMessage.of(
+                topic,
+                eventName.getValue(),
+                eventVersion.getValue(),
+                payload
+        ));
+
+        publishEventMsgToSubscribers(eventTopic, msg);
+    }
+
+    private void publishEventMsgToSubscribers(EventTopic topic, WebSocketMessage msg) {
+        var subscribers = findSubscribers(topic);
+        for (var subscriber : subscribers) {
+            subscriber.send(msg);
+        }
+    }
+
+    private List<WsContext> findSubscribers(EventTopic topic) {
+        // TODO For now we just return all sessions
+        return sessions.values()
+                .stream()
+                .toList();
+    }
+
     private void onMessage(WsContext ctx, WebSocketMessage msg) {
         switch (msg.getMethod()) {
             case HEARTBEAT -> ctx.send(WebSocketMessage.heartbeat());
@@ -73,14 +112,6 @@ public class WebSocketService {
         Optional.ofNullable(sessions.remove(sessionId))
                 .filter(ctx -> ctx.session.isOpen())
                 .ifPresent(ctx -> ctx.session.close());
-    }
-
-    private static ObjectMapper configureObjectMapper(ObjectMapper mapper) {
-        mapper.registerModule(new Jdk8Module());
-
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-        return mapper;
     }
 
 }

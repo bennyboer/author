@@ -1,7 +1,8 @@
 package de.bennyboer.author.structure.tree.api;
 
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.structure.tree.commands.*;
+import de.bennyboer.common.UserId;
+import de.bennyboer.eventsourcing.api.EventPublisher;
 import de.bennyboer.eventsourcing.api.EventSourcingService;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
@@ -21,11 +22,12 @@ public class TreeService {
 
     EventSourcingService<Tree> eventSourcingService;
 
-    public TreeService(EventSourcingRepo repo) {
+    public TreeService(EventSourcingRepo repo, EventPublisher eventPublisher) {
         this.eventSourcingService = new EventSourcingService<>(
                 Tree.TYPE,
                 Tree.init(),
                 repo,
+                eventPublisher,
                 List.of()
         );
     }
@@ -79,6 +81,10 @@ public class TreeService {
             UserId userId
     ) {
         return dispatchCommand(id, version, userId, SwapNodesCmd.of(nodeId1, nodeId2));
+    }
+
+    public Mono<Version> renameNode(TreeId treeId, Version version, NodeId first, NodeName newName, UserId userId) {
+        return dispatchCommand(treeId, version, userId, RenameNodeCmd.of(first, newName));
     }
 
     private Mono<Version> dispatchCommand(TreeId id, Version version, UserId userId, Command cmd) {

@@ -1,6 +1,7 @@
-export enum EventType {
+export enum StructureTreeEventType {
   NODE_TOGGLED = 'NODE_TOGGLED',
   NODE_ADDED = 'NODE_ADDED',
   NODE_REMOVED = 'NODE_REMOVED',
   NODES_SWAPPED = 'NODES_SWAPPED',
+  NODE_RENAMED = 'NODE_RENAMED',
 }

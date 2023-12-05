@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ToggleNodeCmd implements Command {
@@ -13,9 +15,7 @@ public class ToggleNodeCmd implements Command {
     NodeId nodeId;
 
     public static ToggleNodeCmd of(NodeId nodeId) {
-        if (nodeId == null) {
-            throw new IllegalArgumentException("NodeId to toggle must not be null");
-        }
+        checkNotNull(nodeId, "NodeId to toggle must not be null");
 
         return new ToggleNodeCmd(nodeId);
     }

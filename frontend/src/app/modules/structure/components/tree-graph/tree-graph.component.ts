@@ -28,6 +28,7 @@ import { DEFAULT_RENDER_NODE_CONFIG } from './render-node-config';
 import {
   AddNodeCommand,
   RemoveNodeCommand,
+  RenameNodeCommand,
   SwapNodesCommand,
   ToggleNodeCommand,
   TreeGraphCommand,
@@ -104,12 +105,7 @@ export class TreeGraphComponent {
   ) {}
 
   renameNode(nodeId: RenderNodeId, name: string) {
-    this.renderTree.map((tree) => {
-      const updatedTree = tree.renameNode(nodeId, name);
-      this.renderTree = Option.some(updatedTree);
-
-      this.repaint();
-    });
+    this.command.emit(new RenameNodeCommand(nodeId, name));
   }
 
   render(ctx: CanvasRenderingContext2D, viewport: Bounds): void {
@@ -372,7 +368,6 @@ export class TreeGraphComponent {
   }
 
   private addNode(nodeId: RenderNodeId) {
-    console.log('add node', nodeId);
     this.command.emit(new AddNodeCommand(nodeId, '(New node)'));
   }
 

@@ -14,4 +14,6 @@ export abstract class RemoteStructureTreeService {
   abstract removeNode(nodeId: string): Observable<void>;
 
   abstract swapNodes(nodeId1: string, nodeId2: string): Observable<void>;
+
+  abstract renameNode(nodeId: string, name: string): Observable<void>;
 }

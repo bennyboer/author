@@ -80,4 +80,8 @@ public class Node {
         return withChildren(updatedChildren);
     }
 
+    public Node rename(NodeName newNodeName) {
+        return withName(newNodeName);
+    }
+    
 }

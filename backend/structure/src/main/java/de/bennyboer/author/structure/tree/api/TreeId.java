@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.util.UUID;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TreeId {
@@ -13,9 +16,8 @@ public class TreeId {
     String value;
 
     public static TreeId of(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("TreeId must not be null or blank");
-        }
+        checkNotNull(value, "TreeId must not be null");
+        checkArgument(!value.isBlank(), "TreeId must not be blank");
 
         return new TreeId(value);
     }

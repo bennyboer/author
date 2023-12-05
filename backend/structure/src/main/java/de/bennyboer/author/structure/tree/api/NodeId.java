@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.util.UUID;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class NodeId {
@@ -13,9 +16,8 @@ public class NodeId {
     String value;
 
     public static NodeId of(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("NodeId must not be null or blank");
-        }
+        checkNotNull(value, "NodeId must not be null");
+        checkArgument(!value.isBlank(), "NodeId must not be blank");
 
         return new NodeId(value);
     }

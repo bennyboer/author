@@ -29,4 +29,8 @@ export class StructureTreeService {
   swapNodes(nodeId1: string, nodeId2: string) {
     this.store.dispatch(structureStore.actions.swapNodes({ nodeId1, nodeId2 }));
   }
+
+  renameNode(nodeId: string, name: string) {
+    this.store.dispatch(structureStore.actions.renameNode({ nodeId, name }));
+  }
 }

@@ -37,17 +37,21 @@ public class EventSourcingService<A extends Aggregate> {
 
     EventSourcingRepo repo;
 
+    EventPublisher eventPublisher;
+
     EventPatcher patcher;
 
     public EventSourcingService(
             AggregateType aggregateType,
             A initialState,
             EventSourcingRepo repo,
+            EventPublisher eventPublisher,
             List<Patch> patches
     ) {
         this.aggregateType = aggregateType;
         this.initialState = initialState;
         this.repo = repo;
+        this.eventPublisher = eventPublisher;
         this.patcher = EventPatcher.fromPatches(patches);
     }
 
@@ -90,7 +94,7 @@ public class EventSourcingService<A extends Aggregate> {
     ) {
         ApplyCommandResult result = container.getAggregate().apply(cmd);
 
-        return saveEvents(aggregateId, container, agent, result)
+        return saveAndPublishEvents(aggregateId, container, agent, result)
                 .collectList()
                 .flatMap(events -> snapshotIfNecessary(aggregateId, agent, container, events));
     }
@@ -116,7 +120,7 @@ public class EventSourcingService<A extends Aggregate> {
         var snapshotCmd = SnapshotCmd.of();
         var result = container.apply(snapshotCmd);
 
-        return saveEvents(aggregateId, container, agent, result)
+        return saveAndPublishEvents(aggregateId, container, agent, result)
                 .last()
                 .map(event -> event.getMetadata().getAggregateVersion());
     }
@@ -148,7 +152,7 @@ public class EventSourcingService<A extends Aggregate> {
                 ));
     }
 
-    private Flux<EventWithMetadata> saveEvents(
+    private Flux<EventWithMetadata> saveAndPublishEvents(
             AggregateId aggregateId,
             AggregateContainer container,
             Agent agent,
@@ -179,7 +183,12 @@ public class EventSourcingService<A extends Aggregate> {
         }
 
         return Flux.fromIterable(eventsWithMetadata)
-                .concatMap(repo::insert);
+                .concatMap(this::insertEventInRepoAndPublish);
+    }
+
+    private Mono<EventWithMetadata> insertEventInRepoAndPublish(EventWithMetadata event) {
+        return repo.insert(event)
+                .flatMap(e -> eventPublisher.publish(e).thenReturn(e));
     }
 
 }

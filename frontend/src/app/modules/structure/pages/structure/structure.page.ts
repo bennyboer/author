@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild,} from 
 import {
   AddNodeCommand,
   RemoveNodeCommand,
+  RenameNodeCommand,
   SwapNodesCommand,
   ToggleNodeCommand,
   TreeGraph,
@@ -80,8 +81,6 @@ export class StructurePage implements OnInit, OnDestroy {
     const nodes = new Map<TreeGraphNodeId, TreeGraphNode>(nodeList);
     const root = tree.rootId;
 
-    console.log(nodes, root);
-
     return {
       nodes,
       root,
@@ -119,6 +118,13 @@ export class StructurePage implements OnInit, OnDestroy {
         this.structureTreeService.swapNodes(
           swapNodesCmd.nodeId1,
           swapNodesCmd.nodeId2,
+        );
+        break;
+      case TreeGraphCommandType.RENAME_NODE:
+        const renameNodeCmd = cmd as RenameNodeCommand;
+        this.structureTreeService.renameNode(
+          renameNodeCmd.nodeId,
+          renameNodeCmd.name,
         );
         break;
     }

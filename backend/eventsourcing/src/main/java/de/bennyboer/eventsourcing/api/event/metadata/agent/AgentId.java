@@ -4,6 +4,9 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkArgument;
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AgentId {
@@ -11,9 +14,8 @@ public class AgentId {
     String value;
 
     public static AgentId of(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Value must not be null or empty");
-        }
+        checkNotNull(value, "AgentId must not be null");
+        checkArgument(!value.isBlank(), "AgentId must not be blank");
 
         return new AgentId(value);
     }

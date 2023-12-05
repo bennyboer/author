@@ -1,1 +1,5 @@
-export { WebSocketService } from './web-socket.service';
+export {
+  WebSocketService,
+  EventMessage,
+  EventTopicDTO,
+} from './web-socket.service';

@@ -3,4 +3,5 @@ export enum TreeGraphCommandType {
   ADD_NODE = 'ADD_NODE',
   REMOVE_NODE = 'REMOVE_NODE',
   SWAP_NODES = 'SWAP_NODES',
+  RENAME_NODE = 'RENAME_NODE',
 }

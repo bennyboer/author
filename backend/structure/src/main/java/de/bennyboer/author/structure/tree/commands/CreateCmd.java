@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CreateCmd implements Command {
@@ -13,9 +15,7 @@ public class CreateCmd implements Command {
     Node rootNode;
 
     public static CreateCmd of(Node rootNode) {
-        if (rootNode == null) {
-            throw new IllegalArgumentException("Root node must not be null");
-        }
+        checkNotNull(rootNode, "Root node must not be null");
 
         return new CreateCmd(rootNode);
     }

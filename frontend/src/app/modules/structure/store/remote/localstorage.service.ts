@@ -21,6 +21,7 @@ import {
 import {
   NodeAddedEvent,
   NodeRemovedEvent,
+  NodeRenamedEvent,
   NodesSwappedEvent,
   NodeToggledEvent,
   StructureTreeEvent,
@@ -29,6 +30,7 @@ import {
 export interface LocalStorageRemoteStructureTreeServiceConfig {
   delay: number;
 }
+
 export const LOCALSTORAGE_REMOTE_STRUCTURE_TREE_SERVICE_CONFIG =
   new InjectionToken<LocalStorageRemoteStructureTreeServiceConfig>(
     'LOCALSTORAGE_REMOTE_STRUCTURE_TREE_SERVICE_CONFIG',
@@ -111,6 +113,13 @@ export class LocalStorageRemoteStructureTreeService
   toggleNode(nodeId: string): Observable<void> {
     return this.updateTreeAndFireEvent(new NodeToggledEvent(nodeId), (tree) =>
       new TreeMutator(tree).toggleNode(nodeId),
+    );
+  }
+
+  override renameNode(nodeId: string, name: string): Observable<void> {
+    return this.updateTreeAndFireEvent(
+      new NodeRenamedEvent(nodeId, name),
+      (tree) => new TreeMutator(tree).renameNode(nodeId, name),
     );
   }
 

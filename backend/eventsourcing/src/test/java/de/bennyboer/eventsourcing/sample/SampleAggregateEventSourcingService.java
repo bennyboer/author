@@ -1,5 +1,6 @@
 package de.bennyboer.eventsourcing.sample;
 
+import de.bennyboer.eventsourcing.api.EventPublisher;
 import de.bennyboer.eventsourcing.api.EventSourcingService;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
@@ -24,13 +25,14 @@ public class SampleAggregateEventSourcingService {
 
     EventSourcingService<SampleAggregate> eventSourcingService;
 
-    public SampleAggregateEventSourcingService(EventSourcingRepo repo) {
+    public SampleAggregateEventSourcingService(EventSourcingRepo repo, EventPublisher eventPublisher) {
         List<Patch> patches = List.of(new CreatedEventPatch1());
 
         this.eventSourcingService = new EventSourcingService<>(
                 SampleAggregate.TYPE,
                 SampleAggregate.init(),
                 repo,
+                eventPublisher,
                 patches
         );
     }

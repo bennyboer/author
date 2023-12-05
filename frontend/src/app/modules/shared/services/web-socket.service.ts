@@ -4,6 +4,7 @@ import {
   delay,
   EMPTY,
   filter,
+  map,
   Observable,
   of,
   Subject,
@@ -23,7 +24,29 @@ enum WebSocketMessageMethod {
 
 interface HeartbeatMessage {}
 
-interface EventMessage {}
+/*
+    EventTopicDTO topic;
+
+    String eventName;
+
+    long eventVersion;
+
+    Object payload;
+ */
+
+// TODO Should not export since its a DTO
+export interface EventTopicDTO {
+  aggregateType: string;
+  aggregateId: string;
+  version: number;
+}
+
+export interface EventMessage {
+  topic: EventTopicDTO;
+  eventName: string;
+  eventVersion: number;
+  payload: any;
+}
 
 interface WebSocketMessage {
   method: WebSocketMessageMethod;
@@ -57,8 +80,12 @@ export class WebSocketService implements OnDestroy {
     this.socket$.ifSome((socket) => socket.complete());
   }
 
-  getMessages$(): Observable<WebSocketMessage> {
-    return this.messages$.asObservable();
+  // TODO Replace method with new subscribeTo(EventTopic)
+  getEvents$(): Observable<EventMessage> {
+    return this.messages$.asObservable().pipe(
+      filter((msg) => msg.method === WebSocketMessageMethod.EVENT),
+      map((msg) => msg.event!),
+    );
   }
 
   private send(msg: WebSocketMessage) {
@@ -78,7 +105,6 @@ export class WebSocketService implements OnDestroy {
       url: WS_ENDPOINT,
       openObserver: {
         next: () => {
-          console.log('WebSocket connection established');
           this.reconnectionFailures = 0;
           this.startHeartbeat();
         },

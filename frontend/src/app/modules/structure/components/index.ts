@@ -9,4 +9,5 @@ export {
   RemoveNodeCommand,
   ToggleNodeCommand,
   SwapNodesCommand,
+  RenameNodeCommand,
 } from './tree-graph/tree-graph.component';

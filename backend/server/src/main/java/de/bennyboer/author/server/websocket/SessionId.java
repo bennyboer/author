@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SessionId {
@@ -12,9 +14,7 @@ public class SessionId {
     String value;
 
     public static SessionId of(WsContext ctx) {
-        if (ctx == null) {
-            throw new IllegalArgumentException("ctx must not be null");
-        }
+        checkNotNull(ctx, "Context must not be null");
 
         return new SessionId(ctx.getSessionId());
     }

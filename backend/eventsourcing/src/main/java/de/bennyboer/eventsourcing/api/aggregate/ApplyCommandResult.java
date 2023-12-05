@@ -7,6 +7,8 @@ import lombok.Value;
 
 import java.util.List;
 
+import static de.bennyboer.common.Preconditions.checkNotNull;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApplyCommandResult {
@@ -18,9 +20,7 @@ public class ApplyCommandResult {
     List<Event> events;
 
     public static ApplyCommandResult of(List<Event> events) {
-        if (events == null) {
-            throw new IllegalArgumentException("Events must not be null");
-        }
+        checkNotNull(events, "Events must not be null");
 
         return new ApplyCommandResult(events);
     }

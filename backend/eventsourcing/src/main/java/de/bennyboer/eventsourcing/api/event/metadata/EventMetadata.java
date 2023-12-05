@@ -1,14 +1,16 @@
 package de.bennyboer.eventsourcing.api.event.metadata;
 
-import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
+import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.api.Version;
+import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import java.time.Instant;
+
+import static de.bennyboer.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -43,21 +45,11 @@ public class EventMetadata {
             Instant date,
             boolean isSnapshot
     ) {
-        if (aggregateId == null) {
-            throw new IllegalArgumentException("AggregateId must not be null");
-        }
-        if (aggregateType == null) {
-            throw new IllegalArgumentException("AggregateType must not be null");
-        }
-        if (aggregateVersion == null) {
-            throw new IllegalArgumentException("Version must not be null");
-        }
-        if (agent == null) {
-            throw new IllegalArgumentException("Agent must not be null");
-        }
-        if (date == null) {
-            throw new IllegalArgumentException("Date must not be null");
-        }
+        checkNotNull(aggregateId, "AggregateId must not be null");
+        checkNotNull(aggregateType, "AggregateType must not be null");
+        checkNotNull(aggregateVersion, "Version must not be null");
+        checkNotNull(agent, "Agent must not be null");
+        checkNotNull(date, "Date must not be null");
 
         return new EventMetadata(
                 aggregateId,

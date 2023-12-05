@@ -1,9 +1,10 @@
 package de.bennyboer.author.server.structure.rest;
 
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
+import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
+import de.bennyboer.common.UserId;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
@@ -46,6 +47,18 @@ public class TreeRestHandler {
         var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
 
         ctx.future(() -> facade.addNode(treeId, treeVersion, parentNodeId, request.getName(), userId)
+                .toFuture()
+                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+    }
+
+    public void renameNode(Context ctx) {
+        var treeId = ctx.pathParam("treeId");
+        var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
+        var nodeId = ctx.pathParam("nodeId");
+        var request = ctx.bodyAsClass(RenameNodeRequest.class);
+        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+
+        ctx.future(() -> facade.renameNode(treeId, treeVersion, nodeId, request.getName(), userId)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }

@@ -9,8 +9,10 @@ import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentId;
 import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentType;
 import de.bennyboer.eventsourcing.api.persistence.EventSourcingRepo;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.eventsourcing.api.testing.TestEventPublisher;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.eventsourcing.sample.events.CreatedEvent;
+import de.bennyboer.eventsourcing.sample.events.CreatedEvent2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -23,8 +25,12 @@ public class SampleAggregateTests {
 
     private final EventSourcingRepo repo = new InMemoryEventSourcingRepo();
 
-    private final SampleAggregateEventSourcingService eventSourcingService =
-            new SampleAggregateEventSourcingService(repo);
+    private final TestEventPublisher eventPublisher = new TestEventPublisher();
+
+    private final SampleAggregateEventSourcingService eventSourcingService = new SampleAggregateEventSourcingService(
+            repo,
+            eventPublisher
+    );
 
     @Test
     void shouldCreate() {
@@ -42,6 +48,24 @@ public class SampleAggregateTests {
 
         // and: the version is 0
         assertEquals(0, version);
+
+        // and: an event has been published
+        var events = eventPublisher.findEventsByName(CreatedEvent.NAME);
+        assertEquals(1, events.size());
+        EventWithMetadata eventWithMetadata = events.getFirst();
+
+        var metadata = eventWithMetadata.getMetadata();
+        assertEquals(id, metadata.getAggregateId().getValue());
+        assertEquals(SampleAggregate.TYPE, metadata.getAggregateType());
+        assertEquals(Version.zero(), metadata.getAggregateVersion());
+        assertEquals(AgentType.USER, metadata.getAgent().getType());
+        assertEquals("USER_ID", metadata.getAgent().getId().getValue());
+
+        var event = eventWithMetadata.getEvent();
+        assertInstanceOf(CreatedEvent2.class, event);
+        var createdEvent = (CreatedEvent2) event;
+        assertEquals("Test title", createdEvent.getTitle());
+        assertEquals("Test description", createdEvent.getDescription());
     }
 
     @Test

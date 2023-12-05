@@ -1,13 +1,23 @@
 import { RemoteStructureTreeService } from './remote.service';
-import { EMPTY, map, Observable, tap } from 'rxjs';
-import { StructureTreeEvent } from './events';
+import { filter, map, Observable, Subject, takeUntil, tap } from 'rxjs';
+import {
+  NodeAddedEvent,
+  NodeRemovedEvent,
+  NodeRenamedEvent,
+  NodesSwappedEvent,
+  NodeToggledEvent,
+  StructureTreeEvent,
+  StructureTreeEventType,
+} from './events';
 import {
   StructureTree,
   StructureTreeNode,
   StructureTreeNodeLookup,
 } from '../state';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { WebSocketService } from '../../../shared';
+import { EventMessage } from '../../../shared/services';
 
 interface AddChildRequest {
   name: string;
@@ -16,6 +26,10 @@ interface AddChildRequest {
 interface SwapNodesRequest {
   nodeId1: string;
   nodeId2: string;
+}
+
+interface RenameNodeRequest {
+  name: string;
 }
 
 type NodeId = string;
@@ -38,13 +52,44 @@ interface NodeDTO {
 
 @Injectable()
 export class BackendRemoteStructureTreeService
-  implements RemoteStructureTreeService
+  implements RemoteStructureTreeService, OnDestroy
 {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = 'f69481b7-c8c0-43d7-9c12-31285f977301'; // TODO Taken from server log
+  private readonly treeId: string = '5a9fbdf9-bb43-434b-9e6f-aeb98ba04a5b'; // TODO Taken from server log
+  private readonly events$: Subject<StructureTreeEvent> =
+    new Subject<StructureTreeEvent>();
+  private readonly destroy$: Subject<void> = new Subject<void>();
   private version: number = 0;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly webSocketService: WebSocketService,
+  ) {
+    // TODO Implement websocket reconnection behavior (load tree again and update correct version to resync)
+    this.webSocketService
+      .getEvents$()
+      .pipe(
+        // TODO filter on aggregate type and id is no more needed when having a subscribeTo(EventTopic) method in the websocket service
+        filter(
+          (msg) =>
+            msg.topic.aggregateType === 'TREE' &&
+            msg.topic.aggregateId === this.treeId,
+        ),
+        tap((msg) => {
+          this.version = msg.topic.version;
+        }),
+        map((msg) => this.mapToStructureTreeEvent(msg)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((event) => this.events$.next(event));
+  }
+
+  ngOnDestroy() {
+    this.events$.complete();
+
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   addNode(parentNodeId: string, name: string): Observable<void> {
     const request: AddChildRequest = { name };
@@ -60,8 +105,7 @@ export class BackendRemoteStructureTreeService
   }
 
   getEvents(): Observable<StructureTreeEvent> {
-    return EMPTY; // TODO Take events from websocket
-    // TODO Update version on events
+    return this.events$.asObservable();
   }
 
   getTree(): Observable<StructureTree> {
@@ -80,12 +124,11 @@ export class BackendRemoteStructureTreeService
   }
 
   swapNodes(nodeId1: string, nodeId2: string): Observable<void> {
+    const request: SwapNodesRequest = { nodeId1, nodeId2 };
+
     return this.http.post<void>(
       this.url(`${this.treeId}/nodes/swap`),
-      {
-        nodeId1,
-        nodeId2,
-      },
+      request,
       {
         params: {
           version: this.version,
@@ -95,11 +138,23 @@ export class BackendRemoteStructureTreeService
   }
 
   toggleNode(nodeId: string): Observable<void> {
-    console.log(this.version);
-
     return this.http.post<void>(
       this.url(`${this.treeId}/nodes/${nodeId}/toggle`),
       {},
+      {
+        params: {
+          version: this.version,
+        },
+      },
+    );
+  }
+
+  renameNode(nodeId: string, name: string): Observable<void> {
+    const request: RenameNodeRequest = { name };
+
+    return this.http.post<void>(
+      this.url(`${this.treeId}/nodes/${nodeId}/rename`),
+      request,
       {
         params: {
           version: this.version,
@@ -140,5 +195,48 @@ export class BackendRemoteStructureTreeService
       expanded: node.expanded,
       children: node.children,
     };
+  }
+
+  private mapToStructureTreeEvent(msg: EventMessage): StructureTreeEvent {
+    const type = this.mapToStructureTreeEventType(msg.eventName);
+    const payload = msg.payload;
+
+    switch (type) {
+      case StructureTreeEventType.NODE_ADDED:
+        return new NodeAddedEvent(
+          payload.parentNodeId,
+          payload.newNodeId,
+          payload.newNodeName,
+        );
+      case StructureTreeEventType.NODE_REMOVED:
+        return new NodeRemovedEvent(payload.nodeId);
+      case StructureTreeEventType.NODES_SWAPPED:
+        return new NodesSwappedEvent(payload.nodeId1, payload.nodeId2);
+      case StructureTreeEventType.NODE_TOGGLED:
+        return new NodeToggledEvent(payload.nodeId);
+      case StructureTreeEventType.NODE_RENAMED:
+        return new NodeRenamedEvent(payload.nodeId, payload.newNodeName);
+      default:
+        throw new Error(`Unknown event type: ${type}`);
+    }
+  }
+
+  private mapToStructureTreeEventType(
+    eventName: string,
+  ): StructureTreeEventType {
+    switch (eventName) {
+      case 'NODE_ADDED':
+        return StructureTreeEventType.NODE_ADDED;
+      case 'NODE_REMOVED':
+        return StructureTreeEventType.NODE_REMOVED;
+      case 'NODES_SWAPPED':
+        return StructureTreeEventType.NODES_SWAPPED;
+      case 'NODE_TOGGLED':
+        return StructureTreeEventType.NODE_TOGGLED;
+      case 'NODE_RENAMED':
+        return StructureTreeEventType.NODE_RENAMED;
+      default:
+        throw new Error(`Unknown event name: ${eventName}`);
+    }
   }
 }

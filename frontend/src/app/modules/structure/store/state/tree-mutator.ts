@@ -86,6 +86,25 @@ export class TreeMutator {
     });
   }
 
+  renameNode(nodeId: string, name: string): Option<StructureTree> {
+    return this.findNodeById(nodeId).map((node) => {
+      const updatedNodes = {
+        ...this.tree.nodes,
+      };
+
+      updatedNodes[nodeId] = {
+        ...node,
+        name: name,
+      };
+
+      return {
+        ...this.tree,
+        nodes: updatedNodes,
+        version: this.tree.version + 1,
+      };
+    });
+  }
+
   swapNodes(nodeId1: string, nodeId2: string): Option<StructureTree> {
     if (
       this.isAncestor(nodeId1, nodeId2) ||
