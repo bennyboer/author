@@ -15,3 +15,17 @@ application {
     // Define the main class for the application.
     mainClass = 'de.bennyboer.author.server.App'
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': application.mainClass
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
