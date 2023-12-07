@@ -2,6 +2,7 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import de.bennyboer.author.server.messaging.MessagingPlugin;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
@@ -42,6 +43,8 @@ public class App {
         var structureRestRouting = new StructureRestRouting(treeRestHandler);
 
         Javalin.create(config -> {
+                    config.plugins.register(new MessagingPlugin());
+
                     config.plugins.enableCors(cors -> {
                         cors.add(it -> {
                             it.anyHost(); // TODO Restrict to frontend host and only allow for DEV build

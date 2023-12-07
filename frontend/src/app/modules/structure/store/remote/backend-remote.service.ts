@@ -55,7 +55,7 @@ export class BackendRemoteStructureTreeService
   implements RemoteStructureTreeService, OnDestroy
 {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = '5a9fbdf9-bb43-434b-9e6f-aeb98ba04a5b'; // TODO Taken from server log
+  private readonly treeId: string = '363ddb52-6118-435c-a64b-b37e67ce925f'; // TODO Taken from server log
   private readonly events$: Subject<StructureTreeEvent> =
     new Subject<StructureTreeEvent>();
   private readonly destroy$: Subject<void> = new Subject<void>();
