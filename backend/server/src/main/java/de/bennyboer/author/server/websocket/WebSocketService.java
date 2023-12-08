@@ -6,8 +6,8 @@ import de.bennyboer.author.server.websocket.subscriptions.SubscriptionManager;
 import de.bennyboer.author.server.websocket.subscriptions.SubscriptionTarget;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.EventName;
+import io.javalin.json.JsonMapper;
 import io.javalin.websocket.*;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -15,12 +15,15 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@AllArgsConstructor
 public class WebSocketService {
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
-    private final SubscriptionManager subscriptionManager = new SubscriptionManager();
+    private final SubscriptionManager subscriptionManager;
+
+    public WebSocketService(JsonMapper jsonMapper) {
+        subscriptionManager = new SubscriptionManager(jsonMapper, this::publishEvent);
+    }
 
     public void onConnect(WsConnectContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
