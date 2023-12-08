@@ -4,9 +4,11 @@ import {
   delay,
   EMPTY,
   filter,
+  finalize,
   map,
   Observable,
   of,
+  startWith,
   Subject,
   Subscription,
   takeUntil,
@@ -20,19 +22,24 @@ const WS_ENDPOINT: string = 'ws://localhost:7070/ws'; // TODO determine protocol
 enum WebSocketMessageMethod {
   HEARTBEAT = 'HEARTBEAT',
   EVENT = 'EVENT',
+  SUBSCRIBE = 'SUBSCRIBE',
+  UNSUBSCRIBE = 'UNSUBSCRIBE',
+}
+
+interface SubscriptionTarget {
+  aggregateType: string;
+  aggregateId?: string;
 }
 
 interface HeartbeatMessage {}
 
-/*
-    EventTopicDTO topic;
+interface SubscribeMessage {
+  target: SubscriptionTarget;
+}
 
-    String eventName;
-
-    long eventVersion;
-
-    Object payload;
- */
+interface UnsubscribeMessage {
+  target: SubscriptionTarget;
+}
 
 // TODO Should not export since its a DTO
 export interface EventTopicDTO {
@@ -52,6 +59,8 @@ interface WebSocketMessage {
   method: WebSocketMessageMethod;
   heartbeat?: HeartbeatMessage;
   event?: EventMessage;
+  subscribe?: SubscribeMessage;
+  unsubscribe?: UnsubscribeMessage;
 }
 
 const HEARTBEAT_INTERVAL_MS: number = 5000;
@@ -62,12 +71,14 @@ const HEARTBEAT_TIMEOUT_MS: number = 10000;
 })
 export class WebSocketService implements OnDestroy {
   private socket$: Option<Subject<WebSocketMessage>> = Option.none();
+  private reconnect$: Subject<void> = new Subject<void>();
   private readonly messages$: Subject<WebSocketMessage> =
     new Subject<WebSocketMessage>();
   private readonly destroy$: Subject<void> = new Subject<void>();
   private reconnectionFailures: number = 0;
   private heartbeatSub: Option<Subscription> = Option.none();
   private heartbeatTimeoutSub: Option<Subscription> = Option.none();
+  private isConnected: boolean = false;
 
   constructor() {
     this.connect();
@@ -80,8 +91,63 @@ export class WebSocketService implements OnDestroy {
     this.socket$.ifSome((socket) => socket.complete());
   }
 
-  // TODO Replace method with new subscribeTo(EventTopic)
-  getEvents$(): Observable<EventMessage> {
+  subscribeTo(
+    aggregateType: string,
+    aggregateId: string,
+  ): Observable<EventMessage> {
+    const subscribeMsg: SubscribeMessage = {
+      target: {
+        aggregateType,
+        aggregateId,
+      },
+    };
+    const msg: WebSocketMessage = {
+      method: WebSocketMessageMethod.SUBSCRIBE,
+      subscribe: subscribeMsg,
+    };
+
+    this.send(msg);
+
+    return this.getEvents$().pipe(
+      filter(
+        (event) =>
+          event.topic.aggregateType === aggregateType &&
+          event.topic.aggregateId === aggregateId,
+      ),
+      finalize(() => this.unsubscribe(aggregateType, aggregateId)),
+    );
+  }
+
+  /**
+   * Events are sent immediately after (re)connecting to the WebSocket.
+   * If the socket is already connected an initial event is sent immediately.
+   */
+  onConnected$(): Observable<any> {
+    const result$ = this.reconnect$.asObservable();
+
+    if (this.isConnected) {
+      return result$.pipe(startWith(null)); // Send initial event immediately
+    }
+
+    return result$;
+  }
+
+  private unsubscribe(aggregateType: string, aggregateId: string) {
+    const unsubscribeMsg: UnsubscribeMessage = {
+      target: {
+        aggregateType,
+        aggregateId,
+      },
+    };
+    const msg: WebSocketMessage = {
+      method: WebSocketMessageMethod.UNSUBSCRIBE,
+      unsubscribe: unsubscribeMsg,
+    };
+
+    this.send(msg);
+  }
+
+  private getEvents$(): Observable<EventMessage> {
     return this.messages$.asObservable().pipe(
       filter((msg) => msg.method === WebSocketMessageMethod.EVENT),
       map((msg) => msg.event!),
@@ -107,6 +173,8 @@ export class WebSocketService implements OnDestroy {
         next: () => {
           this.reconnectionFailures = 0;
           this.startHeartbeat();
+          this.reconnect$.next();
+          this.isConnected = true;
         },
       },
       closeObserver: {
@@ -116,6 +184,8 @@ export class WebSocketService implements OnDestroy {
           );
           this.stopHeartbeat();
           this.socket$ = Option.none();
+          this.isConnected = false;
+
           const backoff = Math.pow(2, this.reconnectionFailures) * 1000;
           this.reconnectionFailures++;
           of(1)

@@ -1,16 +1,15 @@
 package de.bennyboer.author.server.websocket;
 
-import de.bennyboer.author.server.websocket.api.EventMessage;
-import de.bennyboer.author.server.websocket.api.EventTopicDTO;
-import de.bennyboer.author.server.websocket.api.WebSocketMessage;
+import de.bennyboer.author.server.websocket.api.*;
 import de.bennyboer.author.server.websocket.subscriptions.EventTopic;
+import de.bennyboer.author.server.websocket.subscriptions.SubscriptionManager;
+import de.bennyboer.author.server.websocket.subscriptions.SubscriptionTarget;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.EventName;
 import io.javalin.websocket.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +20,8 @@ public class WebSocketService {
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
+    private final SubscriptionManager subscriptionManager = new SubscriptionManager();
+
     public void onConnect(WsConnectContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
         sessions.put(sessionId, ctx);
@@ -30,6 +31,7 @@ public class WebSocketService {
     public void onClose(WsCloseContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
         closeSessionIfOpen(sessionId);
+        subscriptionManager.unsubscribeFromAllTargets(sessionId);
 
         log.debug(
                 "Closed WebSocket for session ID '{}' with status code '{}' and reason '{}'",
@@ -86,26 +88,37 @@ public class WebSocketService {
     }
 
     private void publishEventMsgToSubscribers(EventTopic topic, WebSocketMessage msg) {
-        var subscribers = findSubscribers(topic);
-        for (var subscriber : subscribers) {
+        for (var subscriber : findSubscribers(topic)) {
             subscriber.send(msg);
         }
     }
 
-    private List<WsContext> findSubscribers(EventTopic topic) {
-        // TODO For now we just return all sessions
-        return sessions.values()
+    private Iterable<WsContext> findSubscribers(EventTopic topic) {
+        SubscriptionTarget target = topic.toSubscriptionTarget();
+
+        return subscriptionManager.getSubscribers(target)
                 .stream()
+                .flatMap(sessionId -> Optional.ofNullable(sessions.get(sessionId)).stream())
                 .toList();
     }
 
     private void onMessage(WsContext ctx, WebSocketMessage msg) {
         switch (msg.getMethod()) {
             case HEARTBEAT -> ctx.send(WebSocketMessage.heartbeat());
+            case SUBSCRIBE -> subscribe(ctx, msg.getSubscribe().orElseThrow());
+            case UNSUBSCRIBE -> unsubscribe(ctx, msg.getUnsubscribe().orElseThrow());
             default -> throw new IllegalArgumentException(
                     "Encountered message with unsupported method from client" + msg.getMethod()
             );
         }
+    }
+
+    private void subscribe(WsContext ctx, SubscribeMessage msg) {
+        subscriptionManager.subscribe(msg.getTarget(), SessionId.of(ctx));
+    }
+
+    private void unsubscribe(WsContext ctx, UnsubscribeMessage msg) {
+        subscriptionManager.unsubscribe(msg.getTarget(), SessionId.of(ctx));
     }
 
     private void closeSessionIfOpen(SessionId sessionId) {

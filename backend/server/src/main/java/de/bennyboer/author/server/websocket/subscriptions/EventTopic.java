@@ -27,4 +27,8 @@ public class EventTopic {
         return new EventTopic(aggregateType, aggregateId, version);
     }
 
+    public SubscriptionTarget toSubscriptionTarget() {
+        return SubscriptionTarget.of(aggregateType, aggregateId);
+    }
+
 }

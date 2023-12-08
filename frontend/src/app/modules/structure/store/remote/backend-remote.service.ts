@@ -1,5 +1,5 @@
 import { RemoteStructureTreeService } from './remote.service';
-import { filter, map, Observable, Subject, takeUntil, tap } from 'rxjs';
+import { map, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import {
   NodeAddedEvent,
   NodeRemovedEvent,
@@ -55,9 +55,10 @@ export class BackendRemoteStructureTreeService
   implements RemoteStructureTreeService, OnDestroy
 {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = '363ddb52-6118-435c-a64b-b37e67ce925f'; // TODO Taken from server log
+  private readonly treeId: string = '86312cd5-39c2-4b2e-b315-547f07e0acc1'; // TODO Taken from server log
   private readonly events$: Subject<StructureTreeEvent> =
     new Subject<StructureTreeEvent>();
+  private readonly tree$: Subject<StructureTree> = new Subject<StructureTree>();
   private readonly destroy$: Subject<void> = new Subject<void>();
   private version: number = 0;
 
@@ -65,16 +66,21 @@ export class BackendRemoteStructureTreeService
     private readonly http: HttpClient,
     private readonly webSocketService: WebSocketService,
   ) {
-    // TODO Implement websocket reconnection behavior (load tree again and update correct version to resync)
     this.webSocketService
-      .getEvents$()
+      .onConnected$()
       .pipe(
-        // TODO filter on aggregate type and id is no more needed when having a subscribeTo(EventTopic) method in the websocket service
-        filter(
-          (msg) =>
-            msg.topic.aggregateType === 'TREE' &&
-            msg.topic.aggregateId === this.treeId,
-        ),
+        switchMap(() => {
+          return this.http.get<TreeDTO>(this.url(this.treeId)).pipe(
+            map((tree) => this.mapToStructureTree(tree)),
+            tap((tree) => {
+              this.version = tree.version;
+              this.tree$.next(tree);
+            }),
+            switchMap((tree) =>
+              this.webSocketService.subscribeTo('TREE', this.treeId),
+            ),
+          );
+        }),
         tap((msg) => {
           this.version = msg.topic.version;
         }),
@@ -86,6 +92,7 @@ export class BackendRemoteStructureTreeService
 
   ngOnDestroy() {
     this.events$.complete();
+    this.tree$.complete();
 
     this.destroy$.next();
     this.destroy$.complete();
@@ -109,10 +116,7 @@ export class BackendRemoteStructureTreeService
   }
 
   getTree(): Observable<StructureTree> {
-    return this.http.get<TreeDTO>(this.url(this.treeId)).pipe(
-      map((tree) => this.mapToStructureTree(tree)),
-      tap((tree) => (this.version = tree.version)),
-    );
+    return this.tree$.asObservable();
   }
 
   removeNode(nodeId: string): Observable<void> {

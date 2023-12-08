@@ -24,10 +24,18 @@ public class WebSocketMessage {
     @Nullable
     EventMessage event;
 
+    @Nullable
+    SubscribeMessage subscribe;
+
+    @Nullable
+    UnsubscribeMessage unsubscribe;
+
     public static WebSocketMessage heartbeat() {
         return new WebSocketMessage(
                 WebSocketMessageMethod.HEARTBEAT,
                 HeartbeatMessage.of(),
+                null,
+                null,
                 null
         );
     }
@@ -36,7 +44,9 @@ public class WebSocketMessage {
         return new WebSocketMessage(
                 WebSocketMessageMethod.EVENT,
                 null,
-                event
+                event,
+                null,
+                null
         );
     }
 
@@ -45,6 +55,8 @@ public class WebSocketMessage {
         return switch (method) {
             case HEARTBEAT -> heartbeat != null;
             case EVENT -> event != null;
+            case SUBSCRIBE -> subscribe != null;
+            case UNSUBSCRIBE -> unsubscribe != null;
         };
     }
 
@@ -54,6 +66,14 @@ public class WebSocketMessage {
 
     public Optional<EventMessage> getEvent() {
         return Optional.ofNullable(event);
+    }
+
+    public Optional<SubscribeMessage> getSubscribe() {
+        return Optional.ofNullable(subscribe);
+    }
+
+    public Optional<UnsubscribeMessage> getUnsubscribe() {
+        return Optional.ofNullable(unsubscribe);
     }
 
 }

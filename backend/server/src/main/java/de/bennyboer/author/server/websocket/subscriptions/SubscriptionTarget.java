@@ -27,4 +27,9 @@ public class SubscriptionTarget {
         return new SubscriptionTarget(aggregateType, aggregateId);
     }
 
+    @Override
+    public String toString() {
+        return String.format("SubscriptionTarget(%s, %s)", aggregateType, aggregateId);
+    }
+
 }
