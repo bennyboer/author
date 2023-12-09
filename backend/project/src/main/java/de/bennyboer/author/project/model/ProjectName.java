@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.api;
+package de.bennyboer.author.project.model;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -9,20 +9,20 @@ import static de.bennyboer.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class NodeName {
+public class ProjectName {
 
     String value;
 
-    public static NodeName of(String value) {
-        checkNotNull(value, "NodeName must not be null");
-        checkArgument(!value.isBlank(), "NodeName must not be blank");
+    public static ProjectName of(String value) {
+        checkNotNull(value, "ProjectName must not be null");
+        checkArgument(!value.isBlank(), "ProjectName must not be blank");
 
-        return new NodeName(value);
+        return new ProjectName(value);
     }
 
     @Override
     public String toString() {
-        return String.format("NodeName(%s)", value);
+        return String.format("ProjectName(%s)", value);
     }
 
 }

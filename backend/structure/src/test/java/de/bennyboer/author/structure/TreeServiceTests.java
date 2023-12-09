@@ -1,6 +1,6 @@
 package de.bennyboer.author.structure;
 
-import de.bennyboer.author.structure.tree.api.*;
+import de.bennyboer.author.structure.tree.model.*;
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;

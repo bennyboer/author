@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.api;
+package de.bennyboer.author.structure.tree.model;
 
 import de.bennyboer.author.structure.tree.commands.*;
 import de.bennyboer.common.UserId;

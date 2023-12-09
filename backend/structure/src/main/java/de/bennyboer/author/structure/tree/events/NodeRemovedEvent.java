@@ -1,7 +1,7 @@
 package de.bennyboer.author.structure.tree.events;
 
 import de.bennyboer.author.structure.tree.commands.RemoveNodeCmd;
-import de.bennyboer.author.structure.tree.api.NodeId;
+import de.bennyboer.author.structure.tree.model.NodeId;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.Event;
 import de.bennyboer.eventsourcing.api.event.EventName;

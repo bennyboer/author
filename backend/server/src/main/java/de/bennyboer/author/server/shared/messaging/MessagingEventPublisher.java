@@ -2,7 +2,7 @@ package de.bennyboer.author.server.shared.messaging;
 
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.structure.tree.api.Tree;
+import de.bennyboer.author.structure.tree.model.Tree;
 import de.bennyboer.eventsourcing.api.EventPublisher;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.api.event.Event;

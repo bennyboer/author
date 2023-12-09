@@ -2,10 +2,10 @@ package de.bennyboer.author.server.structure.facade;
 
 import de.bennyboer.author.server.structure.api.TreeDTO;
 import de.bennyboer.author.server.structure.transformer.TreeTransformer;
-import de.bennyboer.author.structure.tree.api.NodeId;
-import de.bennyboer.author.structure.tree.api.NodeName;
-import de.bennyboer.author.structure.tree.api.TreeId;
-import de.bennyboer.author.structure.tree.api.TreeService;
+import de.bennyboer.author.structure.tree.model.NodeId;
+import de.bennyboer.author.structure.tree.model.NodeName;
+import de.bennyboer.author.structure.tree.model.TreeId;
+import de.bennyboer.author.structure.tree.model.TreeService;
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.Version;
 import lombok.AllArgsConstructor;

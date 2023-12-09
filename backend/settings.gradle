@@ -9,8 +9,9 @@ plugins {
 
 rootProject.name = 'backend'
 include(
-        'server',
+        'common',
         'eventsourcing',
+        'project',
+        'server',
         'structure',
-        'common'
 )

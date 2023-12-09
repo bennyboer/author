@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.api;
+package de.bennyboer.author.structure.tree.model;
 
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
@@ -83,5 +83,5 @@ public class Node {
     public Node rename(NodeName newNodeName) {
         return withName(newNodeName);
     }
-    
+
 }

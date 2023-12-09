@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.api;
+package de.bennyboer.author.structure.tree.model;
 
 import de.bennyboer.author.structure.tree.commands.*;
 import de.bennyboer.author.structure.tree.events.*;
@@ -196,7 +196,7 @@ public class Tree implements Aggregate {
         if (nodeId1.equals(rootNodeId) || nodeId2.equals(rootNodeId)) {
             return true;
         }
-        
+
         return isChildOf(nodeId1, nodeId2) || isChildOf(nodeId2, nodeId1);
     }
 

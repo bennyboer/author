@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.structure.transformer;
 
 import de.bennyboer.author.server.structure.api.TreeDTO;
-import de.bennyboer.author.structure.tree.api.Tree;
+import de.bennyboer.author.structure.tree.model.Tree;
 
 public class TreeTransformer {
 

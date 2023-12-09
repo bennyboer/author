@@ -1,4 +1,4 @@
-package de.bennyboer.author.structure.tree.api;
+package de.bennyboer.author.project.model;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -11,24 +11,24 @@ import static de.bennyboer.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TreeId {
+public class ProjectId {
 
     String value;
 
-    public static TreeId of(String value) {
-        checkNotNull(value, "TreeId must not be null");
-        checkArgument(!value.isBlank(), "TreeId must not be blank");
+    public static ProjectId of(String value) {
+        checkNotNull(value, "ProjectId must not be null");
+        checkArgument(!value.isBlank(), "ProjectId must not be blank");
 
-        return new TreeId(value);
+        return new ProjectId(value);
     }
 
-    public static TreeId create() {
+    public static ProjectId create() {
         return of(UUID.randomUUID().toString());
     }
 
     @Override
     public String toString() {
-        return String.format("TreeId(%s)", value);
+        return String.format("ProjectId(%s)", value);
     }
 
 }

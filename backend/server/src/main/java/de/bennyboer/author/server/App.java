@@ -9,7 +9,7 @@ import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.structure.tree.api.*;
+import de.bennyboer.author.structure.tree.model.*;
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
