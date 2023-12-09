@@ -1,6 +1,6 @@
-package de.bennyboer.author.server.websocket.api;
+package de.bennyboer.author.server.shared.websocket.api;
 
-import de.bennyboer.author.server.websocket.subscriptions.SubscriptionTarget;
+import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +19,7 @@ public class SubscribeMessage {
 
     public static SubscribeMessage of(SubscriptionTarget target) {
         checkNotNull(target, "target must not be null");
-        
+
         return new SubscribeMessage(target);
     }
 

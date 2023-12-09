@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.websocket;
+package de.bennyboer.author.server.shared.websocket;
 
 import io.javalin.websocket.WsContext;
 import lombok.AccessLevel;

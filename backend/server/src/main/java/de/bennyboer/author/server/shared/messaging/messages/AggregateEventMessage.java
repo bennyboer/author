@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.messaging.messages;
+package de.bennyboer.author.server.shared.messaging.messages;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

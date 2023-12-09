@@ -2,21 +2,20 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import de.bennyboer.author.server.messaging.MessagingEventPublisher;
-import de.bennyboer.author.server.messaging.MessagingPlugin;
+import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
+import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
-import de.bennyboer.author.server.websocket.WebSocketService;
-import de.bennyboer.author.structure.tree.api.NodeName;
-import de.bennyboer.author.structure.tree.api.TreeId;
-import de.bennyboer.author.structure.tree.api.TreeIdAndVersion;
-import de.bennyboer.author.structure.tree.api.TreeService;
+import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
+import de.bennyboer.author.structure.tree.api.*;
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
+import io.javalin.plugin.bundled.CorsPluginConfig;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
@@ -28,25 +27,25 @@ public class App {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         });
 
-        var webSocketService = new WebSocketService(jsonMapper);
+        var messaging = new Messaging();
+        messaging.registerAggregateType(Tree.TYPE);
 
         var eventSourcingRepo = new InMemoryEventSourcingRepo();
-        var newEventPublisher = new MessagingEventPublisher(jsonMapper);
-        // TODO Setup Message Listener to call webSocketService publishEvent
+        var eventPublisher = new MessagingEventPublisher(messaging, jsonMapper);
+        eventPublisher.registerAggregateEventPayloadTransformer(Tree.TYPE, TreeEventTransformer::toApi);
 
-        var treeService = new TreeService(eventSourcingRepo, newEventPublisher);
+        var webSocketService = new WebSocketService(messaging, jsonMapper);
+
+        var treeService = new TreeService(eventSourcingRepo, eventPublisher);
         var treeFacade = new TreeFacade(treeService);
 
         var treeRestHandler = new TreeRestHandler(treeFacade);
         var structureRestRouting = new StructureRestRouting(treeRestHandler);
 
         Javalin.create(config -> {
-                    config.plugins.register(new MessagingPlugin());
-
                     config.plugins.enableCors(cors -> {
-                        cors.add(it -> {
-                            it.anyHost(); // TODO Restrict to frontend host and only allow for DEV build
-                        });
+                        // TODO Restrict to frontend host and only allow for DEV build
+                        cors.add(CorsPluginConfig::anyHost);
                     });
 
                     config.jsonMapper(jsonMapper);
@@ -63,15 +62,18 @@ public class App {
                         path("/structure", structureRestRouting);
                     });
                 })
-                .events(event -> event.serverStarted(() -> {
-                    // TODO For now that we do not have projects we need to create a tree here for testing purposes
-                    // TODO Remove when a tree is created as a side-effect of creating a project
-                    var testTreeId = treeService.create(NodeName.of("Root"), UserId.of("TEST_USER_ID"))
-                            .map(TreeIdAndVersion::getId)
-                            .map(TreeId::getValue)
-                            .block();
-                    System.out.println("Test tree ID: " + testTreeId);
-                }))
+                .events(event -> {
+                    event.serverStarted(() -> {
+                        // TODO For now that we do not have projects we need to create a tree here for testing purposes
+                        // TODO Remove when a tree is created as a side-effect of creating a project
+                        var testTreeId = treeService.create(NodeName.of("Root"), UserId.of("TEST_USER_ID"))
+                                .map(TreeIdAndVersion::getId)
+                                .map(TreeId::getValue)
+                                .block();
+                        System.out.println("Test tree ID: " + testTreeId);
+                    });
+                    event.serverStopping(messaging::stop);
+                })
                 .start(7070);
     }
 

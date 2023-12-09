@@ -1,5 +1,7 @@
-package de.bennyboer.author.server.messaging;
+package de.bennyboer.author.server.shared.messaging;
 
+import de.bennyboer.author.structure.tree.api.Tree;
+import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
@@ -7,7 +9,10 @@ import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 
 import javax.jms.JMSContext;
-import java.util.Optional;
+import javax.jms.Topic;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Since the server is currently not expected to face any severe load
@@ -16,7 +21,7 @@ import java.util.Optional;
  * an external message broker cluster.
  */
 @Slf4j
-public class EmbeddedMessageBroker {
+public class Messaging {
 
     private static final String BROKER_URI = "vm://0";
 
@@ -26,25 +31,22 @@ public class EmbeddedMessageBroker {
 
     private JMSContext ctx;
 
-    public EmbeddedMessageBroker() {
+    private final Map<AggregateType, Topic> topicsByAggregateType = new HashMap<>();
+
+    public Messaging() {
         server = new EmbeddedActiveMQ();
 
         try {
             configure();
+            start();
         } catch (Exception e) {
-            log.error("Failed to configure embedded message broker", e);
+            log.error("Failed to configure and start embedded message broker", e);
             throw new RuntimeException(e);
         }
     }
 
-    public void start() {
-        try {
-            server.start();
-            connectionFactory = new ActiveMQConnectionFactory(BROKER_URI);
-        } catch (Exception e) {
-            log.error("Failed to start embedded message broker", e);
-            throw new RuntimeException(e);
-        }
+    public Topic getTopic(AggregateType type) {
+        return topicsByAggregateType.get(type);
     }
 
     public void stop() {
@@ -58,11 +60,17 @@ public class EmbeddedMessageBroker {
     }
 
     public JMSContext getContext() {
-        return Optional.ofNullable(ctx)
-                .orElseGet(() -> {
-                    ctx = connectionFactory.createContext();
-                    return ctx;
-                });
+        return ctx;
+    }
+
+    public void registerAggregateType(AggregateType type) {
+        createTopic(type);
+    }
+
+    private void start() throws Exception {
+        server.start();
+        connectionFactory = new ActiveMQConnectionFactory(BROKER_URI);
+        ctx = connectionFactory.createContext();
     }
 
     private void configure() throws Exception {
@@ -70,9 +78,17 @@ public class EmbeddedMessageBroker {
 
         config.setSecurityEnabled(false);
         config.addAcceptorConfiguration("in-vm", BROKER_URI);
-        config.addAcceptorConfiguration("tcp", "tcp://127.0.0.1:61616");
 
         server.setConfiguration(config);
+    }
+
+    private void createTopic(AggregateType aggregateType) {
+        /*
+        When calling createTopic() the topic is created on the broker when using ActiveMQ Artemis.
+        See https://activemq.apache.org/how-do-i-create-new-destinations.html
+         */
+        Topic tree = ctx.createTopic(aggregateType.getValue().toLowerCase(Locale.ROOT));
+        topicsByAggregateType.put(Tree.TYPE, tree);
     }
 
 }

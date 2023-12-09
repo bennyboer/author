@@ -1,9 +1,10 @@
-package de.bennyboer.author.server.websocket;
+package de.bennyboer.author.server.shared.websocket;
 
-import de.bennyboer.author.server.websocket.api.*;
-import de.bennyboer.author.server.websocket.subscriptions.EventTopic;
-import de.bennyboer.author.server.websocket.subscriptions.SubscriptionManager;
-import de.bennyboer.author.server.websocket.subscriptions.SubscriptionTarget;
+import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.websocket.api.*;
+import de.bennyboer.author.server.shared.websocket.subscriptions.EventTopic;
+import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionManager;
+import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.event.EventName;
 import io.javalin.json.JsonMapper;
@@ -17,12 +18,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class WebSocketService {
 
-    private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
-
     private final SubscriptionManager subscriptionManager;
 
-    public WebSocketService(JsonMapper jsonMapper) {
-        subscriptionManager = new SubscriptionManager(jsonMapper, this::publishEvent);
+    private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
+
+    public WebSocketService(Messaging messaging, JsonMapper jsonMapper) {
+        subscriptionManager = new SubscriptionManager(messaging, jsonMapper, this::publishEvent);
     }
 
     public void onConnect(WsConnectContext ctx) {

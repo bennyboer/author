@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.websocket.api;
+package de.bennyboer.author.server.shared.websocket.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;

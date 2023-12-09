@@ -1,13 +1,14 @@
-package de.bennyboer.author.server.websocket.subscriptions;
+package de.bennyboer.author.server.shared.websocket.subscriptions;
 
-import de.bennyboer.author.server.messaging.MessagingConfig;
-import de.bennyboer.author.server.messaging.messages.AggregateEventMessage;
-import de.bennyboer.author.server.websocket.SessionId;
+import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.author.server.shared.websocket.SessionId;
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.api.event.EventName;
 import io.javalin.json.JsonMapper;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.utils.collections.ConcurrentHashSet;
 
@@ -19,7 +20,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
+@AllArgsConstructor
 public class SubscriptionManager {
+
+    private final Messaging messaging;
+
+    private final JsonMapper jsonMapper;
+
+    private final SubscriptionEventListener subscriptionEventListener;
 
     private final Map<AggregateType, Map<AggregateId, Set<SessionId>>> subscriptions = new ConcurrentHashMap<>();
 
@@ -28,15 +36,6 @@ public class SubscriptionManager {
     private final Set<SubscriptionTarget> subscriptionTargets = new ConcurrentHashSet<>();
 
     private final Map<SubscriptionTarget, JMSConsumer> messageListenersPerTarget = new ConcurrentHashMap<>();
-
-    private final JsonMapper jsonMapper;
-
-    private final SubscriptionEventListener subscriptionEventListener;
-
-    public SubscriptionManager(JsonMapper jsonMapper, SubscriptionEventListener subscriptionEventListener) {
-        this.jsonMapper = jsonMapper;
-        this.subscriptionEventListener = subscriptionEventListener;
-    }
 
     public void subscribe(SubscriptionTarget target, SessionId sessionId) {
         findSubscribers(target).add(sessionId);
@@ -74,8 +73,8 @@ public class SubscriptionManager {
     }
 
     private void setupMessageListenerForTarget(SubscriptionTarget target) {
-        JMSContext ctx = getContext();
-        Topic topic = MessagingConfig.getTopic(target.getAggregateType());
+        JMSContext ctx = messaging.getContext();
+        Topic topic = messaging.getTopic(target.getAggregateType());
 
         String aggregateIdMessageSelector = String.format("aggregateId = '%s'", target.getAggregateId().getValue());
         JMSConsumer consumer = ctx.createConsumer(topic, aggregateIdMessageSelector);
@@ -115,10 +114,6 @@ public class SubscriptionManager {
     private void cleanupMessageListenerForTarget(SubscriptionTarget target) {
         JMSConsumer consumer = messageListenersPerTarget.remove(target);
         consumer.close();
-    }
-
-    private JMSContext getContext() {
-        return MessagingConfig.getContext();
     }
 
 }

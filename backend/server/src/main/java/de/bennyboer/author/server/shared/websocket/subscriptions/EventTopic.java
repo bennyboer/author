@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.websocket.subscriptions;
+package de.bennyboer.author.server.shared.websocket.subscriptions;
 
 import de.bennyboer.eventsourcing.api.Version;
 import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
