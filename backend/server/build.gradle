@@ -5,8 +5,9 @@ plugins {
 dependencies {
     implementation project(':common')
     implementation project(':eventsourcing')
-    implementation project(':structure')
     implementation project(':project')
+    implementation project(':structure')
+    implementation project(':user')
 
     implementation 'io.javalin:javalin-bundle:5.6.3'
 

@@ -4,6 +4,7 @@ import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.command.Command;
 import de.bennyboer.eventsourcing.event.Event;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -29,8 +30,8 @@ public class AggregateContainer implements Aggregate {
     }
 
     @Override
-    public ApplyCommandResult apply(Command command) {
-        return aggregate.apply(command);
+    public ApplyCommandResult apply(Command command, Agent agent) {
+        return aggregate.apply(command, agent);
     }
 
     @Override

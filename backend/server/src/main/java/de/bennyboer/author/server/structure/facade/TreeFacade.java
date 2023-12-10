@@ -6,8 +6,8 @@ import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.node.NodeId;
 import de.bennyboer.author.structure.tree.node.NodeName;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import reactor.core.publisher.Mono;
@@ -25,55 +25,55 @@ public class TreeFacade {
                 .map(TreeTransformer::toApi);
     }
 
-    public Mono<Void> create(String rootNodeName, UserId userId) {
-        return treeService.create(NodeName.of(rootNodeName), userId).then();
+    public Mono<Void> create(String rootNodeName, Agent agent) {
+        return treeService.create(NodeName.of(rootNodeName), agent).then();
     }
 
-    public Mono<Void> toggleNode(String treeId, long version, String nodeId, UserId userId) {
+    public Mono<Void> toggleNode(String treeId, long version, String nodeId, Agent agent) {
         return treeService.toggleNode(
                 TreeId.of(treeId),
                 Version.of(version),
                 NodeId.of(nodeId),
-                userId
+                agent
         ).then();
     }
 
-    public Mono<Void> addNode(String treeId, long version, String parentNodeId, String newNodeName, UserId userId) {
+    public Mono<Void> addNode(String treeId, long version, String parentNodeId, String newNodeName, Agent agent) {
         return treeService.addNode(
                 TreeId.of(treeId),
                 Version.of(version),
                 NodeId.of(parentNodeId),
                 NodeName.of(newNodeName),
-                userId
+                agent
         ).then();
     }
 
-    public Mono<Void> removeNode(String treeId, long version, String nodeId, UserId userId) {
+    public Mono<Void> removeNode(String treeId, long version, String nodeId, Agent agent) {
         return treeService.removeNode(
                 TreeId.of(treeId),
                 Version.of(version),
                 NodeId.of(nodeId),
-                userId
+                agent
         ).then();
     }
 
-    public Mono<Void> swapNodes(String treeId, long version, String nodeId1, String nodeId2, UserId userId) {
+    public Mono<Void> swapNodes(String treeId, long version, String nodeId1, String nodeId2, Agent agent) {
         return treeService.swapNodes(
                 TreeId.of(treeId),
                 Version.of(version),
                 NodeId.of(nodeId1),
                 NodeId.of(nodeId2),
-                userId
+                agent
         ).then();
     }
 
-    public Mono<Void> renameNode(String treeId, Long treeVersion, String nodeId, String newNodeName, UserId userId) {
+    public Mono<Void> renameNode(String treeId, Long treeVersion, String nodeId, String newNodeName, Agent agent) {
         return treeService.renameNode(
                 TreeId.of(treeId),
                 Version.of(treeVersion),
                 NodeId.of(nodeId),
                 NodeName.of(newNodeName),
-                userId
+                agent
         ).then();
     }
 

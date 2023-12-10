@@ -1,11 +1,11 @@
 package de.bennyboer.eventsourcing.sample;
 
+import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.event.EventWithMetadata;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.event.metadata.agent.AgentId;
 import de.bennyboer.eventsourcing.event.metadata.agent.AgentType;
 import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
@@ -32,12 +32,14 @@ public class SampleAggregateTests {
             eventPublisher
     );
 
+    Agent testAgent = Agent.user(UserId.of("USER_ID"));
+
     @Test
     void shouldCreate() {
         var id = "SAMPLE_ID";
 
         // when: the aggregate is created
-        var version = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
+        var version = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
 
         // then: the retrieved aggregate has the correct title and description
         var aggregate = eventSourcingService.get(id).block();
@@ -73,10 +75,10 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: an aggregate with a title
-        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
+        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
 
         // when: the title is updated
-        var version = eventSourcingService.updateTitle(id, initialVersion, "New title", "USER_ID").block();
+        var version = eventSourcingService.updateTitle(id, initialVersion, "New title", testAgent).block();
 
         // then: the retrieved aggregate has the correct title
         var aggregate = eventSourcingService.get(id).block();
@@ -93,10 +95,10 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: an aggregate with a description
-        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
+        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
 
         // when: the description is updated
-        var version = eventSourcingService.updateDescription(id, initialVersion, "New description", "USER_ID").block();
+        var version = eventSourcingService.updateDescription(id, initialVersion, "New description", testAgent).block();
 
         // then: the retrieved aggregate has the correct description
         var aggregate = eventSourcingService.get(id).block();
@@ -113,10 +115,10 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: an aggregate
-        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
+        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
 
         // when: the aggregate is deleted
-        var version = eventSourcingService.delete(id, initialVersion, "USER_ID").block();
+        var version = eventSourcingService.delete(id, initialVersion, testAgent).block();
 
         // then: the retrieved aggregate is deleted
         var aggregate = eventSourcingService.get(id).block();
@@ -131,11 +133,11 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: a deleted aggregate
-        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
-        var version = eventSourcingService.delete(id, initialVersion, "USER_ID").block();
+        var initialVersion = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
+        var version = eventSourcingService.delete(id, initialVersion, testAgent).block();
 
         // when: another command is dispatched
-        Executable executable = () -> eventSourcingService.updateTitle(id, version, "New title", "USER_ID").block();
+        Executable executable = () -> eventSourcingService.updateTitle(id, version, "New title", testAgent).block();
 
         // then: an exception is thrown
         var exception = assertThrows(IllegalStateException.class, executable);
@@ -147,11 +149,11 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: an aggregate that underwent multiple changes
-        var version = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
-        version = eventSourcingService.updateTitle(id, version, "New title", "USER_ID").block();
-        version = eventSourcingService.updateDescription(id, version, "New description", "USER_ID").block();
-        version = eventSourcingService.updateTitle(id, version, "Newer title", "USER_ID").block();
-        version = eventSourcingService.delete(id, version, "USER_ID").block();
+        var version = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
+        version = eventSourcingService.updateTitle(id, version, "New title", testAgent).block();
+        version = eventSourcingService.updateDescription(id, version, "New description", testAgent).block();
+        version = eventSourcingService.updateTitle(id, version, "Newer title", testAgent).block();
+        version = eventSourcingService.delete(id, version, testAgent).block();
 
         // when: the aggregate is retrieved in an old version
         var aggregate = eventSourcingService.get(id, Version.of(2)).block();
@@ -168,9 +170,9 @@ public class SampleAggregateTests {
         var id2 = "SAMPLE_ID_2";
 
         // given: two aggregates
-        var version1 = eventSourcingService.create(id1, "Test title 1", "Test description 1", "USER_ID").block();
-        var version2 = eventSourcingService.create(id2, "Test title 2", "Test description 2", "USER_ID").block();
-        version2 = eventSourcingService.updateTitle(id2, version2, "New title 2", "USER_ID").block();
+        var version1 = eventSourcingService.create(id1, "Test title 1", "Test description 1", testAgent).block();
+        var version2 = eventSourcingService.create(id2, "Test title 2", "Test description 2", testAgent).block();
+        version2 = eventSourcingService.updateTitle(id2, version2, "New title 2", testAgent).block();
 
         // when: the aggregates are retrieved
         var aggregate1 = eventSourcingService.get(id1).block();
@@ -195,11 +197,11 @@ public class SampleAggregateTests {
         var id = "SAMPLE_ID";
 
         // given: an aggregate
-        var version = eventSourcingService.create(id, "Test title", "Test description", "USER_ID").block();
+        var version = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
 
         // when: the aggregate undergoes 300 changes
         for (int i = 0; i < 300; i++) {
-            version = eventSourcingService.updateTitle(id, version, "New title " + i, "USER_ID").block();
+            version = eventSourcingService.updateTitle(id, version, "New title " + i, testAgent).block();
         }
 
         // then: each 100th event is a snapshot
@@ -229,7 +231,7 @@ public class SampleAggregateTests {
                 AggregateId.of(id),
                 SampleAggregate.TYPE,
                 Version.zero(),
-                Agent.of(AgentType.USER, AgentId.of("USER_ID")),
+                testAgent,
                 Instant.now(),
                 false
         ));

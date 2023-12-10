@@ -2,6 +2,7 @@ package de.bennyboer.author.project;
 
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ public class ProjectServiceTests {
             new TestEventPublisher()
     );
 
-    private final UserId userId = UserId.of("TEST_USER_ID");
+    private final Agent testAgent = Agent.user(UserId.of("TEST_USER_ID"));
 
     @Test
     void shouldCreateProject() {
@@ -24,7 +25,7 @@ public class ProjectServiceTests {
         var name = ProjectName.of("Alice in Wonderland");
 
         // when: a project is created
-        var projectIdAndVersion = projectService.create(name, userId).block();
+        var projectIdAndVersion = projectService.create(name, testAgent).block();
         var projectId = projectIdAndVersion.getId();
         var version = projectIdAndVersion.getVersion();
 
@@ -37,13 +38,13 @@ public class ProjectServiceTests {
     void shouldRenameProject() {
         // given: a project
         var originalName = ProjectName.of("Alice in Wonderland");
-        var projectIdAndVersion = projectService.create(originalName, userId).block();
+        var projectIdAndVersion = projectService.create(originalName, testAgent).block();
         var projectId = projectIdAndVersion.getId();
         var version = projectIdAndVersion.getVersion();
 
         // when: the project is renamed
         var newName = ProjectName.of("Alice in the land of horrors");
-        projectService.rename(projectId, version, newName, userId).block();
+        projectService.rename(projectId, version, newName, testAgent).block();
 
         // then: the project name has changed
         var project = projectService.get(projectId).block();
@@ -54,12 +55,12 @@ public class ProjectServiceTests {
     void shouldRemoveProject() {
         // given: a project
         var name = ProjectName.of("Alice in Wonderland");
-        var projectIdAndVersion = projectService.create(name, userId).block();
+        var projectIdAndVersion = projectService.create(name, testAgent).block();
         var projectId = projectIdAndVersion.getId();
         var version = projectIdAndVersion.getVersion();
 
         // when: the project is removed
-        projectService.remove(projectId, version, userId).block();
+        projectService.remove(projectId, version, testAgent).block();
 
         // then: the project is gone
         var project = projectService.get(projectId).block();
@@ -73,7 +74,7 @@ public class ProjectServiceTests {
                 ProjectId.create(),
                 Version.zero(),
                 ProjectName.of("Alice in Wonderland"),
-                userId
+                testAgent
         ).block();
 
         // then: an exception is thrown
@@ -91,17 +92,17 @@ public class ProjectServiceTests {
     void shouldNotAcceptCommandsAfterRemoval() {
         // given: a removed project
         var name = ProjectName.of("Alice in Wonderland");
-        var projectIdAndVersion = projectService.create(name, userId).block();
+        var projectIdAndVersion = projectService.create(name, testAgent).block();
         var projectId = projectIdAndVersion.getId();
         var initialVersion = projectIdAndVersion.getVersion();
-        var version = projectService.remove(projectId, initialVersion, userId).block();
+        var version = projectService.remove(projectId, initialVersion, testAgent).block();
 
         // when: trying to rename the removed project
         Executable executable = () -> projectService.rename(
                 projectId,
                 version,
                 ProjectName.of("Alice in the land of horrors"),
-                userId
+                testAgent
         ).block();
 
         // then: an exception is thrown

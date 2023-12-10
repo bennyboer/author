@@ -7,6 +7,7 @@ import de.bennyboer.eventsourcing.command.Command;
 import de.bennyboer.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.eventsourcing.event.Event;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.eventsourcing.sample.commands.DeleteCmd;
 import de.bennyboer.eventsourcing.sample.commands.UpdateDescriptionCmd;
@@ -39,7 +40,7 @@ public class SampleAggregate implements Aggregate {
     }
 
     @Override
-    public ApplyCommandResult apply(Command cmd) {
+    public ApplyCommandResult apply(Command cmd, Agent ignoredAgent) {
         if (deletedAt != null) {
             throw new IllegalStateException("Cannot apply command to deleted aggregate");
         }

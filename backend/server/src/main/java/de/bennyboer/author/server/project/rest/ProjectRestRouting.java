@@ -14,12 +14,12 @@ public class ProjectRestRouting implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        path("/projects", () -> path("/{projectId}", () -> {
+        path("/{projectId}", () -> {
             get(handler::getProject);
             post(handler::createProject);
             post("/rename", handler::renameProject);
             delete(handler::removeProject);
-        }));
+        });
     }
 
 }

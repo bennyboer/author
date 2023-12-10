@@ -1,8 +1,6 @@
 package de.bennyboer.author.server.shared.messaging;
 
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
-import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.eventsourcing.EventPublisher;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.event.Event;
@@ -15,6 +13,7 @@ import reactor.core.publisher.Mono;
 import javax.jms.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Value
 public class MessagingEventPublisher implements EventPublisher {
@@ -27,7 +26,7 @@ public class MessagingEventPublisher implements EventPublisher {
 
     JMSProducer producer;
 
-    Map<AggregateType, AggregateEventPayloadTransformer> topicsByAggregateType = new HashMap<>();
+    Map<AggregateType, AggregateEventPayloadTransformer> eventPayloadTransformerByAggregateType = new HashMap<>();
 
     public MessagingEventPublisher(Messaging messaging, JsonMapper jsonMapper) {
         this.messaging = messaging;
@@ -59,7 +58,7 @@ public class MessagingEventPublisher implements EventPublisher {
             AggregateType type,
             AggregateEventPayloadTransformer transformer
     ) {
-        topicsByAggregateType.put(type, transformer);
+        eventPayloadTransformerByAggregateType.put(type, transformer);
     }
 
     private AggregateEventMessage createMessage(EventWithMetadata event) {
@@ -85,16 +84,12 @@ public class MessagingEventPublisher implements EventPublisher {
         Event event = eventWithMetadata.getEvent();
 
         var aggregateType = metadata.getAggregateType();
+        var transformer = Optional.ofNullable(eventPayloadTransformerByAggregateType.get(aggregateType))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No event transformer found for aggregate type '" + aggregateType + "'"
+                ));
 
-        // TODO We should provide a registry singleton where we can register the mapping of events for an aggregate
-        //  type to payloads
-        // TODO For now we just hard-code the event transformers per aggregate type
-
-        if (aggregateType == Tree.TYPE) {
-            return TreeEventTransformer.toApi(event);
-        } else {
-            throw new IllegalArgumentException("No event transformer found for aggregate type '" + aggregateType + "'");
-        }
+        return transformer.toApi(event);
     }
 
 }

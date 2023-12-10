@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import java.util.UUID;
+
 @Value
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserId {
@@ -16,6 +18,10 @@ public class UserId {
         }
 
         return new UserId(value);
+    }
+
+    public static UserId create() {
+        return of(UUID.randomUUID().toString());
     }
 
     @Override

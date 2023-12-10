@@ -7,6 +7,7 @@ import de.bennyboer.author.project.events.CreatedEvent;
 import de.bennyboer.author.project.events.RemovedEvent;
 import de.bennyboer.author.project.events.RenamedEvent;
 import de.bennyboer.author.project.events.SnapshottedEvent;
+import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.Aggregate;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.aggregate.ApplyCommandResult;
@@ -14,6 +15,8 @@ import de.bennyboer.eventsourcing.command.Command;
 import de.bennyboer.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.eventsourcing.event.Event;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -31,20 +34,21 @@ public class Project implements Aggregate {
 
     ProjectId id;
 
-    long version;
+    Version version;
 
     ProjectName name;
 
     Instant createdAt;
 
+    @Nullable
     Instant removedAt;
 
     public static Project init() {
-        return new Project(null, 0L, null, null, null);
+        return new Project(null, null, null, null, null);
     }
 
     @Override
-    public ApplyCommandResult apply(Command cmd) {
+    public ApplyCommandResult apply(Command cmd, Agent agent) {
         var isInitialized = Optional.ofNullable(id).isPresent();
         var isCreateCmd = cmd instanceof CreateCmd;
         if (!isInitialized && !isCreateCmd) {
@@ -56,6 +60,8 @@ public class Project implements Aggregate {
         if (isRemoved()) {
             throw new IllegalStateException("Cannot apply command to removed Project");
         }
+
+        // TODO Check if agent is allowed to apply command
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
@@ -80,11 +86,15 @@ public class Project implements Aggregate {
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
 
-        return updatedProject.withVersion(metadata.getAggregateVersion().getValue());
+        return updatedProject.withVersion(metadata.getAggregateVersion());
     }
 
     public boolean isRemoved() {
-        return Optional.ofNullable(removedAt).isPresent();
+        return getRemovedAt().isPresent();
+    }
+
+    private Optional<Instant> getRemovedAt() {
+        return Optional.ofNullable(removedAt);
     }
 
 }

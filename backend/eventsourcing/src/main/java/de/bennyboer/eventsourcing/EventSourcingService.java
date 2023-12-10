@@ -1,11 +1,6 @@
 package de.bennyboer.eventsourcing;
 
-import de.bennyboer.eventsourcing.aggregate.AggregateContainer;
-import de.bennyboer.eventsourcing.patch.EventPatcher;
-import de.bennyboer.eventsourcing.aggregate.Aggregate;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.aggregate.ApplyCommandResult;
+import de.bennyboer.eventsourcing.aggregate.*;
 import de.bennyboer.eventsourcing.command.Command;
 import de.bennyboer.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.eventsourcing.event.Event;
@@ -13,6 +8,7 @@ import de.bennyboer.eventsourcing.event.EventWithMetadata;
 import de.bennyboer.eventsourcing.event.SnapshotEvent;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.eventsourcing.patch.EventPatcher;
 import de.bennyboer.eventsourcing.patch.Patch;
 import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
 import lombok.AllArgsConstructor;
@@ -92,7 +88,7 @@ public class EventSourcingService<A extends Aggregate> {
             Command cmd,
             Agent agent
     ) {
-        ApplyCommandResult result = container.getAggregate().apply(cmd);
+        ApplyCommandResult result = container.getAggregate().apply(cmd, agent);
 
         return saveAndPublishEvents(aggregateId, container, agent, result)
                 .collectList()
@@ -118,7 +114,7 @@ public class EventSourcingService<A extends Aggregate> {
 
     private Mono<Version> snapshot(AggregateId aggregateId, Agent agent, AggregateContainer container) {
         var snapshotCmd = SnapshotCmd.of();
-        var result = container.apply(snapshotCmd);
+        var result = container.apply(snapshotCmd, agent);
 
         return saveAndPublishEvents(aggregateId, container, agent, result)
                 .last()

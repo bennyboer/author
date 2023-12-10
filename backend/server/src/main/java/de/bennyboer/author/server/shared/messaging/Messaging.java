@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.shared.messaging;
 
-import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;
@@ -22,6 +21,8 @@ import java.util.Map;
  */
 @Slf4j
 public class Messaging {
+
+    private static final String TOPIC_PREFIX = "aggregate.";
 
     private static final String BROKER_URI = "vm://0";
 
@@ -87,8 +88,10 @@ public class Messaging {
         When calling createTopic() the topic is created on the broker when using ActiveMQ Artemis.
         See https://activemq.apache.org/how-do-i-create-new-destinations.html
          */
-        Topic tree = ctx.createTopic(aggregateType.getValue().toLowerCase(Locale.ROOT));
-        topicsByAggregateType.put(Tree.TYPE, tree);
+        String topicName = TOPIC_PREFIX + aggregateType.getValue().toLowerCase(Locale.ROOT);
+        System.out.println("Creating topic: " + topicName);
+        Topic tree = ctx.createTopic(topicName);
+        topicsByAggregateType.put(aggregateType, tree);
     }
 
 }

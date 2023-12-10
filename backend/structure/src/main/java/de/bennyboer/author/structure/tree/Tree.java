@@ -5,6 +5,7 @@ import de.bennyboer.author.structure.tree.events.*;
 import de.bennyboer.author.structure.tree.node.Node;
 import de.bennyboer.author.structure.tree.node.NodeId;
 import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.Aggregate;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.aggregate.ApplyCommandResult;
@@ -12,6 +13,7 @@ import de.bennyboer.eventsourcing.command.Command;
 import de.bennyboer.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.eventsourcing.event.Event;
 import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -31,23 +33,27 @@ public class Tree implements Aggregate {
 
     TreeId id;
 
-    long version;
+    Version version;
 
     NodeId rootNodeId;
 
     Map<NodeId, Node> nodes;
 
     public static Tree init() {
-        return new Tree(null, 0L, null, null);
+        return new Tree(null, null, null, null);
     }
 
     @Override
-    public ApplyCommandResult apply(Command cmd) {
+    public ApplyCommandResult apply(Command cmd, Agent agent) {
         var isInitialized = Optional.ofNullable(id).isPresent();
         var isCreateCmd = cmd instanceof CreateCmd;
         if (!isInitialized && !isCreateCmd) {
             throw new IllegalStateException("Tree must be initialized with CreateCmd before applying other commands");
         }
+
+        // TODO Allow removal of tree
+
+        // TODO Check if agent is allowed to apply command
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
@@ -100,7 +106,7 @@ public class Tree implements Aggregate {
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
 
-        return updatedTree.withVersion(metadata.getAggregateVersion().getValue());
+        return updatedTree.withVersion(metadata.getAggregateVersion());
     }
 
     public Optional<Node> getNodeById(NodeId nodeId) {

@@ -5,6 +5,7 @@ import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.common.UserId;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
@@ -32,9 +33,9 @@ public class TreeRestHandler {
         var treeId = ctx.pathParam("treeId");
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var nodeId = ctx.pathParam("nodeId");
-        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.toggleNode(treeId, treeVersion, nodeId, userId)
+        ctx.future(() -> facade.toggleNode(treeId, treeVersion, nodeId, agent)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -44,9 +45,9 @@ public class TreeRestHandler {
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var parentNodeId = ctx.pathParam("nodeId");
         var request = ctx.bodyAsClass(AddChildRequest.class);
-        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.addNode(treeId, treeVersion, parentNodeId, request.getName(), userId)
+        ctx.future(() -> facade.addNode(treeId, treeVersion, parentNodeId, request.getName(), agent)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -56,9 +57,9 @@ public class TreeRestHandler {
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var nodeId = ctx.pathParam("nodeId");
         var request = ctx.bodyAsClass(RenameNodeRequest.class);
-        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.renameNode(treeId, treeVersion, nodeId, request.getName(), userId)
+        ctx.future(() -> facade.renameNode(treeId, treeVersion, nodeId, request.getName(), agent)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -67,9 +68,9 @@ public class TreeRestHandler {
         var treeId = ctx.pathParam("treeId");
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var nodeId = ctx.pathParam("nodeId");
-        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.removeNode(treeId, treeVersion, nodeId, userId)
+        ctx.future(() -> facade.removeNode(treeId, treeVersion, nodeId, agent)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -78,9 +79,9 @@ public class TreeRestHandler {
         var treeId = ctx.pathParam("treeId");
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var request = ctx.bodyAsClass(SwapNodesRequest.class);
-        var userId = UserId.of("TEST_USER_ID"); // TODO Get user ID from authentication
+        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.swapNodes(treeId, treeVersion, request.getNodeId1(), request.getNodeId2(), userId)
+        ctx.future(() -> facade.swapNodes(treeId, treeVersion, request.getNodeId1(), request.getNodeId2(), agent)
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
