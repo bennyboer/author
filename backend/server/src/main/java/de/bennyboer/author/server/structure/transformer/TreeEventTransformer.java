@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.structure.transformer;
 
 import de.bennyboer.author.structure.tree.events.*;
-import de.bennyboer.eventsourcing.api.event.Event;
+import de.bennyboer.eventsourcing.event.Event;
 
 import java.util.Map;
 

@@ -1,12 +1,12 @@
 package de.bennyboer.eventsourcing.sample;
 
-import de.bennyboer.eventsourcing.api.aggregate.Aggregate;
-import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.api.aggregate.ApplyCommandResult;
-import de.bennyboer.eventsourcing.api.command.Command;
-import de.bennyboer.eventsourcing.api.command.SnapshotCmd;
-import de.bennyboer.eventsourcing.api.event.Event;
-import de.bennyboer.eventsourcing.api.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.aggregate.Aggregate;
+import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.eventsourcing.aggregate.ApplyCommandResult;
+import de.bennyboer.eventsourcing.command.Command;
+import de.bennyboer.eventsourcing.command.SnapshotCmd;
+import de.bennyboer.eventsourcing.event.Event;
+import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.eventsourcing.sample.commands.DeleteCmd;
 import de.bennyboer.eventsourcing.sample.commands.UpdateDescriptionCmd;

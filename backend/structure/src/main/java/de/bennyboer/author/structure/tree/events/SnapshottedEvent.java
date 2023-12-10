@@ -1,11 +1,11 @@
 package de.bennyboer.author.structure.tree.events;
 
-import de.bennyboer.author.structure.tree.model.Node;
-import de.bennyboer.author.structure.tree.model.NodeId;
-import de.bennyboer.author.structure.tree.model.Tree;
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.event.Event;
-import de.bennyboer.eventsourcing.api.event.EventName;
+import de.bennyboer.author.structure.tree.Tree;
+import de.bennyboer.author.structure.tree.node.Node;
+import de.bennyboer.author.structure.tree.node.NodeId;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.event.Event;
+import de.bennyboer.eventsourcing.event.EventName;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -29,7 +29,7 @@ public class SnapshottedEvent implements Event {
     }
 
     @Override
-    public EventName getName() {
+    public EventName getEventName() {
         return NAME;
     }
 

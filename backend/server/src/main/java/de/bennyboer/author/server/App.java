@@ -9,9 +9,13 @@ import de.bennyboer.author.server.structure.facade.TreeFacade;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.structure.tree.model.*;
+import de.bennyboer.author.structure.tree.Tree;
+import de.bennyboer.author.structure.tree.TreeId;
+import de.bennyboer.author.structure.tree.TreeService;
+import de.bennyboer.author.structure.tree.node.NodeName;
 import de.bennyboer.common.UserId;
-import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.eventsourcing.aggregate.AggregateIdAndVersion;
+import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
@@ -67,7 +71,7 @@ public class App {
                         // TODO For now that we do not have projects we need to create a tree here for testing purposes
                         // TODO Remove when a tree is created as a side-effect of creating a project
                         var testTreeId = treeService.create(NodeName.of("Root"), UserId.of("TEST_USER_ID"))
-                                .map(TreeIdAndVersion::getId)
+                                .map(AggregateIdAndVersion::getId)
                                 .map(TreeId::getValue)
                                 .block();
                         System.out.println("Test tree ID: " + testTreeId);

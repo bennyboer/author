@@ -1,7 +1,7 @@
 package de.bennyboer.eventsourcing.sample.events;
 
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.event.AbstractEvent;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.event.AbstractEvent;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

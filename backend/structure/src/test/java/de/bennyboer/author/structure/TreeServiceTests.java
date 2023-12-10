@@ -1,10 +1,14 @@
 package de.bennyboer.author.structure;
 
-import de.bennyboer.author.structure.tree.model.*;
+import de.bennyboer.author.structure.tree.TreeId;
+import de.bennyboer.author.structure.tree.TreeService;
+import de.bennyboer.author.structure.tree.node.Node;
+import de.bennyboer.author.structure.tree.node.NodeId;
+import de.bennyboer.author.structure.tree.node.NodeName;
 import de.bennyboer.common.UserId;
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.eventsourcing.api.testing.TestEventPublisher;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 

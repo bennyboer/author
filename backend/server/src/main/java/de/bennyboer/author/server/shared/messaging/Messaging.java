@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.shared.messaging;
 
-import de.bennyboer.author.structure.tree.model.Tree;
-import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
+import de.bennyboer.author.structure.tree.Tree;
+import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;

@@ -2,12 +2,12 @@ package de.bennyboer.author.server.structure.facade;
 
 import de.bennyboer.author.server.structure.api.TreeDTO;
 import de.bennyboer.author.server.structure.transformer.TreeTransformer;
-import de.bennyboer.author.structure.tree.model.NodeId;
-import de.bennyboer.author.structure.tree.model.NodeName;
-import de.bennyboer.author.structure.tree.model.TreeId;
-import de.bennyboer.author.structure.tree.model.TreeService;
+import de.bennyboer.author.structure.tree.TreeId;
+import de.bennyboer.author.structure.tree.TreeService;
+import de.bennyboer.author.structure.tree.node.NodeId;
+import de.bennyboer.author.structure.tree.node.NodeName;
 import de.bennyboer.common.UserId;
-import de.bennyboer.eventsourcing.api.Version;
+import de.bennyboer.eventsourcing.Version;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import reactor.core.publisher.Mono;

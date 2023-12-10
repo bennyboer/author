@@ -1,8 +1,8 @@
 package de.bennyboer.author.structure.tree.commands;
 
-import de.bennyboer.author.structure.tree.model.NodeId;
-import de.bennyboer.author.structure.tree.model.NodeName;
-import de.bennyboer.eventsourcing.api.command.Command;
+import de.bennyboer.author.structure.tree.node.NodeId;
+import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

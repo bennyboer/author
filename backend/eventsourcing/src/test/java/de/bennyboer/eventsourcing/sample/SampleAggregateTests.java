@@ -1,18 +1,18 @@
 package de.bennyboer.eventsourcing.sample;
 
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.api.event.EventWithMetadata;
-import de.bennyboer.eventsourcing.api.event.metadata.EventMetadata;
-import de.bennyboer.eventsourcing.api.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentId;
-import de.bennyboer.eventsourcing.api.event.metadata.agent.AgentType;
-import de.bennyboer.eventsourcing.api.persistence.EventSourcingRepo;
-import de.bennyboer.eventsourcing.api.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.eventsourcing.api.testing.TestEventPublisher;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.eventsourcing.event.EventWithMetadata;
+import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.eventsourcing.event.metadata.agent.AgentId;
+import de.bennyboer.eventsourcing.event.metadata.agent.AgentType;
+import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.eventsourcing.sample.events.CreatedEvent;
 import de.bennyboer.eventsourcing.sample.events.CreatedEvent2;
+import de.bennyboer.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -27,7 +27,7 @@ public class SampleAggregateTests {
 
     private final TestEventPublisher eventPublisher = new TestEventPublisher();
 
-    private final SampleAggregateEventSourcingService eventSourcingService = new SampleAggregateEventSourcingService(
+    private final SampleAggregateService eventSourcingService = new SampleAggregateService(
             repo,
             eventPublisher
     );
@@ -47,7 +47,7 @@ public class SampleAggregateTests {
         assertFalse(aggregate.isDeleted());
 
         // and: the version is 0
-        assertEquals(0, version);
+        assertEquals(Version.zero(), version);
 
         // and: an event has been published
         var events = eventPublisher.findEventsByName(CreatedEvent.NAME);
@@ -85,7 +85,7 @@ public class SampleAggregateTests {
         assertFalse(aggregate.isDeleted());
 
         // and: the version is 1
-        assertEquals(1, version);
+        assertEquals(Version.of(1), version);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class SampleAggregateTests {
         assertFalse(aggregate.isDeleted());
 
         // and: the version is 1
-        assertEquals(1, version);
+        assertEquals(Version.of(1), version);
     }
 
     @Test
@@ -120,12 +120,10 @@ public class SampleAggregateTests {
 
         // then: the retrieved aggregate is deleted
         var aggregate = eventSourcingService.get(id).block();
-        assertEquals("Test title", aggregate.getTitle());
-        assertEquals("Test description", aggregate.getDescription());
-        assertTrue(aggregate.isDeleted());
+        assertNull(aggregate);
 
         // and: the version is 1
-        assertEquals(1, version);
+        assertEquals(Version.of(1), version);
     }
 
     @Test
@@ -156,7 +154,7 @@ public class SampleAggregateTests {
         version = eventSourcingService.delete(id, version, "USER_ID").block();
 
         // when: the aggregate is retrieved in an old version
-        var aggregate = eventSourcingService.get(id, 2).block();
+        var aggregate = eventSourcingService.get(id, Version.of(2)).block();
 
         // then: the aggregate has the correct title and description
         assertEquals("New title", aggregate.getTitle());
@@ -188,8 +186,8 @@ public class SampleAggregateTests {
         assertFalse(aggregate2.isDeleted());
 
         // and: the versions are correct
-        assertEquals(0, version1);
-        assertEquals(1, version2);
+        assertEquals(Version.zero(), version1);
+        assertEquals(Version.of(1), version2);
     }
 
     @Test

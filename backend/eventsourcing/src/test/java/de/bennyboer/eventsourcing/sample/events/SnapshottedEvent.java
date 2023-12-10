@@ -1,9 +1,9 @@
 package de.bennyboer.eventsourcing.sample.events;
 
-import de.bennyboer.eventsourcing.api.event.AbstractEvent;
-import de.bennyboer.eventsourcing.api.event.EventName;
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.event.SnapshotEvent;
+import de.bennyboer.eventsourcing.event.AbstractEvent;
+import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.event.SnapshotEvent;
 import de.bennyboer.eventsourcing.sample.SampleAggregate;
 import lombok.EqualsAndHashCode;
 import lombok.Value;

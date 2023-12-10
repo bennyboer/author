@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.shared.websocket.subscriptions;
 
-import de.bennyboer.eventsourcing.api.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
+import de.bennyboer.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,10 +1,10 @@
 package de.bennyboer.eventsourcing.sample.patches;
 
-import de.bennyboer.eventsourcing.api.Version;
-import de.bennyboer.eventsourcing.api.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.api.event.Event;
-import de.bennyboer.eventsourcing.api.event.EventName;
-import de.bennyboer.eventsourcing.api.patch.Patch;
+import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.eventsourcing.event.Event;
+import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.eventsourcing.patch.Patch;
 import de.bennyboer.eventsourcing.sample.SampleAggregate;
 import de.bennyboer.eventsourcing.sample.events.CreatedEvent;
 import de.bennyboer.eventsourcing.sample.events.CreatedEvent2;
