@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.structure.api.events;
+package de.bennyboer.author.server.project.api.requests;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,8 +10,8 @@ import lombok.extern.jackson.Jacksonized;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Jacksonized
-public class NodeToggledEventDTO {
+public class RenameProjectRequest {
 
-    String nodeId;
+    String name;
 
 }

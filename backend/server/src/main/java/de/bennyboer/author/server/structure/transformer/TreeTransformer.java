@@ -7,6 +7,7 @@ public class TreeTransformer {
 
     public static TreeDTO toApi(Tree tree) {
         return TreeDTO.builder()
+                .id(tree.getId().getValue())
                 .version(tree.getVersion())
                 .rootNodeId(tree.getRootNodeId().getValue())
                 .nodes(NodeTransformer.toApi(tree.getNodes()))

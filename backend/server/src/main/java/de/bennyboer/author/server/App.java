@@ -2,6 +2,8 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import de.bennyboer.author.project.Project;
+import de.bennyboer.author.server.project.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
@@ -33,10 +35,12 @@ public class App {
 
         var messaging = new Messaging();
         messaging.registerAggregateType(Tree.TYPE);
+        messaging.registerAggregateType(Project.TYPE);
 
         var eventSourcingRepo = new InMemoryEventSourcingRepo();
         var eventPublisher = new MessagingEventPublisher(messaging, jsonMapper);
         eventPublisher.registerAggregateEventPayloadTransformer(Tree.TYPE, TreeEventTransformer::toApi);
+        eventPublisher.registerAggregateEventPayloadTransformer(Project.TYPE, ProjectEventTransformer::toApi);
 
         var webSocketService = new WebSocketService(messaging, jsonMapper);
 

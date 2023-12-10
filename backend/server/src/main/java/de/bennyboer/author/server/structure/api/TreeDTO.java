@@ -14,6 +14,8 @@ import java.util.Map;
 @Jacksonized
 public class TreeDTO {
 
+    String id;
+
     long version;
 
     String rootNodeId;
