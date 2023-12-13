@@ -16,6 +16,7 @@ import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
 import de.bennyboer.author.server.user.facade.UserFacade;
+import de.bennyboer.author.server.user.persistence.lookup.UserLookupInMemoryRepo;
 import de.bennyboer.author.server.user.rest.UserRestHandler;
 import de.bennyboer.author.server.user.rest.UserRestRouting;
 import de.bennyboer.author.server.user.transformer.UserEventTransformer;
@@ -23,6 +24,7 @@ import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserName;
 import de.bennyboer.author.user.UserService;
@@ -61,7 +63,8 @@ public class App {
         // TODO Authentication module with login (JWT)
 
         var userService = new UserService(eventSourcingRepo, eventPublisher);
-        var userFacade = new UserFacade(userService);
+        var userLookupRepo = new UserLookupInMemoryRepo();
+        var userFacade = new UserFacade(userService, userLookupRepo);
         var userRestHandler = new UserRestHandler(userFacade);
         var userRestRouting = new UserRestRouting(userRestHandler);
 
@@ -101,7 +104,7 @@ public class App {
                     event.serverStarted(() -> {
                         // TODO For now we create a test user here for testing purposes
                         // TODO This is later to be replaced by some configuration and a signup mechanism
-                        var testUserId = userService.create(UserName.of("test"), Agent.system())
+                        var testUserId = userService.create(UserName.of("test"), Password.of("test"), Agent.system())
                                 .map(AggregateIdAndVersion::getId)
                                 .map(UserId::getValue)
                                 .block();

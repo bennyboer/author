@@ -1,27 +1,28 @@
 package de.bennyboer.author.user.commands;
 
 import de.bennyboer.author.user.Password;
-import de.bennyboer.author.user.UserName;
 import de.bennyboer.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import java.time.Instant;
+
 import static de.bennyboer.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class CreateCmd implements Command {
-
-    UserName name;
+public class LoginCmd implements Command {
 
     Password password;
 
-    public static CreateCmd of(UserName name, Password password) {
-        checkNotNull(name, "Name must not be null");
-        checkNotNull(password, "Password must not be null");
+    Instant now;
 
-        return new CreateCmd(name, password);
+    public static LoginCmd of(Password password, Instant now) {
+        checkNotNull(password, "Password must not be null");
+        checkNotNull(now, "Now must not be null");
+
+        return new LoginCmd(password, now);
     }
 
 }

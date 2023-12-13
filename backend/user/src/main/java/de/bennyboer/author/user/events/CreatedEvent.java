@@ -1,5 +1,7 @@
 package de.bennyboer.author.user.events;
 
+import de.bennyboer.author.auth.EncodedPassword;
+import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.UserName;
 import de.bennyboer.author.user.commands.CreateCmd;
 import de.bennyboer.eventsourcing.Version;
@@ -19,8 +21,12 @@ public class CreatedEvent implements Event {
 
     UserName name;
 
+    Password password;
+
     public static CreatedEvent of(CreateCmd cmd) {
-        return new CreatedEvent(cmd.getName());
+        EncodedPassword encodedPassword = EncodedPassword.ofRaw(cmd.getPassword().getValue());
+
+        return new CreatedEvent(cmd.getName(), Password.of(encodedPassword.getValue()));
     }
 
     @Override

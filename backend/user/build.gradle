@@ -5,4 +5,7 @@ plugins {
 dependencies {
     implementation project(':eventsourcing')
     implementation project(':common')
+    implementation project(':auth')
+
+    testImplementation project(':testing')
 }

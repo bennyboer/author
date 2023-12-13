@@ -14,6 +14,7 @@ public class UserRestRouting implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
+        post("/login", handler::login);
         path("/{userId}", () -> {
             get(handler::getUser);
             post("/rename", handler::renameUser);

@@ -1,0 +1,11 @@
+plugins {
+    id 'de.bennyboer.author.java-library-conventions'
+}
+
+dependencies {
+    implementation project(':common')
+
+    implementation 'org.springframework.security:spring-security-crypto:6.2.0'
+    implementation 'commons-logging:commons-logging:1.3.0'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
+}
