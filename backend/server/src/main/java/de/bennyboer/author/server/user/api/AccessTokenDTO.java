@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
-import java.time.Instant;
-
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -15,7 +13,5 @@ import java.time.Instant;
 public class AccessTokenDTO {
 
     String value;
-
-    Instant expiresAt;
 
 }

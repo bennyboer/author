@@ -1,10 +1,21 @@
 package de.bennyboer.author.structure.tree;
 
-import de.bennyboer.author.structure.tree.commands.*;
-import de.bennyboer.author.structure.tree.events.*;
-import de.bennyboer.author.structure.tree.node.Node;
-import de.bennyboer.author.structure.tree.node.NodeId;
-import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.author.structure.tree.create.CreateCmd;
+import de.bennyboer.author.structure.tree.create.CreatedEvent;
+import de.bennyboer.author.structure.tree.nodes.Node;
+import de.bennyboer.author.structure.tree.nodes.NodeId;
+import de.bennyboer.author.structure.tree.nodes.NodeName;
+import de.bennyboer.author.structure.tree.nodes.add.AddNodeCmd;
+import de.bennyboer.author.structure.tree.nodes.add.NodeAddedEvent;
+import de.bennyboer.author.structure.tree.nodes.remove.NodeRemovedEvent;
+import de.bennyboer.author.structure.tree.nodes.remove.RemoveNodeCmd;
+import de.bennyboer.author.structure.tree.nodes.rename.NodeRenamedEvent;
+import de.bennyboer.author.structure.tree.nodes.rename.RenameNodeCmd;
+import de.bennyboer.author.structure.tree.nodes.swap.NodesSwappedEvent;
+import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
+import de.bennyboer.author.structure.tree.nodes.toggle.NodeToggledEvent;
+import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
+import de.bennyboer.author.structure.tree.snapshot.SnapshottedEvent;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.Aggregate;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;

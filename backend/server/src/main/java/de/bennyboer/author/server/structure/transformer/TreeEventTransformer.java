@@ -1,6 +1,10 @@
 package de.bennyboer.author.server.structure.transformer;
 
-import de.bennyboer.author.structure.tree.events.*;
+import de.bennyboer.author.structure.tree.nodes.add.NodeAddedEvent;
+import de.bennyboer.author.structure.tree.nodes.remove.NodeRemovedEvent;
+import de.bennyboer.author.structure.tree.nodes.rename.NodeRenamedEvent;
+import de.bennyboer.author.structure.tree.nodes.swap.NodesSwappedEvent;
+import de.bennyboer.author.structure.tree.nodes.toggle.NodeToggledEvent;
 import de.bennyboer.eventsourcing.event.Event;
 
 import java.util.Map;

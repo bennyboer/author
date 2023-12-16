@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.user.transformer;
 
-import de.bennyboer.author.project.events.CreatedEvent;
-import de.bennyboer.author.project.events.RenamedEvent;
+import de.bennyboer.author.project.create.CreatedEvent;
+import de.bennyboer.author.project.rename.RenamedEvent;
 import de.bennyboer.eventsourcing.event.Event;
 
 import java.util.Map;

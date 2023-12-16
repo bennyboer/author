@@ -2,12 +2,19 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import de.bennyboer.author.auth.keys.KeyPair;
+import de.bennyboer.author.auth.keys.KeyPairs;
+import de.bennyboer.author.auth.token.TokenGenerator;
+import de.bennyboer.author.auth.token.TokenGenerators;
+import de.bennyboer.author.auth.token.TokenVerifier;
+import de.bennyboer.author.auth.token.TokenVerifiers;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectService;
 import de.bennyboer.author.server.project.facade.ProjectFacade;
 import de.bennyboer.author.server.project.rest.ProjectRestHandler;
 import de.bennyboer.author.server.project.rest.ProjectRestRouting;
 import de.bennyboer.author.server.project.transformer.ProjectEventTransformer;
+import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
@@ -23,7 +30,7 @@ import de.bennyboer.author.server.user.transformer.UserEventTransformer;
 import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
-import de.bennyboer.author.structure.tree.node.NodeName;
+import de.bennyboer.author.structure.tree.nodes.NodeName;
 import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserName;
@@ -47,6 +54,11 @@ public class App {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         });
 
+        KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
+        TokenGenerator tokenGenerator = TokenGenerators.create(keyPair);
+        TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
+        Auth.init(tokenVerifier);
+
         var messaging = new Messaging();
         messaging.registerAggregateType(User.TYPE);
         messaging.registerAggregateType(Project.TYPE);
@@ -60,9 +72,7 @@ public class App {
 
         var webSocketService = new WebSocketService(messaging, jsonMapper);
 
-        // TODO Authentication module with login (JWT)
-
-        var userService = new UserService(eventSourcingRepo, eventPublisher);
+        var userService = new UserService(eventSourcingRepo, eventPublisher, tokenGenerator);
         var userLookupRepo = new UserLookupInMemoryRepo();
         var userFacade = new UserFacade(userService, userLookupRepo);
         var userRestHandler = new UserRestHandler(userFacade);
@@ -104,11 +114,20 @@ public class App {
                     event.serverStarted(() -> {
                         // TODO For now we create a test user here for testing purposes
                         // TODO This is later to be replaced by some configuration and a signup mechanism
-                        var testUserId = userService.create(UserName.of("test"), Password.of("test"), Agent.system())
+                        var testUserId = userService.create(
+                                        UserName.of("test"),
+                                        Password.of("password"),
+                                        Agent.system()
+                                )
                                 .map(AggregateIdAndVersion::getId)
                                 .map(UserId::getValue)
                                 .block();
-                        System.out.printf("### TEST USER ID '%s' ###%n", testUserId);
+                        System.out.printf(
+                                "### TEST USER ID '%s' with name '%s' and password '%s' ###%n",
+                                testUserId,
+                                "test",
+                                "password"
+                        );
 
                         // TODO For now that we do not have projects we need to create a tree here for testing purposes
                         // TODO Remove when a tree is created as a side-effect of creating a project

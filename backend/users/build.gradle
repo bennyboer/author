@@ -1,0 +1,11 @@
+plugins {
+    id 'de.bennyboer.author.java-library-conventions'
+}
+
+dependencies {
+    implementation project(':libs:eventsourcing')
+    implementation project(':libs:common')
+    implementation project(':libs:auth')
+
+    testImplementation project(':libs:testing')
+}

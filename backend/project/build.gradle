@@ -1,8 +1,0 @@
-plugins {
-    id 'de.bennyboer.author.java-library-conventions'
-}
-
-dependencies {
-    implementation project(':eventsourcing')
-    implementation project(':common')
-}
