@@ -16,3 +16,10 @@ hr {
   border: 0;
   border-top: 1px solid #ccc;
 }
+
+/*
+This class will remove the subscript sizing at the bottom of a mat-form-field.
+ */
+.remove-subscript-sizing {
+  margin-bottom: -1.25em;
+}

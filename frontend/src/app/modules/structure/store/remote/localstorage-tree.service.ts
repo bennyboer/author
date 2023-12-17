@@ -1,4 +1,4 @@
-import { RemoteStructureTreeService } from './remote.service';
+import { TreeService } from './tree.service';
 import {
   BehaviorSubject,
   delay,
@@ -52,10 +52,7 @@ const DEFAULT_TREE: StructureTree = {
 };
 
 @Injectable()
-export class LocalStorageRemoteStructureTreeService
-  extends RemoteStructureTreeService
-  implements OnDestroy
-{
+export class LocalStorageTreeService extends TreeService implements OnDestroy {
   private readonly config: LocalStorageRemoteStructureTreeServiceConfig;
 
   private readonly tree$: BehaviorSubject<StructureTree> = new BehaviorSubject(

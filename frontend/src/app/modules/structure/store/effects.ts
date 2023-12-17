@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { RemoteStructureTreeService } from './remote';
+import { TreeService } from './remote';
 import { catchError, map, mergeMap, of } from 'rxjs';
 import {
   addNode,
@@ -134,6 +134,6 @@ export class StructureStoreEffects {
 
   constructor(
     private readonly actions: Actions,
-    private readonly remoteStructureTreeService: RemoteStructureTreeService,
+    private readonly remoteStructureTreeService: TreeService,
   ) {}
 }

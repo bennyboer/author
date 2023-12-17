@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 import { StructureTreeEvent } from './events';
 import { StructureTree } from '../state';
 
-export abstract class RemoteStructureTreeService {
+export abstract class TreeService {
   abstract getTree(): Observable<StructureTree>;
 
   abstract getEvents(): Observable<StructureTreeEvent>;

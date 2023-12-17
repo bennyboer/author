@@ -1,17 +1,21 @@
 package de.bennyboer.author.server.shared.messaging;
 
+import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.eventsourcing.event.EventName;
+import io.javalin.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 
-import javax.jms.JMSContext;
-import javax.jms.Topic;
+import javax.jms.*;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Since the server is currently not expected to face any severe load
@@ -32,9 +36,14 @@ public class Messaging {
 
     private JMSContext ctx;
 
+    private final JsonMapper jsonMapper;
+
     private final Map<AggregateType, Topic> topicsByAggregateType = new HashMap<>();
 
-    public Messaging() {
+    private final Map<MessageListenerId, JMSConsumer> messageListeners = new HashMap<>();
+
+    public Messaging(JsonMapper jsonMapper) {
+        this.jsonMapper = jsonMapper;
         server = new EmbeddedActiveMQ();
 
         try {
@@ -66,6 +75,58 @@ public class Messaging {
 
     public void registerAggregateType(AggregateType type) {
         createTopic(type);
+    }
+
+    public MessageListenerId registerAggregateEventMessageListener(AggregateEventMessageListener listener) {
+        AggregateType type = listener.aggregateType();
+
+        Topic topic = getTopic(type);
+        String messageSelector = buildMessageSelectorForAggregateEventMessageListener(listener);
+
+        JMSConsumer consumer = ctx.createConsumer(topic, messageSelector);
+        consumer.setMessageListener(message -> parseAggregateEventMessage(message)
+                .ifPresent(msg -> listener.onMessage(msg).block()));
+
+        MessageListenerId id = MessageListenerId.create();
+        messageListeners.put(id, consumer);
+
+        return id;
+    }
+
+    public void unregisterAggregateEventMessageListener(MessageListenerId id) {
+        Optional.ofNullable(messageListeners.remove(id))
+                .ifPresent(JMSConsumer::close);
+    }
+
+    private Optional<AggregateEventMessage> parseAggregateEventMessage(Message msg) {
+        if (msg instanceof TextMessage textMessage) {
+            try {
+                String json = textMessage.getText();
+                return Optional.of(jsonMapper.fromJsonString(json, AggregateEventMessage.class));
+            } catch (Exception e) {
+                log.error("Failed to parse AggregateEventMessage", e);
+                return Optional.empty();
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private String buildMessageSelectorForAggregateEventMessageListener(AggregateEventMessageListener listener) {
+        Optional<AggregateId> aggregateId = listener.aggregateId();
+        Optional<EventName> eventName = listener.eventName();
+        String messageSelector = "";
+        if (aggregateId.isPresent()) {
+            messageSelector += String.format("aggregateId = '%s'", aggregateId.get().getValue());
+        }
+        if (eventName.isPresent()) {
+            if (!messageSelector.isBlank()) {
+                messageSelector += " AND ";
+            }
+            messageSelector += String.format("eventName = '%s'", eventName.get().getValue());
+        }
+
+        return messageSelector;
     }
 
     private void start() throws Exception {

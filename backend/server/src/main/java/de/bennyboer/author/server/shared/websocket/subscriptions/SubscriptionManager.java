@@ -1,5 +1,7 @@
 package de.bennyboer.author.server.shared.websocket.subscriptions;
 
+import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.MessageListenerId;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
 import de.bennyboer.author.server.shared.websocket.SessionId;
@@ -7,12 +9,11 @@ import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.eventsourcing.event.EventName;
-import io.javalin.json.JsonMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.utils.collections.ConcurrentHashSet;
+import reactor.core.publisher.Mono;
 
-import javax.jms.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -25,8 +26,6 @@ public class SubscriptionManager {
 
     private final Messaging messaging;
 
-    private final JsonMapper jsonMapper;
-
     private final SubscriptionEventListener subscriptionEventListener;
 
     private final Map<AggregateType, Map<AggregateId, Set<SessionId>>> subscriptions = new ConcurrentHashMap<>();
@@ -35,7 +34,7 @@ public class SubscriptionManager {
 
     private final Set<SubscriptionTarget> subscriptionTargets = new ConcurrentHashSet<>();
 
-    private final Map<SubscriptionTarget, JMSConsumer> messageListenersPerTarget = new ConcurrentHashMap<>();
+    private final Map<SubscriptionTarget, MessageListenerId> messageListenersPerTarget = new ConcurrentHashMap<>();
 
     public void subscribe(SubscriptionTarget target, SessionId sessionId) {
         findSubscribers(target).add(sessionId);
@@ -73,29 +72,27 @@ public class SubscriptionManager {
     }
 
     private void setupMessageListenerForTarget(SubscriptionTarget target) {
-        JMSContext ctx = messaging.getContext();
-        Topic topic = messaging.getTopic(target.getAggregateType());
+        AggregateType type = target.getAggregateType();
+        AggregateId id = target.getAggregateId();
 
-        String aggregateIdMessageSelector = String.format("aggregateId = '%s'", target.getAggregateId().getValue());
-        JMSConsumer consumer = ctx.createConsumer(topic, aggregateIdMessageSelector);
-        consumer.setMessageListener(message -> parseAggregateEventMessage(message)
-                .ifPresent(this::publishEventForAggregateEventMessage));
-
-        messageListenersPerTarget.put(target, consumer);
-    }
-
-    private Optional<AggregateEventMessage> parseAggregateEventMessage(Message msg) {
-        if (msg instanceof TextMessage textMessage) {
-            try {
-                String json = textMessage.getText();
-                return Optional.of(jsonMapper.fromJsonString(json, AggregateEventMessage.class));
-            } catch (Exception e) {
-                log.error("Failed to parse AggregateEventMessage", e);
-                return Optional.empty();
+        var messageListenerId = messaging.registerAggregateEventMessageListener(new AggregateEventMessageListener() {
+            @Override
+            public AggregateType aggregateType() {
+                return type;
             }
-        }
 
-        return Optional.empty();
+            @Override
+            public Optional<AggregateId> aggregateId() {
+                return Optional.of(id);
+            }
+
+            @Override
+            public Mono<Void> onMessage(AggregateEventMessage message) {
+                return Mono.fromRunnable(() -> publishEventForAggregateEventMessage(message));
+            }
+        });
+
+        messageListenersPerTarget.put(target, messageListenerId);
     }
 
     private void publishEventForAggregateEventMessage(AggregateEventMessage msg) {
@@ -112,8 +109,8 @@ public class SubscriptionManager {
     }
 
     private void cleanupMessageListenerForTarget(SubscriptionTarget target) {
-        JMSConsumer consumer = messageListenersPerTarget.remove(target);
-        consumer.close();
+        MessageListenerId messageListenerId = messageListenersPerTarget.remove(target);
+        messaging.unregisterAggregateEventMessageListener(messageListenerId);
     }
 
 }

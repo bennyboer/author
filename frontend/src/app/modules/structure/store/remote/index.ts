@@ -1,4 +1,4 @@
-export { RemoteStructureTreeService } from './remote.service';
-export { LocalStorageRemoteStructureTreeService } from './localstorage.service';
-export { BackendRemoteStructureTreeService } from './backend-remote.service';
+export { TreeService } from './tree.service';
+export { LocalStorageTreeService } from './localstorage-tree.service';
+export { HttpTreeService } from './http-tree.service';
 export * from './events';

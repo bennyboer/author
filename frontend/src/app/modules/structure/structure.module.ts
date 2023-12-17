@@ -16,13 +16,13 @@ import {
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import {
-  RemoteStructureTreeService,
+  HttpTreeService,
   structureStore,
   StructureStoreEffects,
   StructureTreeService,
+  TreeService,
 } from './store';
 import { CommonModule } from '@angular/common';
-import { BackendRemoteStructureTreeService } from './store/remote';
 import { HttpClientModule } from '@angular/common/http';
 
 const PAGES = [StructurePage];
@@ -49,8 +49,8 @@ const DIALOGS = [NodeDetailsDialog];
   providers: [
     StructureTreeService,
     {
-      provide: RemoteStructureTreeService,
-      useClass: BackendRemoteStructureTreeService, // LocalStorageRemoteStructureTreeService,
+      provide: TreeService,
+      useClass: HttpTreeService, // LocalStorageRemoteStructureTreeService,
     },
   ],
   exports: [],

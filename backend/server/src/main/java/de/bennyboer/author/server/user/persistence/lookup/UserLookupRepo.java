@@ -11,4 +11,6 @@ public interface UserLookupRepo {
 
     Mono<Void> update(User user);
 
+    Mono<Void> remove(UserId userId);
+
 }

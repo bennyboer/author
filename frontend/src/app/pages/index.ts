@@ -1,1 +1,1 @@
-export {StartPage} from "./start/start.page";
+export { StartPage } from './start/start.page';

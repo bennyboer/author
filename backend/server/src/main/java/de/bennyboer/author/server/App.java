@@ -15,6 +15,7 @@ import de.bennyboer.author.server.project.rest.ProjectRestHandler;
 import de.bennyboer.author.server.project.rest.ProjectRestRouting;
 import de.bennyboer.author.server.project.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.http.Auth;
+import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
@@ -23,6 +24,8 @@ import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
 import de.bennyboer.author.server.user.facade.UserFacade;
+import de.bennyboer.author.server.user.messaging.UserCreatedUpdateLookupMsgListener;
+import de.bennyboer.author.server.user.messaging.UserRemovedUpdateLookupMsgListener;
 import de.bennyboer.author.server.user.persistence.lookup.UserLookupInMemoryRepo;
 import de.bennyboer.author.server.user.rest.UserRestHandler;
 import de.bennyboer.author.server.user.rest.UserRestRouting;
@@ -40,9 +43,14 @@ import de.bennyboer.eventsourcing.aggregate.AggregateIdAndVersion;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
 import io.javalin.plugin.bundled.CorsPluginConfig;
+import io.javalin.security.RouteRole;
+
+import java.util.Set;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
@@ -59,7 +67,7 @@ public class App {
         TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
         Auth.init(tokenVerifier);
 
-        var messaging = new Messaging();
+        var messaging = new Messaging(jsonMapper);
         messaging.registerAggregateType(User.TYPE);
         messaging.registerAggregateType(Project.TYPE);
         messaging.registerAggregateType(Tree.TYPE);
@@ -70,13 +78,18 @@ public class App {
         eventPublisher.registerAggregateEventPayloadTransformer(Project.TYPE, ProjectEventTransformer::toApi);
         eventPublisher.registerAggregateEventPayloadTransformer(Tree.TYPE, TreeEventTransformer::toApi);
 
-        var webSocketService = new WebSocketService(messaging, jsonMapper);
+        var webSocketService = new WebSocketService(messaging);
 
         var userService = new UserService(eventSourcingRepo, eventPublisher, tokenGenerator);
         var userLookupRepo = new UserLookupInMemoryRepo();
         var userFacade = new UserFacade(userService, userLookupRepo);
         var userRestHandler = new UserRestHandler(userFacade);
         var userRestRouting = new UserRestRouting(userRestHandler);
+        messaging.registerAggregateEventMessageListener(new UserCreatedUpdateLookupMsgListener(
+                userLookupRepo,
+                userService
+        ));
+        messaging.registerAggregateEventMessageListener(new UserRemovedUpdateLookupMsgListener(userLookupRepo));
 
         var projectService = new ProjectService(eventSourcingRepo, eventPublisher);
         var projectFacade = new ProjectFacade(projectService);
@@ -95,6 +108,8 @@ public class App {
                     });
 
                     config.jsonMapper(jsonMapper);
+
+                    config.accessManager(App::handleIfPermitted);
                 })
                 .get("/", ctx -> ctx.result("Hello World")) // TODO Maybe serve frontend here?
                 .ws("/ws", ws -> {
@@ -140,6 +155,32 @@ public class App {
                     event.serverStopping(messaging::stop);
                 })
                 .start(7070);
+    }
+
+    private static void handleIfPermitted(Handler handler, Context ctx, Set<? extends RouteRole> permittedRoles)
+            throws Exception {
+        Set<Role> defaultRoles = Set.of(Role.AUTHORIZED); // We require authorization by default
+        Set<? extends RouteRole> roles = permittedRoles.isEmpty() ? defaultRoles : permittedRoles;
+
+        /*
+        If the route is permitted for unauthorized use or the agent is a system agent, we allow the request through.
+         */
+        Agent agent = Auth.toAgent(ctx).block();
+        if (roles.contains(Role.UNAUTHORIZED) || agent.isSystem()) {
+            handler.handle(ctx);
+            return;
+        }
+
+        /*
+        Here we only allow users that are authorized and thus must have a user ID!
+         */
+        boolean isUserAgent = agent.getUserId().isPresent();
+        if (!isUserAgent) {
+            ctx.status(401).result("Unauthorized");
+            return;
+        }
+
+        handler.handle(ctx);
     }
 
 }

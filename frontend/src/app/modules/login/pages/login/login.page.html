@@ -1,0 +1,41 @@
+<div class="login-container">
+  <h1>
+    Hi there!<span class="blinking">_</span>
+  </h1>
+
+  <p class="subtext">
+    Enter your credentials below to access the app.
+  </p>
+
+  <form [formGroup]="formGroup" class="login-form">
+    <div class="left">
+      <div>
+        <mat-form-field appearance="outline">
+          <mat-label>Username</mat-label>
+          <input formControlName="username" matInput placeholder="Username">
+          <mat-icon matSuffix>account_circle</mat-icon>
+        </mat-form-field>
+      </div>
+      <div>
+        <mat-form-field appearance="outline" class="remove-subscript-sizing">
+          <mat-label>Password</mat-label>
+          <input formControlName="password" matInput type="password" placeholder="Password">
+          <mat-icon matSuffix>key</mat-icon>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="right">
+      <button mat-flat-button color="primary" type="submit" (click)="login()" [disabled]="!formGroup.valid">
+        Login
+      </button>
+    </div>
+  </form>
+
+  <p class="subtext">
+    Forgot your password? <a href="/login/forgot">Click here</a> to reset it.
+  </p>
+
+  <p class="subtext">
+    If you do not yet have an account, you may sign up <a href="/login/signup">here</a>.
+  </p>
+</div>

@@ -1,4 +1,4 @@
-import { RemoteStructureTreeService } from './remote.service';
+import { TreeService } from './tree.service';
 import { map, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import {
   NodeAddedEvent,
@@ -18,6 +18,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from '../../../shared';
 import { EventMessage } from '../../../shared/services';
+import { environment } from '../../../../../environments';
 
 interface AddChildRequest {
   name: string;
@@ -51,11 +52,9 @@ interface NodeDTO {
 }
 
 @Injectable()
-export class BackendRemoteStructureTreeService
-  implements RemoteStructureTreeService, OnDestroy
-{
+export class HttpTreeService implements TreeService, OnDestroy {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = '79de2e92-8c97-46a3-8363-3c05efb3b14f'; // TODO Taken from server log
+  private readonly treeId: string = 'e16e336b-5a67-4d30-8be0-60c84e092686'; // TODO Taken from server log
   private readonly events$: Subject<StructureTreeEvent> =
     new Subject<StructureTreeEvent>();
   private readonly tree$: Subject<StructureTree> = new Subject<StructureTree>();
@@ -168,8 +167,7 @@ export class BackendRemoteStructureTreeService
   }
 
   private url(postfix: string): string {
-    const apiUrl = 'http://localhost:7070/api'; // TODO Take apiUrl from config
-    return `${apiUrl}/structure/trees/${postfix}`;
+    return `${environment.apiUrl}/structure/trees/${postfix}`;
   }
 
   private mapToStructureTree(tree: TreeDTO): StructureTree {
