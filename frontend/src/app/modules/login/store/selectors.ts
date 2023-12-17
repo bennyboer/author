@@ -11,9 +11,11 @@ const selectErrorMessage = createSelector(loginState, (state) =>
   Option.someOrNone(state.errorMessage),
 );
 const isLoading = createSelector(loginState, (state) => state.loading);
+const isLoggedIn = createSelector(loginState, (state) => !!state.token);
 
 export const selectors = {
   token: selectToken,
   errorMessage: selectErrorMessage,
   isLoading,
+  isLoggedIn,
 };

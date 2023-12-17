@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialState } from './state';
-import { login, loginFailure, loginSuccess } from './actions';
+import { login, loginFailure, loginStateLoaded, loginSuccess } from './actions';
 
 export const reducer = createReducer(
   initialState,
@@ -10,5 +10,11 @@ export const reducer = createReducer(
   on(loginFailure, (state, { message }) => ({
     ...state,
     errorMessage: message,
+  })),
+
+  on(loginStateLoaded, (state, { token }) => ({
+    ...state,
+    token,
+    loading: false,
   })),
 );

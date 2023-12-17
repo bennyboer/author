@@ -14,6 +14,13 @@ export const loginFailure = createAction(
   props<{ message: string }>(),
 );
 
+export const loadLoginState = createAction('[Login] Load Login State');
+export const loginStateLoaded = createAction(
+  '[Login] Login State Loaded',
+  props<{ token?: Token }>(),
+);
+
 export const actions = {
   login,
+  loadLoginState,
 };

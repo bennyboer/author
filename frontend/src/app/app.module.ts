@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { LoginModule } from './modules/login';
 
 const COMPONENTS = [AppComponent, NavigationComponent, PageContainerComponent];
 
@@ -26,6 +27,7 @@ const PAGES = [StartPage];
     BrowserAnimationsModule,
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
+    LoginModule,
     MatIconModule,
     MatMenuModule,
   ],

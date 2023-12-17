@@ -39,6 +39,5 @@ const PAGES = [LoginPage];
       useClass: HttpLoginService,
     },
   ],
-  exports: [],
 })
 export class LoginModule {}

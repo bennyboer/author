@@ -2,16 +2,18 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { StartPage } from './pages';
 import { PageContainerComponent } from './components';
+import { loggedInGuard, loggedOutGuard, LoginModule } from './modules/login';
 
 const routes: Routes = [
   {
     path: 'login',
-    loadChildren: () =>
-      import('./modules/login/login.module').then((m) => m.LoginModule),
+    canActivate: [loggedOutGuard],
+    loadChildren: () => LoginModule,
   },
   {
     path: '',
     component: PageContainerComponent,
+    canActivate: [loggedInGuard],
     children: [
       {
         path: '',

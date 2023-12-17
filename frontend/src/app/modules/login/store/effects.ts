@@ -1,8 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, mergeMap, of } from 'rxjs';
+import { catchError, map, mergeMap, of, tap } from 'rxjs';
 import { RemoteLoginService } from './remote';
-import { login, loginFailure, loginSuccess } from './actions';
+import {
+  loadLoginState,
+  login,
+  loginFailure,
+  loginStateLoaded,
+  loginSuccess,
+} from './actions';
+import { Router } from '@angular/router';
+import { Option } from '../../shared';
+import { Token } from './state';
 
 @Injectable()
 export class LoginStoreEffects {
@@ -24,8 +33,41 @@ export class LoginStoreEffects {
     ),
   );
 
+  navigateToStartPage$ = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(loginSuccess),
+        tap(() => this.router.navigate(['/'])),
+      ),
+    { dispatch: false },
+  );
+
+  loadLoginStateFromLocalStorage$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(loadLoginState),
+      map(() => Option.someOrNone(localStorage.getItem('token'))),
+      map((token) =>
+        loginStateLoaded({
+          token: token
+            .map((value) => ({ value }) as Token)
+            .orElse(null as unknown as Token),
+        }),
+      ),
+    ),
+  );
+
+  saveTokenToLocalStorage$ = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(loginSuccess),
+        tap(({ token }) => localStorage.setItem('token', token.value)),
+      ),
+    { dispatch: false },
+  );
+
   constructor(
     private readonly actions: Actions,
     private readonly loginService: RemoteLoginService,
+    private readonly router: Router,
   ) {}
 }
