@@ -10,8 +10,10 @@ import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Value
 @AllArgsConstructor
 public class TreeFacade {
@@ -75,6 +77,19 @@ public class TreeFacade {
                 NodeName.of(newNodeName),
                 agent
         ).then();
+    }
+
+    /**
+     * @deprecated To be removed when we have a message listener that creates a tree for a new project.
+     */
+    @Deprecated
+    public Mono<Void> initSampleTree() {
+        return treeService.create(NodeName.of("Root"), Agent.system())
+                .doOnNext((idAndVersion) -> log.info(
+                        "Created sample tree with ID '{}' for testing purposes",
+                        idAndVersion.getId().getValue()
+                ))
+                .then();
     }
 
 }

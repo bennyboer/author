@@ -61,6 +61,7 @@ public class Messaging {
 
     public void stop() {
         try {
+            deregisterAllAggregateEventMessageListeners();
             server.stop();
             connectionFactory.close();
         } catch (Exception e) {
@@ -93,9 +94,14 @@ public class Messaging {
         return id;
     }
 
-    public void unregisterAggregateEventMessageListener(MessageListenerId id) {
+    public void deregisterAggregateEventMessageListener(MessageListenerId id) {
         Optional.ofNullable(messageListeners.remove(id))
                 .ifPresent(JMSConsumer::close);
+    }
+
+    private void deregisterAllAggregateEventMessageListeners() {
+        messageListeners.values().forEach(JMSConsumer::close);
+        messageListeners.clear();
     }
 
     private Optional<AggregateEventMessage> parseAggregateEventMessage(Message msg) {

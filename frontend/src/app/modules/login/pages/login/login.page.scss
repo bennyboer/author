@@ -24,6 +24,11 @@
   align-items: end;
 }
 
+.caret {
+  margin-left: 4px;
+  border-right: 2px solid black;
+}
+
 .blinking {
   animation: blinking-animation 1s infinite;
   visibility: hidden;

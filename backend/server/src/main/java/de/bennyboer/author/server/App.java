@@ -8,41 +8,20 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenGenerators;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.auth.token.TokenVerifiers;
-import de.bennyboer.author.project.Project;
-import de.bennyboer.author.project.ProjectService;
-import de.bennyboer.author.server.project.facade.ProjectFacade;
-import de.bennyboer.author.server.project.rest.ProjectRestHandler;
-import de.bennyboer.author.server.project.rest.ProjectRestRouting;
-import de.bennyboer.author.server.project.transformer.ProjectEventTransformer;
+import de.bennyboer.author.server.projects.ProjectsModule;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
+import de.bennyboer.author.server.shared.modules.Module;
+import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
-import de.bennyboer.author.server.structure.facade.TreeFacade;
-import de.bennyboer.author.server.structure.rest.StructureRestRouting;
-import de.bennyboer.author.server.structure.rest.TreeRestHandler;
-import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.server.user.facade.UserFacade;
-import de.bennyboer.author.server.user.messaging.UserCreatedUpdateLookupMsgListener;
-import de.bennyboer.author.server.user.messaging.UserRemovedUpdateLookupMsgListener;
-import de.bennyboer.author.server.user.persistence.lookup.UserLookupInMemoryRepo;
-import de.bennyboer.author.server.user.rest.UserRestHandler;
-import de.bennyboer.author.server.user.rest.UserRestRouting;
-import de.bennyboer.author.server.user.transformer.UserEventTransformer;
-import de.bennyboer.author.structure.tree.Tree;
-import de.bennyboer.author.structure.tree.TreeId;
-import de.bennyboer.author.structure.tree.TreeService;
-import de.bennyboer.author.structure.tree.nodes.NodeName;
-import de.bennyboer.author.user.Password;
-import de.bennyboer.author.user.User;
-import de.bennyboer.author.user.UserName;
-import de.bennyboer.author.user.UserService;
-import de.bennyboer.common.UserId;
-import de.bennyboer.eventsourcing.aggregate.AggregateIdAndVersion;
+import de.bennyboer.author.server.structure.StructureModule;
+import de.bennyboer.author.server.users.UsersModule;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.json.JavalinJackson;
@@ -51,8 +30,6 @@ import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
 
 import java.util.Set;
-
-import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class App {
 
@@ -68,40 +45,19 @@ public class App {
         Auth.init(tokenVerifier);
 
         var messaging = new Messaging(jsonMapper);
-        messaging.registerAggregateType(User.TYPE);
-        messaging.registerAggregateType(Project.TYPE);
-        messaging.registerAggregateType(Tree.TYPE);
 
         var eventSourcingRepo = new InMemoryEventSourcingRepo();
         var eventPublisher = new MessagingEventPublisher(messaging, jsonMapper);
-        eventPublisher.registerAggregateEventPayloadTransformer(User.TYPE, UserEventTransformer::toApi);
-        eventPublisher.registerAggregateEventPayloadTransformer(Project.TYPE, ProjectEventTransformer::toApi);
-        eventPublisher.registerAggregateEventPayloadTransformer(Tree.TYPE, TreeEventTransformer::toApi);
 
         var webSocketService = new WebSocketService(messaging);
 
-        var userService = new UserService(eventSourcingRepo, eventPublisher, tokenGenerator);
-        var userLookupRepo = new UserLookupInMemoryRepo();
-        var userFacade = new UserFacade(userService, userLookupRepo);
-        var userRestHandler = new UserRestHandler(userFacade);
-        var userRestRouting = new UserRestRouting(userRestHandler);
-        messaging.registerAggregateEventMessageListener(new UserCreatedUpdateLookupMsgListener(
-                userLookupRepo,
-                userService
-        ));
-        messaging.registerAggregateEventMessageListener(new UserRemovedUpdateLookupMsgListener(userLookupRepo));
-
-        var projectService = new ProjectService(eventSourcingRepo, eventPublisher);
-        var projectFacade = new ProjectFacade(projectService);
-        var projectRestHandler = new ProjectRestHandler(projectFacade);
-        var projectRestRouting = new ProjectRestRouting(projectRestHandler);
-
-        var treeService = new TreeService(eventSourcingRepo, eventPublisher);
-        var treeFacade = new TreeFacade(treeService);
-        var treeRestHandler = new TreeRestHandler(treeFacade);
-        var structureRestRouting = new StructureRestRouting(treeRestHandler);
-
         Javalin.create(config -> {
+                    ModuleConfig moduleConfig = ModuleConfig.of(eventSourcingRepo, eventPublisher, messaging);
+
+                    registerModule(config, new UsersModule(moduleConfig, tokenGenerator));
+                    registerModule(config, new ProjectsModule(moduleConfig));
+                    registerModule(config, new StructureModule(moduleConfig));
+
                     config.plugins.enableCors(cors -> {
                         // TODO Restrict to frontend host and only allow for DEV build
                         cors.add(CorsPluginConfig::anyHost);
@@ -118,43 +74,12 @@ public class App {
                     ws.onError(webSocketService::onError);
                     ws.onMessage(webSocketService::onMessage);
                 })
-                .routes(() -> {
-                    path("/api", () -> {
-                        path("/structure", structureRestRouting);
-                        path("/projects", projectRestRouting);
-                        path("/users", userRestRouting);
-                    });
-                })
-                .events(event -> {
-                    event.serverStarted(() -> {
-                        // TODO For now we create a test user here for testing purposes
-                        // TODO This is later to be replaced by some configuration and a signup mechanism
-                        var testUserId = userService.create(
-                                        UserName.of("test"),
-                                        Password.of("password"),
-                                        Agent.system()
-                                )
-                                .map(AggregateIdAndVersion::getId)
-                                .map(UserId::getValue)
-                                .block();
-                        System.out.printf(
-                                "### TEST USER ID '%s' with name '%s' and password '%s' ###%n",
-                                testUserId,
-                                "test",
-                                "password"
-                        );
-
-                        // TODO For now that we do not have projects we need to create a tree here for testing purposes
-                        // TODO Remove when a tree is created as a side-effect of creating a project
-                        var testTreeId = treeService.create(NodeName.of("Root"), Agent.system())
-                                .map(AggregateIdAndVersion::getId)
-                                .map(TreeId::getValue)
-                                .block();
-                        System.out.println("Test tree ID: " + testTreeId);
-                    });
-                    event.serverStopping(messaging::stop);
-                })
+                .events(event -> event.serverStopping(messaging::stop))
                 .start(7070);
+    }
+
+    private static void registerModule(JavalinConfig config, Module module) {
+        config.plugins.register(module);
     }
 
     private static void handleIfPermitted(Handler handler, Context ctx, Set<? extends RouteRole> permittedRoles)

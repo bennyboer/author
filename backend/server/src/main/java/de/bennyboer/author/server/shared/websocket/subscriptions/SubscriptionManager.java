@@ -110,7 +110,7 @@ public class SubscriptionManager {
 
     private void cleanupMessageListenerForTarget(SubscriptionTarget target) {
         MessageListenerId messageListenerId = messageListenersPerTarget.remove(target);
-        messaging.unregisterAggregateEventMessageListener(messageListenerId);
+        messaging.deregisterAggregateEventMessageListener(messageListenerId);
     }
 
 }
