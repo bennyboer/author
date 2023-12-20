@@ -13,7 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
-import { LoginModule } from './modules/login';
+import { AuthInterceptor, LoginModule } from './modules/login';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 const COMPONENTS = [AppComponent, NavigationComponent, PageContainerComponent];
 
@@ -30,6 +31,9 @@ const PAGES = [StartPage];
     LoginModule,
     MatIconModule,
     MatMenuModule,
+  ],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
 })

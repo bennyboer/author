@@ -19,14 +19,23 @@
       Writing
     </li>
     <li routerLink="/reading" routerLinkActive="active-link">
-      Reading <!-- TODO Reading view focused on reviewing the written text - leaving comments, may also be shared to the public to request and receive feedback from other people -->
+      Reading
+      <!-- TODO Reading view focused on reviewing the written text - leaving comments, may also be shared to the public to request and receive feedback from other people -->
     </li>
   </ul>
 </nav>
 
 <mat-menu #menu="matMenu">
-  <button mat-menu-item><mat-icon>add</mat-icon> New</button>
-  <button mat-menu-item><mat-icon>upload_file</mat-icon> Load</button>
-  <button mat-menu-item><mat-icon>save_As</mat-icon> Save</button>
-  <button mat-menu-item><mat-icon>publish</mat-icon> Export</button>
+  <button mat-menu-item>
+    <mat-icon>arrow_back_ios</mat-icon>
+    Back to projects
+  </button>
+  <button mat-menu-item>
+    <mat-icon>publish</mat-icon>
+    Export
+  </button>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
 </mat-menu>

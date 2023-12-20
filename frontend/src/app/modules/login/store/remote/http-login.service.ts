@@ -25,7 +25,11 @@ export class HttpLoginService implements RemoteLoginService {
     };
 
     return this.http
-      .post<AccessTokenDTO>(this.url('login'), request)
+      .post<AccessTokenDTO>(this.url('login'), request, {
+        headers: {
+          UNAUTHORIZED: 'true',
+        },
+      })
       .pipe(map((token) => new Token({ value: token.value })));
   }
 

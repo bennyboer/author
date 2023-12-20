@@ -31,6 +31,8 @@ import io.javalin.security.RouteRole;
 
 import java.util.Set;
 
+import static de.bennyboer.author.server.shared.http.security.Role.UNAUTHORIZED;
+
 public class App {
 
     public static void main(String[] args) {
@@ -73,7 +75,7 @@ public class App {
                     ws.onClose(webSocketService::onClose);
                     ws.onError(webSocketService::onError);
                     ws.onMessage(webSocketService::onMessage);
-                })
+                }, UNAUTHORIZED)
                 .events(event -> event.serverStopping(messaging::stop))
                 .start(7070);
     }
@@ -91,7 +93,7 @@ public class App {
         If the route is permitted for unauthorized use or the agent is a system agent, we allow the request through.
          */
         Agent agent = Auth.toAgent(ctx).block();
-        if (roles.contains(Role.UNAUTHORIZED) || agent.isSystem()) {
+        if (roles.contains(UNAUTHORIZED) || agent.isSystem()) {
             handler.handle(ctx);
             return;
         }

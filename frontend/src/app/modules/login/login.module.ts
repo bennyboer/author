@@ -16,11 +16,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { CommonModule } from '@angular/common';
 
 const PAGES = [LoginPage];
 
 @NgModule({
   imports: [
+    CommonModule,
     LoginRoutingModule,
     StoreModule.forFeature(loginStore.featureName, loginStore.reducer),
     EffectsModule.forFeature([LoginStoreEffects]),
@@ -30,6 +33,7 @@ const PAGES = [LoginPage];
     MatInputModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressBarModule,
   ],
   declarations: [...PAGES],
   providers: [

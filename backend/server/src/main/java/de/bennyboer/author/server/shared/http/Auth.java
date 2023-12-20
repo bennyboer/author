@@ -20,8 +20,12 @@ public class Auth {
 
     public static Mono<Agent> toAgent(Context ctx) {
         // TODO Add a backend token that is to be mapped to the system agent
-        return extractToken(ctx)
-                .flatMap(token -> tokenVerifier.verify(token))
+        return extractToken(ctx).flatMap(Auth::toAgent);
+    }
+
+    public static Mono<Agent> toAgent(Token token) {
+        return Mono.just(token)
+                .flatMap(tokenVerifier::verify)
                 .map(content -> Agent.user(content.getUserId()))
                 .onErrorResume(throwable -> {
                     log.warn("Could not verify access token", throwable);

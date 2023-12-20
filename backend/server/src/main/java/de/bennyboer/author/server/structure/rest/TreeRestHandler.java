@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.structure.rest;
 
-import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
 import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
@@ -20,8 +19,6 @@ public class TreeRestHandler {
 
     public void getTree(Context ctx) {
         var treeId = ctx.pathParam("treeId");
-
-        System.out.println(Auth.toAgent(ctx).block().toString());
 
         ctx.future(() -> facade.getTree(treeId)
                 .singleOptional()

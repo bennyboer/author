@@ -1,5 +1,7 @@
 package de.bennyboer.author.server.shared.websocket;
 
+import de.bennyboer.author.auth.token.Token;
+import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.websocket.api.*;
 import de.bennyboer.author.server.shared.websocket.subscriptions.EventTopic;
@@ -7,6 +9,7 @@ import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionMan
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,9 +109,23 @@ public class WebSocketService {
     }
 
     private void onMessage(WsContext ctx, WebSocketMessage msg) {
+        Token token = msg.getToken().map(Token::of).orElseThrow(() -> new IllegalArgumentException(
+                "Received websocket message without token"
+        ));
+        Agent agent = Auth.toAgent(token).block();
+
+        if (agent.isAnonymous()) {
+            log.warn("Received message from anonymous user - closing websocket session");
+            ctx.session.close();
+            return;
+        }
+
         switch (msg.getMethod()) {
             case HEARTBEAT -> ctx.send(WebSocketMessage.heartbeat());
-            case SUBSCRIBE -> subscribe(ctx, msg.getSubscribe().orElseThrow());
+            case SUBSCRIBE -> subscribe(
+                    ctx,
+                    msg.getSubscribe().orElseThrow()
+            ); // TODO Check if agent is allowed to subscribe to target
             case UNSUBSCRIBE -> unsubscribe(ctx, msg.getUnsubscribe().orElseThrow());
             default -> throw new IllegalArgumentException(
                     "Encountered message with unsupported method from client" + msg.getMethod()

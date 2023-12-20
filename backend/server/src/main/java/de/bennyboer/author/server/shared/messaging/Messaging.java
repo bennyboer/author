@@ -156,7 +156,6 @@ public class Messaging {
         See https://activemq.apache.org/how-do-i-create-new-destinations.html
          */
         String topicName = TOPIC_PREFIX + aggregateType.getValue().toLowerCase(Locale.ROOT);
-        System.out.println("Creating topic: " + topicName);
         Topic tree = ctx.createTopic(topicName);
         topicsByAggregateType.put(aggregateType, tree);
     }

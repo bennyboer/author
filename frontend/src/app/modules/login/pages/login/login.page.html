@@ -31,6 +31,30 @@
     </div>
   </form>
 
+  <div class="progress-bar-container">
+    <mat-progress-bar [class.hidden]="isNotLoading() | async" mode="indeterminate"></mat-progress-bar>
+  </div>
+
+  @if (error$ | async;as error) {
+    @if (error !== LoginError.None) {
+      <div class="error-container">
+        <span>
+          @switch (error) {
+            @case (LoginError.InvalidCredentials) {
+              Invalid username or password.
+            }
+            @case (LoginError.TooManyAttempts) {
+              Too many failed login attempts. Please try again in half an hour.
+            }
+            @case (LoginError.Unknown) {
+              An error has occurred. Please try again later or contact us.
+            }
+          }
+        </span>
+      </div>
+    }
+  }
+
   <p class="subtext">
     Forgot your password? <a href="/login/forgot">Click here</a> to reset it.
   </p>

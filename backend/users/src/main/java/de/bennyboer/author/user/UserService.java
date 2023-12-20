@@ -4,7 +4,6 @@ import de.bennyboer.author.auth.token.TokenContent;
 import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.login.LoginCmd;
-import de.bennyboer.author.user.login.UserLockedException;
 import de.bennyboer.author.user.remove.RemoveCmd;
 import de.bennyboer.author.user.rename.RenameCmd;
 import de.bennyboer.common.UserId;
@@ -66,7 +65,6 @@ public class UserService extends AggregateService<User, UserId> {
 
     public Mono<AccessToken> login(UserId userId, Password password) {
         return dispatchCommandToLatest(userId, Agent.anonymous(), LoginCmd.of(password, clock.instant()))
-                .onErrorResume(UserLockedException.class, e -> Mono.empty())
                 .flatMap(version -> get(userId, version))
                 .filter(User::hasNoFailedLoginAttempts)
                 .flatMap(user -> generateAccessToken(user.getId()));

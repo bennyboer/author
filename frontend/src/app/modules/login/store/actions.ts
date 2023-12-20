@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Token } from './state';
+import { LoginError, Token } from './state';
 
 export const login = createAction(
   '[Login] Login',
@@ -11,8 +11,11 @@ export const loginSuccess = createAction(
 );
 export const loginFailure = createAction(
   '[Login] Login Failure',
-  props<{ message: string }>(),
+  props<{ error: LoginError }>(),
 );
+
+export const logout = createAction('[Login] Logout');
+export const logoutSuccess = createAction('[Login] Logout Success');
 
 export const loadLoginState = createAction('[Login] Load Login State');
 export const loginStateLoaded = createAction(
@@ -22,5 +25,6 @@ export const loginStateLoaded = createAction(
 
 export const actions = {
   login,
+  logout,
   loadLoginState,
 };

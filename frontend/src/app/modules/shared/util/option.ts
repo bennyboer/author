@@ -77,6 +77,14 @@ export class Option<T> {
     return this.orElseThrow();
   }
 
+  orElseGet(other: () => T): T {
+    if (this.isNone()) {
+      return other();
+    }
+
+    return this.orElseThrow();
+  }
+
   orElseThrow(): T {
     if (this.isNone()) {
       throw new Error('Expected value to be non-null and non-undefined');

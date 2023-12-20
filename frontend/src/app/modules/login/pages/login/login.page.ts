@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { LoginService } from '../../store';
 import { Option } from '../../../shared';
+import { map, Observable } from 'rxjs';
+import { LoginError } from '../../store/state';
 
 @Component({
   templateUrl: './login.page.html',
@@ -9,10 +11,16 @@ import { Option } from '../../../shared';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {
-  formGroup = new FormGroup({
+  readonly LoginError = LoginError;
+
+  readonly formGroup = new FormGroup({
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required]),
   });
+
+  readonly loading$: Observable<boolean> = this.loginService.isLoading();
+
+  readonly error$: Observable<LoginError> = this.loginService.getError();
 
   constructor(private readonly loginService: LoginService) {}
 
@@ -25,5 +33,9 @@ export class LoginPage {
     ).orElseThrow();
 
     this.loginService.login(username, password);
+  }
+
+  isNotLoading(): Observable<boolean> {
+    return this.loading$.pipe(map((loading) => !loading));
   }
 }

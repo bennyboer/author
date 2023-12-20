@@ -50,7 +50,7 @@ public class UsersFacade {
 
     public Mono<AccessTokenDTO> login(String userName, CharSequence password) {
         return userLookupRepo.findUserIdByName(UserName.of(userName))
-                .flatMap(userId -> userService.login(userId, Password.of(password)))
+                .flatMap(userId -> userService.login(userId, Password.withoutValidation(password)))
                 .map(AccessTokenTransformer::toApi);
     }
 

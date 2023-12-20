@@ -3,6 +3,7 @@ package de.bennyboer.author.server.users.rest;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.facade.UsersFacade;
+import de.bennyboer.author.user.login.UserLockedException;
 import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
@@ -57,16 +58,23 @@ public class UsersRestHandler {
         var request = ctx.bodyAsClass(LoginUserRequest.class);
 
         ctx.future(() -> facade.login(request.getName(), request.getPassword())
+                .switchIfEmpty(Mono.defer(() -> {
+                    ctx.status(HttpStatus.UNAUTHORIZED);
+                    return Mono.empty();
+                }))
                 .onErrorResume(e -> {
+                    if (e instanceof UserLockedException) {
+                        ctx.status(HttpStatus.TOO_MANY_REQUESTS);
+                    } else {
+                        ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+
                     log.warn("Login failed", e);
                     return Mono.empty();
                 })
                 .singleOptional()
                 .toFuture()
-                .thenAccept(token -> token.ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(HttpStatus.UNAUTHORIZED)
-                )));
+                .thenAccept(token -> token.ifPresent(ctx::json)));
     }
 
 }

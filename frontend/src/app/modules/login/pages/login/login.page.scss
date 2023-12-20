@@ -24,6 +24,22 @@
   align-items: end;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
+.progress-bar-container {
+  margin-top: 12px;
+}
+
+.error-container {
+  background-color: #FF3366;
+  color: white;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
 .caret {
   margin-left: 4px;
   border-right: 2px solid black;

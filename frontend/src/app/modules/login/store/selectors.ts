@@ -7,15 +7,13 @@ const loginState = selectFeature(FEATURE_NAME);
 const selectToken = createSelector(loginState, (state) =>
   Option.someOrNone(state.token),
 );
-const selectErrorMessage = createSelector(loginState, (state) =>
-  Option.someOrNone(state.errorMessage),
-);
+const selectError = createSelector(loginState, (state) => state.error);
 const isLoading = createSelector(loginState, (state) => state.loading);
 const isLoggedIn = createSelector(loginState, (state) => !!state.token);
 
 export const selectors = {
   token: selectToken,
-  errorMessage: selectErrorMessage,
+  error: selectError,
   isLoading,
   isLoggedIn,
 };

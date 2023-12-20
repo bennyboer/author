@@ -19,6 +19,9 @@ public class WebSocketMessage {
     WebSocketMessageMethod method;
 
     @Nullable
+    String token;
+
+    @Nullable
     HeartbeatMessage heartbeat;
 
     @Nullable
@@ -33,6 +36,7 @@ public class WebSocketMessage {
     public static WebSocketMessage heartbeat() {
         return new WebSocketMessage(
                 WebSocketMessageMethod.HEARTBEAT,
+                null,
                 HeartbeatMessage.of(),
                 null,
                 null,
@@ -43,6 +47,7 @@ public class WebSocketMessage {
     public static WebSocketMessage event(EventMessage event) {
         return new WebSocketMessage(
                 WebSocketMessageMethod.EVENT,
+                null,
                 null,
                 event,
                 null,
@@ -58,6 +63,10 @@ public class WebSocketMessage {
             case SUBSCRIBE -> subscribe != null;
             case UNSUBSCRIBE -> unsubscribe != null;
         };
+    }
+
+    public Optional<String> getToken() {
+        return Optional.ofNullable(token);
     }
 
     public Optional<HeartbeatMessage> getHeartbeat() {

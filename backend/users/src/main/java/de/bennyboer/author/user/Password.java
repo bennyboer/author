@@ -19,8 +19,13 @@ public class Password {
     CharSequence value;
 
     public static Password of(CharSequence value) {
-        checkNotNull(value, "Password value must not be null");
         checkArgument(value.length() >= 8, "Password must be at least 8 characters long");
+
+        return withoutValidation(value);
+    }
+
+    public static Password withoutValidation(CharSequence value) {
+        checkNotNull(value, "Password value must not be null");
 
         return new Password(value);
     }

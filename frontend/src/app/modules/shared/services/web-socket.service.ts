@@ -16,6 +16,8 @@ import {
 } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Option } from '../util';
+import { environment } from '../../../../environments';
+import { LoginService } from '../../login';
 
 const WS_ENDPOINT: string = 'ws://localhost:7070/ws'; // TODO determine protocol and host based on environment
 
@@ -57,6 +59,7 @@ export interface EventMessage {
 
 interface WebSocketMessage {
   method: WebSocketMessageMethod;
+  token?: string;
   heartbeat?: HeartbeatMessage;
   event?: EventMessage;
   subscribe?: SubscribeMessage;
@@ -79,8 +82,17 @@ export class WebSocketService implements OnDestroy {
   private heartbeatSub: Option<Subscription> = Option.none();
   private heartbeatTimeoutSub: Option<Subscription> = Option.none();
   private isConnected: boolean = false;
+  private token: Option<string> = Option.none();
 
-  constructor() {
+  constructor(private readonly loginService: LoginService) {
+    this.loginService
+      .getToken()
+      .pipe(
+        map((token) => token.map((t) => t.getValue())),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((token) => (this.token = token));
+
     this.connect();
   }
 
@@ -103,6 +115,7 @@ export class WebSocketService implements OnDestroy {
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.SUBSCRIBE,
+      token: this.token.orElse(''),
       subscribe: subscribeMsg,
     };
 
@@ -141,6 +154,7 @@ export class WebSocketService implements OnDestroy {
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.UNSUBSCRIBE,
+      token: this.token.orElse(''),
       unsubscribe: unsubscribeMsg,
     };
 
@@ -168,7 +182,7 @@ export class WebSocketService implements OnDestroy {
     );
 
     const socket: WebSocketSubject<WebSocketMessage> = webSocket({
-      url: WS_ENDPOINT,
+      url: environment.webSocketUrl,
       openObserver: {
         next: () => {
           this.reconnectionFailures = 0;
@@ -234,6 +248,7 @@ export class WebSocketService implements OnDestroy {
   private sendHeartbeat() {
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.HEARTBEAT,
+      token: this.token.orElse(''),
       heartbeat: {},
     };
 

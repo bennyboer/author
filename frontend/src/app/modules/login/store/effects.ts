@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, mergeMap, of, tap } from 'rxjs';
+import { catchError, delay, map, mergeMap, of, tap } from 'rxjs';
 import { RemoteLoginService } from './remote';
 import {
   loadLoginState,
@@ -8,10 +8,11 @@ import {
   loginFailure,
   loginStateLoaded,
   loginSuccess,
+  logout,
 } from './actions';
 import { Router } from '@angular/router';
 import { Option } from '../../shared';
-import { Token } from './state';
+import { LoginErrors, Token } from './state';
 
 @Injectable()
 export class LoginStoreEffects {
@@ -24,13 +25,24 @@ export class LoginStoreEffects {
           catchError((error) =>
             of(
               loginFailure({
-                message: error.message,
+                error: LoginErrors.fromStatusCode(error.status),
               }),
             ),
           ),
+          delay(500), // It's weird when the progress bar is only visible for a short time.
         );
       }),
     ),
+  );
+
+  logout$ = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(logout),
+        tap(() => localStorage.removeItem('token')),
+        tap(() => this.router.navigate(['/login'])),
+      ),
+    { dispatch: false },
   );
 
   navigateToStartPage$ = createEffect(
