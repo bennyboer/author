@@ -10,10 +10,14 @@ const selectToken = createSelector(loginState, (state) =>
 const selectError = createSelector(loginState, (state) => state.error);
 const isLoading = createSelector(loginState, (state) => state.loading);
 const isLoggedIn = createSelector(loginState, (state) => !!state.token);
+const selectRedirectUrlAfterLogin = createSelector(loginState, (state) =>
+  Option.someOrNone(state.redirectUrlAfterLogin),
+);
 
 export const selectors = {
   token: selectToken,
   error: selectError,
   isLoading,
   isLoggedIn,
+  redirectUrlAfterLogin: selectRedirectUrlAfterLogin,
 };

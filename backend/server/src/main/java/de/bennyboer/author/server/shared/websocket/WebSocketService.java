@@ -116,7 +116,7 @@ public class WebSocketService {
 
         if (agent.isAnonymous()) {
             log.warn("Received message from anonymous user - closing websocket session");
-            ctx.session.close();
+            ctx.session.close(4001, "Unauthorized");
             return;
         }
 

@@ -6,6 +6,8 @@ import {
   loginStateLoaded,
   loginSuccess,
   logout,
+  redirectAfterLogin,
+  redirectAfterLoginSuccess,
 } from './actions';
 
 export const reducer = createReducer(
@@ -23,6 +25,15 @@ export const reducer = createReducer(
     ...state,
     token: undefined,
     loading: false,
+  })),
+
+  on(redirectAfterLogin, (state, { url }) => ({
+    ...state,
+    redirectUrlAfterLogin: url,
+  })),
+  on(redirectAfterLoginSuccess, (state) => ({
+    ...state,
+    redirectUrlAfterLogin: undefined,
   })),
 
   on(loginStateLoaded, (state, { token }) => ({

@@ -39,4 +39,8 @@ export class LoginService {
   logout(): void {
     this.store.dispatch(loginStore.actions.logout());
   }
+
+  redirectAfterLogin(url: string): void {
+    this.store.dispatch(loginStore.actions.redirectAfterLogin({ url }));
+  }
 }

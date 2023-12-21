@@ -54,7 +54,7 @@ interface NodeDTO {
 @Injectable()
 export class HttpTreeService implements TreeService, OnDestroy {
   // TODO Fetch tree Id from project?
-  private readonly treeId: string = '382aaffb-7ace-4774-a309-42bd96ef4af0'; // TODO Taken from server log
+  private readonly treeId: string = 'b4f8c89e-8c05-47f7-b957-5cb2648959c2'; // TODO Taken from server log
   private readonly events$: Subject<StructureTreeEvent> =
     new Subject<StructureTreeEvent>();
   private readonly tree$: Subject<StructureTree> = new Subject<StructureTree>();

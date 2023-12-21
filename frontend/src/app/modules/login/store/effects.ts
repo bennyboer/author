@@ -1,6 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, delay, map, mergeMap, of, tap } from 'rxjs';
+import {
+  catchError,
+  delay,
+  first,
+  map,
+  mergeMap,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { RemoteLoginService } from './remote';
 import {
   loadLoginState,
@@ -9,10 +18,13 @@ import {
   loginStateLoaded,
   loginSuccess,
   logout,
+  redirectAfterLoginSuccess,
 } from './actions';
 import { Router } from '@angular/router';
 import { Option } from '../../shared';
 import { LoginErrors, Token } from './state';
+import { Store } from '@ngrx/store';
+import { selectors } from './selectors';
 
 @Injectable()
 export class LoginStoreEffects {
@@ -45,13 +57,23 @@ export class LoginStoreEffects {
     { dispatch: false },
   );
 
-  navigateToStartPage$ = createEffect(
-    () =>
-      this.actions.pipe(
-        ofType(loginSuccess),
-        tap(() => this.router.navigate(['/'])),
+  navigateToRedirectUrlAfterLogin$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(loginSuccess),
+      switchMap(() =>
+        this.store.select(selectors.redirectUrlAfterLogin).pipe(first()),
       ),
-    { dispatch: false },
+      tap((url) => {
+        url.ifSome((redirectUrlAfterLogin) => {
+          this.router.navigateByUrl(redirectUrlAfterLogin);
+        });
+
+        if (url.isNone()) {
+          this.router.navigate(['/']);
+        }
+      }),
+      map(() => redirectAfterLoginSuccess()),
+    ),
   );
 
   loadLoginStateFromLocalStorage$ = createEffect(() =>
@@ -79,6 +101,7 @@ export class LoginStoreEffects {
 
   constructor(
     private readonly actions: Actions,
+    private readonly store: Store,
     private readonly loginService: RemoteLoginService,
     private readonly router: Router,
   ) {}

@@ -196,15 +196,20 @@ export class WebSocketService implements OnDestroy {
           console.warn(
             `WebSocket connection closed with code ${closeEvent.code} and reason '${closeEvent.reason}' - attempting to reconnect...`,
           );
+          const isUnauthorized = closeEvent.code === 4001;
           this.stopHeartbeat();
           this.socket$ = Option.none();
           this.isConnected = false;
 
-          const backoff = Math.pow(2, this.reconnectionFailures) * 1000;
-          this.reconnectionFailures++;
-          of(1)
-            .pipe(delay(backoff))
-            .subscribe(() => this.connect());
+          if (isUnauthorized) {
+            this.loginService.logout();
+          } else {
+            const backoff = Math.pow(2, this.reconnectionFailures) * 1000;
+            this.reconnectionFailures++;
+            of(1)
+              .pipe(delay(backoff), takeUntil(this.destroy$))
+              .subscribe(() => this.connect());
+          }
         },
       },
     });

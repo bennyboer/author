@@ -27,6 +27,7 @@ export const loggedInGuard: CanActivateFn = (
     map(({ isLoggedIn }) => isLoggedIn),
     tap((isLoggedIn) => {
       if (!isLoggedIn) {
+        loginService.redirectAfterLogin(state.url);
         router.navigate(['/login']);
       }
     }),

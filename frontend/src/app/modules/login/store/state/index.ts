@@ -8,6 +8,7 @@ export interface State {
   loading: boolean;
   error: LoginError;
   token?: Token;
+  redirectUrlAfterLogin?: string;
   // TODO User information (name, email, etc.)
 }
 

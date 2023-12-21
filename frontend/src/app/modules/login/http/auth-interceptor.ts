@@ -6,7 +6,14 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { LoginService } from '../store';
-import { map, Observable, Subject, takeUntil } from 'rxjs';
+import {
+  catchError,
+  map,
+  Observable,
+  Subject,
+  takeUntil,
+  throwError,
+} from 'rxjs';
 import { Option } from '../../shared';
 
 @Injectable()
@@ -43,6 +50,15 @@ export class AuthInterceptor implements HttpInterceptor, OnDestroy {
       )
       .orElse(request);
 
-    return next.handle(updatedRequest);
+    return next.handle(updatedRequest).pipe(
+      catchError((error) => {
+        const statusCode = error.status;
+        if (statusCode === 401) {
+          this.loginService.logout();
+        }
+
+        return throwError(() => error);
+      }),
+    );
   }
 }

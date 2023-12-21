@@ -14,6 +14,14 @@ export const loginFailure = createAction(
   props<{ error: LoginError }>(),
 );
 
+export const redirectAfterLogin = createAction(
+  '[Login] Redirect After Login',
+  props<{ url: string }>(),
+);
+export const redirectAfterLoginSuccess = createAction(
+  '[Login] Redirect After Login Success',
+);
+
 export const logout = createAction('[Login] Logout');
 export const logoutSuccess = createAction('[Login] Logout Success');
 
@@ -26,5 +34,6 @@ export const loginStateLoaded = createAction(
 export const actions = {
   login,
   logout,
+  redirectAfterLogin,
   loadLoginState,
 };
