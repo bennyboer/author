@@ -10,7 +10,7 @@ import {
   tap,
 } from 'rxjs';
 import { StructureTree, StructureTreeNodeId, TreeMutator } from '../state';
-import { Option } from '../../../shared';
+import { Option } from '../../../../../shared';
 import {
   Inject,
   Injectable,

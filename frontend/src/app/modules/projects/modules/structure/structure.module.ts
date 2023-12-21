@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { StructureRoutingModule } from './structure-routing.module';
 import { StructurePage } from './pages';
-import { SharedModule } from '../shared/shared.module';
 import { TreeGraphComponent } from './components';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +23,7 @@ import {
 } from './store';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { SharedModule } from '../../../shared/shared.module';
 
 const PAGES = [StructurePage];
 const COMPONENTS = [TreeGraphComponent];
@@ -50,7 +50,7 @@ const DIALOGS = [NodeDetailsDialog];
     StructureTreeService,
     {
       provide: TreeService,
-      useClass: HttpTreeService, // LocalStorageRemoteStructureTreeService,
+      useClass: HttpTreeService,
     },
   ],
   exports: [],

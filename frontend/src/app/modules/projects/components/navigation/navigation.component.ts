@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { LoginService } from '../../modules/login';
+import { LoginService } from '../../../login';
 
 @Component({
   selector: 'app-navigation',

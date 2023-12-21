@@ -16,9 +16,9 @@ import {
 } from '../state';
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { WebSocketService } from '../../../shared';
-import { EventMessage } from '../../../shared/services';
-import { environment } from '../../../../../environments';
+import { WebSocketService } from '../../../../../shared';
+import { EventMessage } from '../../../../../shared/services';
+import { environment } from '../../../../../../../environments';
 
 interface AddChildRequest {
   name: string;

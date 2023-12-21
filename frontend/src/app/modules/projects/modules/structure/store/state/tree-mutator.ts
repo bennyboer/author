@@ -1,6 +1,6 @@
 import { StructureTreeNode, StructureTreeNodeId } from './node';
 import { StructureTree } from './tree';
-import { Option } from '../../../shared';
+import { Option } from '../../../../../shared';
 
 export class TreeMutator {
   private readonly parentNodeIdLookup: Map<

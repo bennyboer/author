@@ -15,7 +15,7 @@ import {
   CanvasListenerResult,
   CanvasMouseEvent,
   Option,
-} from '../../../shared';
+} from '../../../../../shared';
 import { RenderTreeGraph } from './render-tree-graph';
 import {
   ActionButtonType,

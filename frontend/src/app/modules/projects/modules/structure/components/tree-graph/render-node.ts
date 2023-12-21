@@ -1,4 +1,4 @@
-import { Anchor, Bounds, Option, Size } from '../../../shared';
+import { Anchor, Bounds, Option, Size } from '../../../../../shared';
 import { RenderNodeConfig } from './render-node-config';
 
 export type RenderNodeId = string;

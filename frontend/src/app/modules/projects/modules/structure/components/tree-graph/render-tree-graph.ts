@@ -5,7 +5,7 @@ import {
   RenderNodeId,
 } from './render-node';
 import { RenderTreeGraphConfig } from './render-tree-graph-config';
-import { Anchor, Bounds, Option, Size } from '../../../shared';
+import { Anchor, Bounds, Option, Size } from '../../../../../shared';
 
 interface LayoutResult {
   width: number;

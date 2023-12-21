@@ -18,7 +18,7 @@ import {
   StructureTreeEvent,
   StructureTreeEventType,
 } from './remote';
-import { Option } from '../../shared';
+import { Option } from '../../../../shared';
 
 export const reducer = createReducer(
   initialState,

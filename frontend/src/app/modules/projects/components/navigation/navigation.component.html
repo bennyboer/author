@@ -3,22 +3,22 @@
     <li [matMenuTriggerFor]="menu">
       <mat-icon>menu</mat-icon>
     </li>
-    <li routerLink="/structure" routerLinkActive="active-link">
+    <li routerLink="./structure" routerLinkActive="active-link">
       Structure
     </li>
-    <li routerLink="/characters" routerLinkActive="active-link">
+    <li routerLink="./characters" routerLinkActive="active-link">
       Characters
     </li>
-    <li routerLink="/locations" routerLinkActive="active-link">
+    <li routerLink="./locations" routerLinkActive="active-link">
       Locations
     </li>
-    <li routerLink="/timeline" routerLinkActive="active-link">
+    <li routerLink="./timeline" routerLinkActive="active-link">
       Timeline
     </li>
-    <li routerLink="/writing" routerLinkActive="active-link">
+    <li routerLink="./writing" routerLinkActive="active-link">
       Writing
     </li>
-    <li routerLink="/reading" routerLinkActive="active-link">
+    <li routerLink="./reading" routerLinkActive="active-link">
       Reading
       <!-- TODO Reading view focused on reviewing the written text - leaving comments, may also be shared to the public to request and receive feedback from other people -->
     </li>
@@ -26,7 +26,7 @@
 </nav>
 
 <mat-menu #menu="matMenu">
-  <button mat-menu-item>
+  <button mat-menu-item routerLink="/projects">
     <mat-icon>arrow_back_ios</mat-icon>
     Back to projects
   </button>

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  styleUrls: ['./start.page.scss'],
-  templateUrl: './start.page.html',
+  templateUrl: './projects.page.html',
+  styleUrls: ['./projects.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StartPage {}
+export class ProjectsPage {}
