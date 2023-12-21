@@ -1,1 +1,11 @@
-Projects
+<h1>Your projects!</h1>
+
+<button (click)="createNewProject()">Create a new one</button>
+
+@if (projectListItems$ | async;as items) {
+  @if (items.length === 0) {
+    <p>You seem to have no access to any projects yet. Try creating a new one!</p>
+  } @else {
+    <app-project-list [items]="items"></app-project-list>
+  }
+}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RemoteLoginService } from './remote-login.service';
 import { map, Observable } from 'rxjs';
-import { Token } from '../../model';
+import { Token } from '../../models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 

@@ -1,12 +1,12 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialState, StructureTree, TreeMutator } from './state';
 import {
-  addNodeFailure,
+  addingNodeFailed,
   eventReceived,
-  removeNodeFailure,
-  renameNodeFailure,
-  swapNodesFailure,
-  toggleNodeFailure,
+  removingNodeFailed,
+  renamingNodeFailed,
+  swappingNodesFailed,
+  togglingNodeFailed,
   treeLoaded,
 } from './actions';
 import {
@@ -36,27 +36,27 @@ export const reducer = createReducer(
       }),
   ),
 
-  on(toggleNodeFailure, (state, { nodeId, message }) => ({
+  on(togglingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to toggle node ${nodeId}: ${message}`,
   })),
 
-  on(addNodeFailure, (state, { parentNodeId, message }) => ({
+  on(addingNodeFailed, (state, { parentNodeId, message }) => ({
     ...state,
     errorMessage: `Failed to add node to ${parentNodeId}: ${message}`,
   })),
 
-  on(removeNodeFailure, (state, { nodeId, message }) => ({
+  on(removingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to remove node ${nodeId}: ${message}`,
   })),
 
-  on(swapNodesFailure, (state, { nodeId1, nodeId2, message }) => ({
+  on(swappingNodesFailed, (state, { nodeId1, nodeId2, message }) => ({
     ...state,
     errorMessage: `Failed to swap nodes ${nodeId1} and ${nodeId2}: ${message}`,
   })),
 
-  on(renameNodeFailure, (state, { nodeId, message }) => ({
+  on(renamingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to rename node ${nodeId}: ${message}`,
   })),

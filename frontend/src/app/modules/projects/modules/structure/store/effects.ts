@@ -3,22 +3,22 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { TreeService } from './remote';
 import { catchError, map, mergeMap, of } from 'rxjs';
 import {
+  addingNodeFailed,
   addNode,
-  addNodeFailure,
-  addNodeSuccess,
   eventReceived,
+  nodeAdded,
+  nodeRenamed,
+  nodesSwapped,
+  nodeToggled,
+  removedNode,
   removeNode,
-  removeNodeFailure,
-  removeNodeSuccess,
+  removingNodeFailed,
   renameNode,
-  renameNodeFailure,
-  renameNodeSuccess,
+  renamingNodeFailed,
   swapNodes,
-  swapNodesFailure,
-  swapNodesSuccess,
+  swappingNodesFailed,
   toggleNode,
-  toggleNodeFailure,
-  toggleNodeSuccess,
+  togglingNodeFailed,
   treeLoaded,
 } from './actions';
 
@@ -29,10 +29,10 @@ export class StructureStoreEffects {
       ofType(toggleNode),
       mergeMap(({ nodeId }) => {
         return this.remoteStructureTreeService.toggleNode(nodeId).pipe(
-          map(() => toggleNodeSuccess({ nodeId })),
+          map(() => nodeToggled({ nodeId })),
           catchError((error) =>
             of(
-              toggleNodeFailure({
+              togglingNodeFailed({
                 nodeId: error.nodeId,
                 message: error.message,
               }),
@@ -48,10 +48,10 @@ export class StructureStoreEffects {
       ofType(addNode),
       mergeMap(({ parentNodeId, name }) => {
         return this.remoteStructureTreeService.addNode(parentNodeId, name).pipe(
-          map(() => addNodeSuccess({ parentNodeId })),
+          map(() => nodeAdded({ parentNodeId })),
           catchError((error) =>
             of(
-              addNodeFailure({
+              addingNodeFailed({
                 parentNodeId: error.nodeId,
                 message: error.message,
               }),
@@ -67,10 +67,10 @@ export class StructureStoreEffects {
       ofType(removeNode),
       mergeMap(({ nodeId }) => {
         return this.remoteStructureTreeService.removeNode(nodeId).pipe(
-          map(() => removeNodeSuccess({ nodeId })),
+          map(() => removedNode({ nodeId })),
           catchError((error) =>
             of(
-              removeNodeFailure({
+              removingNodeFailed({
                 nodeId: error.nodeId,
                 message: error.message,
               }),
@@ -86,10 +86,10 @@ export class StructureStoreEffects {
       ofType(renameNode),
       mergeMap(({ nodeId, name }) => {
         return this.remoteStructureTreeService.renameNode(nodeId, name).pipe(
-          map(() => renameNodeSuccess({ nodeId })),
+          map(() => nodeRenamed({ nodeId })),
           catchError((error) =>
             of(
-              renameNodeFailure({
+              renamingNodeFailed({
                 nodeId: error.nodeId,
                 message: error.message,
               }),
@@ -105,10 +105,10 @@ export class StructureStoreEffects {
       ofType(swapNodes),
       mergeMap(({ nodeId1, nodeId2 }) => {
         return this.remoteStructureTreeService.swapNodes(nodeId1, nodeId2).pipe(
-          map(() => swapNodesSuccess({ nodeId1, nodeId2 })),
+          map(() => nodesSwapped({ nodeId1, nodeId2 })),
           catchError((error) =>
             of(
-              swapNodesFailure({
+              swappingNodesFailed({
                 nodeId1: error.nodeId1,
                 nodeId2: error.nodeId2,
                 message: error.message,

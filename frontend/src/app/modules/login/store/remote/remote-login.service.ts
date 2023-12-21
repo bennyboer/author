@@ -1,4 +1,4 @@
-import { Token } from '../../model';
+import { Token } from '../../models';
 import { Observable } from 'rxjs';
 
 export abstract class RemoteLoginService {

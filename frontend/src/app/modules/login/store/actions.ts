@@ -5,12 +5,12 @@ export const login = createAction(
   '[Login] Login',
   props<{ username: string; password: string }>(),
 );
-export const loginSuccess = createAction(
-  '[Login] Login Success',
+export const loggedIn = createAction(
+  '[Login] Logged In',
   props<{ token: Token }>(),
 );
-export const loginFailure = createAction(
-  '[Login] Login Failure',
+export const loginFailed = createAction(
+  '[Login] Login Failed',
   props<{ error: LoginError }>(),
 );
 
@@ -23,7 +23,7 @@ export const redirectAfterLoginSuccess = createAction(
 );
 
 export const logout = createAction('[Login] Logout');
-export const logoutSuccess = createAction('[Login] Logout Success');
+export const loggedOut = createAction('[Login] Logged Out');
 
 export const loadLoginState = createAction('[Login] Load Login State');
 export const loginStateLoaded = createAction(

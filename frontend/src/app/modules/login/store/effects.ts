@@ -13,10 +13,10 @@ import {
 import { RemoteLoginService } from './remote';
 import {
   loadLoginState,
+  loggedIn,
   login,
-  loginFailure,
+  loginFailed,
   loginStateLoaded,
-  loginSuccess,
   logout,
   redirectAfterLoginSuccess,
 } from './actions';
@@ -33,10 +33,10 @@ export class LoginStoreEffects {
       ofType(login),
       mergeMap(({ username, password }) => {
         return this.loginService.login(username, password).pipe(
-          map((token) => loginSuccess({ token: { value: token.getValue() } })),
+          map((token) => loggedIn({ token: { value: token.getValue() } })),
           catchError((error) =>
             of(
-              loginFailure({
+              loginFailed({
                 error: LoginErrors.fromStatusCode(error.status),
               }),
             ),
@@ -59,7 +59,7 @@ export class LoginStoreEffects {
 
   navigateToRedirectUrlAfterLogin$ = createEffect(() =>
     this.actions.pipe(
-      ofType(loginSuccess),
+      ofType(loggedIn),
       switchMap(() =>
         this.store.select(selectors.redirectUrlAfterLogin).pipe(first()),
       ),
@@ -93,7 +93,7 @@ export class LoginStoreEffects {
   saveTokenToLocalStorage$ = createEffect(
     () =>
       this.actions.pipe(
-        ofType(loginSuccess),
+        ofType(loggedIn),
         tap(({ token }) => localStorage.setItem('token', token.value)),
       ),
     { dispatch: false },

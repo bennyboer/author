@@ -1,0 +1,5 @@
+<ul>
+  @for (item of items;track item.id) {
+    <app-project-list-item [item]="item" (clicked)="clicked.emit($event)"></app-project-list-item>
+  }
+</ul>
