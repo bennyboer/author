@@ -2,11 +2,11 @@ package de.bennyboer.author.user;
 
 import de.bennyboer.author.auth.token.TokenContent;
 import de.bennyboer.author.auth.token.TokenGenerator;
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.login.LoginCmd;
 import de.bennyboer.author.user.remove.RemoveCmd;
 import de.bennyboer.author.user.rename.RenameCmd;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.EventPublisher;
 import de.bennyboer.eventsourcing.EventSourcingService;
 import de.bennyboer.eventsourcing.Version;

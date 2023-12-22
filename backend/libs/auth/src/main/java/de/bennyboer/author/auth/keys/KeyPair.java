@@ -7,7 +7,7 @@ import lombok.Value;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 
-import static de.bennyboer.common.Preconditions.checkNotNull;
+import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

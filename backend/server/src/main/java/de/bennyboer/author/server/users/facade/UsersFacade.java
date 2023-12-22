@@ -1,5 +1,6 @@
 package de.bennyboer.author.server.users.facade;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.users.api.AccessTokenDTO;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
@@ -8,7 +9,6 @@ import de.bennyboer.author.server.users.transformer.UserTransformer;
 import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.UserName;
 import de.bennyboer.author.user.UserService;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;

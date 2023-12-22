@@ -1,6 +1,6 @@
 package de.bennyboer.author.project;
 
-import de.bennyboer.common.UserId;
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;

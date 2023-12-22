@@ -1,8 +1,8 @@
 package de.bennyboer.author.server.users.persistence.lookup;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserName;
-import de.bennyboer.common.UserId;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

@@ -2,7 +2,7 @@ package de.bennyboer.author.auth.token;
 
 import de.bennyboer.author.auth.keys.KeyPair;
 import de.bennyboer.author.auth.keys.KeyPairs;
-import de.bennyboer.common.UserId;
+import de.bennyboer.author.common.UserId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -1,0 +1,7 @@
+plugins {
+    id 'de.bennyboer.author.java-library-conventions'
+}
+
+dependencies {
+    implementation project(':libs:common')
+}

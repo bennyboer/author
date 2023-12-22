@@ -1,10 +1,10 @@
 package de.bennyboer.author.server.structure.rest;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
 import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;

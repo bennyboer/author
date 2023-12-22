@@ -17,5 +17,6 @@ include(
         'libs:auth',
         'libs:common',
         'libs:eventsourcing',
-        'libs:testing'
+        'libs:testing',
+        'libs:permissions'
 )

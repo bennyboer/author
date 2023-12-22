@@ -6,8 +6,8 @@ import lombok.Value;
 
 import java.util.UUID;
 
-import static de.bennyboer.common.Preconditions.checkArgument;
-import static de.bennyboer.common.Preconditions.checkNotNull;
+import static de.bennyboer.author.common.Preconditions.checkArgument;
+import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -18,7 +18,7 @@ public class MessageListenerId {
     public static MessageListenerId of(String value) {
         checkNotNull(value, "Message listener ID must be given");
         checkArgument(!value.isBlank(), "Message listener ID must not be empty");
-        
+
         return new MessageListenerId(value);
     }
 

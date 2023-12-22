@@ -1,11 +1,11 @@
 package de.bennyboer.author.structure;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.nodes.Node;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
 import de.bennyboer.author.structure.tree.nodes.NodeName;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;

@@ -1,9 +1,9 @@
 package de.bennyboer.author.server.projects.rest;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.projects.api.requests.CreateProjectRequest;
 import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
 import de.bennyboer.author.server.projects.facade.ProjectsFacade;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;

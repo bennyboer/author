@@ -1,11 +1,11 @@
 package de.bennyboer.author.auth.token;
 
-import de.bennyboer.common.UserId;
+import de.bennyboer.author.common.UserId;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import static de.bennyboer.common.Preconditions.checkNotNull;
+import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import static de.bennyboer.common.Preconditions.checkArgument;
-import static de.bennyboer.common.Preconditions.checkNotNull;
+import static de.bennyboer.author.common.Preconditions.checkArgument;
+import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 /**
  * This may represent a password in its raw or encoded form.

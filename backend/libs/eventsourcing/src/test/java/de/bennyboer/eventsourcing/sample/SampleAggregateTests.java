@@ -1,6 +1,6 @@
 package de.bennyboer.eventsourcing.sample;
 
-import de.bennyboer.common.UserId;
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.eventsourcing.event.EventWithMetadata;

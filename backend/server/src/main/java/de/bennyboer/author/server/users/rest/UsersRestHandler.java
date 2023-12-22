@@ -1,10 +1,10 @@
 package de.bennyboer.author.server.users.rest;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.facade.UsersFacade;
 import de.bennyboer.author.user.login.UserLockedException;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;

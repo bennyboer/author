@@ -5,7 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import de.bennyboer.author.auth.keys.KeyPair;
-import de.bennyboer.common.UserId;
+import de.bennyboer.author.common.UserId;
 import reactor.core.publisher.Mono;
 
 public class JWTTokenVerifier implements TokenVerifier {

@@ -2,8 +2,8 @@ package de.bennyboer.author.user;
 
 import de.bennyboer.author.auth.password.PasswordEncoder;
 import de.bennyboer.author.auth.token.Token;
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.testing.TestClock;
-import de.bennyboer.common.UserId;
 import de.bennyboer.eventsourcing.Version;
 import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
