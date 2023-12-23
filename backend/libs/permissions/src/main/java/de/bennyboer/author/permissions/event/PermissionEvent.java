@@ -5,8 +5,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -14,21 +13,21 @@ public class PermissionEvent {
 
     PermissionEventType type;
 
-    Collection<Permission> permissions;
+    Set<Permission> permissions;
 
     public static PermissionEvent added(Permission permission) {
-        return added(List.of(permission));
+        return added(Set.of(permission));
     }
 
-    public static PermissionEvent added(Collection<Permission> permissions) {
+    public static PermissionEvent added(Set<Permission> permissions) {
         return new PermissionEvent(PermissionEventType.ADDED, permissions);
     }
 
     public static PermissionEvent removed(Permission permission) {
-        return removed(List.of(permission));
+        return removed(Set.of(permission));
     }
 
-    public static PermissionEvent removed(Collection<Permission> permissions) {
+    public static PermissionEvent removed(Set<Permission> permissions) {
         return new PermissionEvent(PermissionEventType.REMOVED, permissions);
     }
 

@@ -7,7 +7,9 @@ import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
+import java.time.Duration;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PermissionsService {
 
@@ -15,7 +17,13 @@ public class PermissionsService {
     private final PermissionsEventPublisher eventPublisher;
 
     public PermissionsService(PermissionsRepo permissionsRepo, PermissionsEventPublisher eventPublisher) {
-        this.permissionsRepo = new CacheablePermissionsRepo(permissionsRepo);
+        this.permissionsRepo = new CacheablePermissionsRepo(
+                permissionsRepo,
+                CacheablePermissionsRepo.Config.builder()
+                        .maximumSize(10_000)
+                        .expireAfterWrite(Duration.ofMinutes(5))
+                        .build()
+        );
         this.eventPublisher = eventPublisher;
     }
 
@@ -24,7 +32,7 @@ public class PermissionsService {
                 .then(eventPublisher.publish(PermissionEvent.added(permission)));
     }
 
-    public Mono<Void> addPermissions(Collection<Permission> permissions) {
+    public Mono<Void> addPermissions(Set<Permission> permissions) {
         return permissionsRepo.insertAll(permissions)
                 .then(eventPublisher.publish(PermissionEvent.added(permissions)));
     }
@@ -52,19 +60,19 @@ public class PermissionsService {
 
     public Mono<Void> removePermissionsByUserId(UserId userId) {
         return permissionsRepo.removeByUserId(userId)
-                .collectList()
+                .collect(Collectors.toSet())
                 .flatMap(permissions -> eventPublisher.publish(PermissionEvent.removed(permissions)));
     }
 
     public Mono<Void> removePermissionsByResource(Resource resource) {
         return permissionsRepo.removeByResource(resource)
-                .collectList()
+                .collect(Collectors.toSet())
                 .flatMap(permissions -> eventPublisher.publish(PermissionEvent.removed(permissions)));
     }
 
     public Mono<Void> removePermissionsByUserIdAndResource(UserId userId, Resource resource) {
         return permissionsRepo.removeByUserIdAndResource(userId, resource)
-                .collectList()
+                .collect(Collectors.toSet())
                 .flatMap(permissions -> eventPublisher.publish(PermissionEvent.removed(permissions)));
     }
 

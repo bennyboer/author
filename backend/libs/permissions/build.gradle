@@ -4,4 +4,6 @@ plugins {
 
 dependencies {
     implementation project(':libs:common')
+
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 }

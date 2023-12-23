@@ -29,6 +29,10 @@ public class Permission {
         return new Permission(userId, action, resource);
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     /**
      * The preferred way to create a permission.
      * <pre>
