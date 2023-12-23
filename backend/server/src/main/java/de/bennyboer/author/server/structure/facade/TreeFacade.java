@@ -1,13 +1,13 @@
 package de.bennyboer.author.server.structure.facade;
 
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.structure.api.TreeDTO;
 import de.bennyboer.author.server.structure.transformer.TreeTransformer;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
 import de.bennyboer.author.structure.tree.nodes.NodeName;
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class TreeFacade {
 
     TreeService treeService;
 
-    public Mono<TreeDTO> getTree(String id) {
+    public Mono<TreeDTO> getTree(String id, Agent agent) {
         TreeId treeId = TreeId.of(id);
 
         return treeService.get(treeId)

@@ -1,10 +1,10 @@
 package de.bennyboer.author.server.projects.rest;
 
-import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.projects.api.requests.CreateProjectRequest;
 import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
-import de.bennyboer.author.server.projects.facade.ProjectsFacade;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.server.projects.facade.ProjectsCommandFacade;
+import de.bennyboer.author.server.projects.facade.ProjectsQueryFacade;
+import de.bennyboer.author.server.shared.http.Auth;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
@@ -14,12 +14,15 @@ import lombok.Value;
 @AllArgsConstructor
 public class ProjectsRestHandler {
 
-    ProjectsFacade facade;
+    ProjectsQueryFacade queryFacade;
+
+    ProjectsCommandFacade commandFacade;
 
     public void getProject(Context ctx) {
         var projectId = ctx.pathParam("projectId");
 
-        ctx.future(() -> facade.getProject(projectId)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> queryFacade.getProject(projectId, agent))
                 .singleOptional()
                 .toFuture()
                 .thenAccept(tree -> tree.ifPresentOrElse(
@@ -30,9 +33,9 @@ public class ProjectsRestHandler {
 
     public void createProject(Context ctx) {
         var request = ctx.bodyAsClass(CreateProjectRequest.class);
-        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.create(request.getName(), agent)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> commandFacade.create(request.getName(), agent))
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -41,9 +44,9 @@ public class ProjectsRestHandler {
         var request = ctx.bodyAsClass(RenameProjectRequest.class);
         var projectId = ctx.pathParam("projectId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
-        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.rename(projectId, version, request.getName(), agent)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> commandFacade.rename(projectId, version, request.getName(), agent))
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -51,9 +54,9 @@ public class ProjectsRestHandler {
     public void removeProject(Context ctx) {
         var projectId = ctx.pathParam("projectId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
-        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.remove(projectId, version, agent)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> commandFacade.remove(projectId, version, agent))
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }

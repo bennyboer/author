@@ -1,11 +1,11 @@
 package de.bennyboer.author.server.users.rest;
 
-import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
-import de.bennyboer.author.server.users.facade.UsersFacade;
+import de.bennyboer.author.server.users.facade.UsersCommandFacade;
+import de.bennyboer.author.server.users.facade.UsersQueryFacade;
 import de.bennyboer.author.user.login.UserLockedException;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
@@ -18,13 +18,15 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class UsersRestHandler {
 
-    UsersFacade facade;
+    UsersQueryFacade queryFacade;
+
+    UsersCommandFacade commandFacade;
 
     public void getUser(Context ctx) {
         var userId = ctx.pathParam("userId");
-        // TODO Get user ID from authentication
 
-        ctx.future(() -> facade.getUser(userId)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> queryFacade.getUser(userId, agent))
                 .singleOptional()
                 .toFuture()
                 .thenAccept(tree -> tree.ifPresentOrElse(
@@ -37,9 +39,9 @@ public class UsersRestHandler {
         var request = ctx.bodyAsClass(RenameUserRequest.class);
         var userId = ctx.pathParam("userId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
-        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.rename(userId, version, request.getName(), agent)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> commandFacade.rename(userId, version, request.getName(), agent))
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -47,9 +49,9 @@ public class UsersRestHandler {
     public void removeUser(Context ctx) {
         var userId = ctx.pathParam("userId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
-        var agent = Agent.user(UserId.of("TEST_USER_ID")); // TODO Get agent from authentication
 
-        ctx.future(() -> facade.remove(userId, version, agent)
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMap(agent -> commandFacade.remove(userId, version, agent))
                 .toFuture()
                 .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
     }
@@ -57,7 +59,7 @@ public class UsersRestHandler {
     public void login(Context ctx) {
         var request = ctx.bodyAsClass(LoginUserRequest.class);
 
-        ctx.future(() -> facade.login(request.getName(), request.getPassword())
+        ctx.future(() -> commandFacade.login(request.getName(), request.getPassword())
                 .switchIfEmpty(Mono.defer(() -> {
                     ctx.status(HttpStatus.UNAUTHORIZED);
                     return Mono.empty();

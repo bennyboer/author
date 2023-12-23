@@ -1,10 +1,13 @@
 package de.bennyboer.author.server.shared.permissions;
 
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
+
+import java.util.Optional;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -18,6 +21,7 @@ public class AggregatePermissionEventMessage {
 
     String aggregateType;
 
+    @Nullable
     String aggregateId;
 
     String action;
@@ -36,6 +40,10 @@ public class AggregatePermissionEventMessage {
                 aggregateId,
                 action
         );
+    }
+
+    public Optional<String> getAggregateId() {
+        return Optional.ofNullable(aggregateId);
     }
 
 }

@@ -1,13 +1,13 @@
 package de.bennyboer.author.server.users.messaging;
 
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
-import de.bennyboer.author.server.users.facade.UsersFacade;
-import de.bennyboer.author.user.User;
-import de.bennyboer.author.user.remove.RemovedEvent;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.author.server.users.facade.UsersSyncFacade;
+import de.bennyboer.author.user.User;
+import de.bennyboer.author.user.remove.RemovedEvent;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -16,7 +16,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserRemovedUpdateLookupMsgListener implements AggregateEventMessageListener {
 
-    private final UsersFacade facade;
+    private final UsersSyncFacade syncFacade;
 
     @Override
     public AggregateType aggregateType() {
@@ -32,7 +32,7 @@ public class UserRemovedUpdateLookupMsgListener implements AggregateEventMessage
     public Mono<Void> onMessage(AggregateEventMessage message) {
         UserId userId = UserId.of(message.getAggregateId());
 
-        return facade.removeUserFromLookup(userId);
+        return syncFacade.removeUserFromLookup(userId);
     }
 
 }

@@ -5,7 +5,7 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
-import de.bennyboer.author.server.users.facade.UsersFacade;
+import de.bennyboer.author.server.users.facade.UsersPermissionsFacade;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.create.CreatedEvent;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserCreatedAddPermissionsMsgListener implements AggregateEventMessageListener {
 
-    private final UsersFacade facade;
+    private final UsersPermissionsFacade permissionsFacade;
 
     @Override
     public AggregateType aggregateType() {
@@ -32,7 +32,7 @@ public class UserCreatedAddPermissionsMsgListener implements AggregateEventMessa
     public Mono<Void> onMessage(AggregateEventMessage message) {
         UserId userId = UserId.of(message.getAggregateId());
 
-        return facade.addPermissionsForUser(userId);
+        return permissionsFacade.addPermissionsForUser(userId);
     }
 
 }

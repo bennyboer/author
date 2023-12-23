@@ -2,6 +2,7 @@ package de.bennyboer.author.server.shared.permissions;
 
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.permissions.PermissionsEventPublisher;
+import de.bennyboer.author.permissions.ResourceId;
 import de.bennyboer.author.permissions.event.PermissionEvent;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import io.javalin.json.JsonMapper;
@@ -57,11 +58,13 @@ public class MessagingAggregatePermissionsEventPublisher implements PermissionsE
             String json = jsonMapper.toJsonString(message, AggregatePermissionEventMessage.class);
 
             TextMessage textMessage = ctx.createTextMessage(json);
-            try {
-                textMessage.setStringProperty("aggregateId", message.getAggregateId());
-            } catch (JMSException e) {
-                throw new RuntimeException(e);
-            }
+            message.getAggregateId().ifPresent(aggregateId -> {
+                try {
+                    textMessage.setStringProperty("aggregateId", aggregateId);
+                } catch (JMSException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
             // TODO Instead of publishing directly we should store the messages in an outbox
             producer.send(destination, textMessage);
@@ -88,7 +91,7 @@ public class MessagingAggregatePermissionsEventPublisher implements PermissionsE
                         eventType,
                         permission.getUserId().getValue(),
                         permission.getResource().getType().getName(),
-                        permission.getResource().getId().getValue(),
+                        permission.getResource().getId().map(ResourceId::getValue).orElse(null),
                         permission.getAction().getName()
                 ))
                 .toList();

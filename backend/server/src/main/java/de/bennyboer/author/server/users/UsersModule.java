@@ -9,8 +9,10 @@ import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransfor
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.users.facade.UsersFacade;
+import de.bennyboer.author.server.users.facade.*;
+import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgListener;
+import de.bennyboer.author.server.users.messaging.UserRemovedRemovePermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserRemovedUpdateLookupMsgListener;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupInMemoryRepo;
@@ -30,7 +32,15 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class UsersModule extends Module {
 
-    private final UsersFacade facade;
+    private final UsersCommandFacade commandFacade;
+
+    private final UsersQueryFacade queryFacade;
+
+    private final UsersStartupFacade startupFacade;
+
+    private final UsersSyncFacade syncFacade;
+
+    private final UsersPermissionsFacade permissionsFacade;
 
     public UsersModule(ModuleConfig config, TokenGenerator tokenGenerator) {
         super(config);
@@ -38,21 +48,25 @@ public class UsersModule extends Module {
         var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
         var userService = new UserService(eventSourcingRepo, getEventPublisher(), tokenGenerator);
 
-        var userPermissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo
+        var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
-        var userPermissionsService = new UserPermissionsService(userPermissionsRepo, permissionsEventPublisher);
+        var userPermissionsService = new UserPermissionsService(permissionsRepo, permissionsEventPublisher);
 
         var userLookupRepo = new UserLookupInMemoryRepo(); // TODO Use persistent repo
 
-        facade = new UsersFacade(userService, userPermissionsService, userLookupRepo);
+        commandFacade = new UsersCommandFacade(userService, userPermissionsService, userLookupRepo);
+        queryFacade = new UsersQueryFacade(userService, userPermissionsService);
+        startupFacade = new UsersStartupFacade(userService, userLookupRepo);
+        syncFacade = new UsersSyncFacade(userService, userLookupRepo);
+        permissionsFacade = new UsersPermissionsFacade(userPermissionsService);
     }
 
     @Override
     public void apply(@NotNull Javalin javalin) {
-        var restHandler = new UsersRestHandler(facade);
+        var restHandler = new UsersRestHandler(queryFacade, commandFacade);
         var restRouting = new UsersRestRouting(restHandler);
 
         javalin.routes(() -> path("/api/users", restRouting));
@@ -61,8 +75,10 @@ public class UsersModule extends Module {
     @Override
     protected List<AggregateEventMessageListener> createMessageListeners() {
         return List.of(
-                new UserCreatedUpdateLookupMsgListener(facade),
-                new UserRemovedUpdateLookupMsgListener(facade)
+                new UserCreatedUpdateLookupMsgListener(syncFacade),
+                new UserCreatedAddPermissionsMsgListener(permissionsFacade),
+                new UserRemovedUpdateLookupMsgListener(syncFacade),
+                new UserRemovedRemovePermissionsMsgListener(permissionsFacade)
         );
     }
 
@@ -78,7 +94,7 @@ public class UsersModule extends Module {
 
     @Override
     protected Mono<Void> onServerStarted() {
-        return facade.initDefaultUserIfNecessary();
+        return startupFacade.initDefaultUserIfNecessary();
     }
 
 }

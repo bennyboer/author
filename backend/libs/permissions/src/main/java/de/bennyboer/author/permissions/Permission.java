@@ -29,6 +29,11 @@ public class Permission {
         return new Permission(userId, action, resource);
     }
 
+    @Override
+    public String toString() {
+        return String.format("Permission(user=%s, action=%s, resource=%s)", userId, action, resource);
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -56,9 +61,14 @@ public class Permission {
             return this;
         }
 
+        public Permission onType(ResourceType resourceType) {
+            return Permission.of(userId, action, Resource.ofType(resourceType));
+        }
+
         public Permission on(Resource resource) {
             return Permission.of(userId, action, resource);
         }
+
     }
 
 }

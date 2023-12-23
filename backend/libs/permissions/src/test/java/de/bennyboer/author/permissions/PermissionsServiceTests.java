@@ -63,6 +63,32 @@ public class PermissionsServiceTests {
     }
 
     @Test
+    void shouldHavePermissionOnNoSpecificResource() {
+        // given: a permission on no specific resource
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(testAction)
+                .onType(resourceType);
+
+        service.addPermission(permission).block();
+
+        // when: checking the permission
+        boolean hasPermission = service.hasPermission(permission).block();
+
+        // then: the permission is present
+        assertTrue(hasPermission);
+
+        // when: checking the permission for a specific resource
+        hasPermission = service.hasPermission(Permission.builder()
+                .user(userId)
+                .isAllowedTo(testAction)
+                .on(resource)).block();
+
+        // then: the permission is not present
+        assertFalse(hasPermission);
+    }
+
+    @Test
     void shouldAddMultiplePermissions() {
         var userId1 = UserId.of("USER_ID_1");
         var userId2 = UserId.of("USER_ID_2");
