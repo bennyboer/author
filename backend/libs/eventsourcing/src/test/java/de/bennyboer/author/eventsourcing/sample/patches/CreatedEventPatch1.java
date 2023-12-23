@@ -1,13 +1,13 @@
-package de.bennyboer.eventsourcing.sample.patches;
+package de.bennyboer.author.eventsourcing.sample.patches;
 
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.Event;
-import de.bennyboer.eventsourcing.event.EventName;
-import de.bennyboer.eventsourcing.patch.Patch;
-import de.bennyboer.eventsourcing.sample.SampleAggregate;
-import de.bennyboer.eventsourcing.sample.events.CreatedEvent;
-import de.bennyboer.eventsourcing.sample.events.CreatedEvent2;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.patch.Patch;
+import de.bennyboer.author.eventsourcing.sample.SampleAggregate;
+import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent;
+import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent2;
 
 public class CreatedEventPatch1 implements Patch {
 

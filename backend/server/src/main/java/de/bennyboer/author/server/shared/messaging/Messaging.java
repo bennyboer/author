@@ -1,9 +1,9 @@
 package de.bennyboer.author.server.shared.messaging;
 
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import io.javalin.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;

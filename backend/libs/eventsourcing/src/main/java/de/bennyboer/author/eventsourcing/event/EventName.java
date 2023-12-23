@@ -1,4 +1,4 @@
-package de.bennyboer.eventsourcing.event;
+package de.bennyboer.author.eventsourcing.event;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

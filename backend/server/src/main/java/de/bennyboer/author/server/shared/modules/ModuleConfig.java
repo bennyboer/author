@@ -2,7 +2,7 @@ package de.bennyboer.author.server.shared.modules;
 
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
-import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

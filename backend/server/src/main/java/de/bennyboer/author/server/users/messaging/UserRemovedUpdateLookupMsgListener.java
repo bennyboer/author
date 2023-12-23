@@ -6,8 +6,8 @@ import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessag
 import de.bennyboer.author.server.users.facade.UsersFacade;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.remove.RemovedEvent;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 

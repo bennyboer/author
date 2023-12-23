@@ -1,4 +1,4 @@
-package de.bennyboer.eventsourcing.command;
+package de.bennyboer.author.eventsourcing.command;
 
 /**
  * Commands in CQRS/Event Sourcing are issuing a change to the aggregate.

@@ -1,6 +1,6 @@
-package de.bennyboer.eventsourcing.event;
+package de.bennyboer.author.eventsourcing.event;
 
-import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

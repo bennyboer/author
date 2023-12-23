@@ -3,11 +3,12 @@ package de.bennyboer.author.user;
 import de.bennyboer.author.auth.password.PasswordEncoder;
 import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import de.bennyboer.author.testing.TestClock;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.eventsourcing.testing.TestEventPublisher;
+import de.bennyboer.author.user.login.UserLockedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import reactor.core.publisher.Mono;
@@ -273,10 +274,13 @@ public class UserServiceTests {
         assertTrue(user.isLocked());
 
         // when: trying to login given the correct password
-        var accessToken = userService.login(userId, password).block();
+        Executable executable = () -> userService.login(userId, password).block();
 
-        // then: no access token is returned
-        assertNull(accessToken);
+        // then: an exception is thrown
+        assertThrows(
+                UserLockedException.class,
+                executable
+        );
     }
 
     @Test

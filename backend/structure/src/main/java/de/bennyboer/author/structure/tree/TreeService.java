@@ -1,5 +1,7 @@
 package de.bennyboer.author.structure.tree;
 
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.structure.tree.create.CreateCmd;
 import de.bennyboer.author.structure.tree.nodes.Node;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
@@ -9,14 +11,12 @@ import de.bennyboer.author.structure.tree.nodes.remove.RemoveNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.rename.RenameNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
 import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
-import de.bennyboer.eventsourcing.EventPublisher;
-import de.bennyboer.eventsourcing.EventSourcingService;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.aggregate.AggregateIdAndVersion;
-import de.bennyboer.eventsourcing.aggregate.AggregateService;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.eventsourcing.EventPublisher;
+import de.bennyboer.author.eventsourcing.EventSourcingService;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateIdAndVersion;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import reactor.core.publisher.Mono;
 
 import java.util.List;

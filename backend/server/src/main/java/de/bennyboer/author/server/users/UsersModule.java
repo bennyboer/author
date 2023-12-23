@@ -14,7 +14,7 @@ import de.bennyboer.author.server.users.rest.UsersRestRouting;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserService;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;

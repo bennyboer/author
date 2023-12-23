@@ -1,8 +1,8 @@
-package de.bennyboer.eventsourcing.testing;
+package de.bennyboer.author.eventsourcing.testing;
 
-import de.bennyboer.eventsourcing.EventPublisher;
-import de.bennyboer.eventsourcing.event.EventName;
-import de.bennyboer.eventsourcing.event.EventWithMetadata;
+import de.bennyboer.author.eventsourcing.EventPublisher;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;

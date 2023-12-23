@@ -1,9 +1,9 @@
-package de.bennyboer.eventsourcing.patch;
+package de.bennyboer.author.eventsourcing.patch;
 
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.Event;
-import de.bennyboer.eventsourcing.event.EventName;
-import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

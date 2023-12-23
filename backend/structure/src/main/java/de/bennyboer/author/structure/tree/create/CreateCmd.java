@@ -1,7 +1,7 @@
 package de.bennyboer.author.structure.tree.create;
 
 import de.bennyboer.author.structure.tree.nodes.Node;
-import de.bennyboer.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

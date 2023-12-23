@@ -1,10 +1,10 @@
-package de.bennyboer.eventsourcing.sample.events;
+package de.bennyboer.author.eventsourcing.sample.events;
 
-import de.bennyboer.eventsourcing.event.AbstractEvent;
-import de.bennyboer.eventsourcing.event.EventName;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.SnapshotEvent;
-import de.bennyboer.eventsourcing.sample.SampleAggregate;
+import de.bennyboer.author.eventsourcing.event.AbstractEvent;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.SnapshotEvent;
+import de.bennyboer.author.eventsourcing.sample.SampleAggregate;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 

@@ -1,9 +1,9 @@
-package de.bennyboer.eventsourcing.aggregate;
+package de.bennyboer.author.eventsourcing.aggregate;
 
-import de.bennyboer.eventsourcing.command.Command;
-import de.bennyboer.eventsourcing.event.Event;
-import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 
 /**
  * An aggregate in CQRS/Event Sourcing is the end result of all events that have been applied to it.

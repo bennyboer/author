@@ -10,7 +10,7 @@ import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
 import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.author.structure.tree.TreeService;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;

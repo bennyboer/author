@@ -10,7 +10,7 @@ import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 

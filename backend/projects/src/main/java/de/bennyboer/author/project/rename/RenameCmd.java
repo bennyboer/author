@@ -1,7 +1,7 @@
 package de.bennyboer.author.project.rename;
 
 import de.bennyboer.author.project.ProjectName;
-import de.bennyboer.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

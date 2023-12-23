@@ -5,7 +5,7 @@ import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
 import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
 import de.bennyboer.author.server.structure.facade.TreeFacade;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;

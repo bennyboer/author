@@ -2,9 +2,9 @@ package de.bennyboer.author.project.snapshot;
 
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectName;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.Event;
-import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

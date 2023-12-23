@@ -1,5 +1,6 @@
 package de.bennyboer.author.eventsourcing;
 
+import de.bennyboer.author.eventsourcing.aggregate.*;
 import de.bennyboer.author.eventsourcing.command.Command;
 import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.author.eventsourcing.event.Event;

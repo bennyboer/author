@@ -1,18 +1,18 @@
-package de.bennyboer.eventsourcing.sample;
+package de.bennyboer.author.eventsourcing.sample;
 
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.event.EventWithMetadata;
-import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.event.metadata.agent.AgentType;
-import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
-import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
-import de.bennyboer.eventsourcing.sample.events.CreatedEvent;
-import de.bennyboer.eventsourcing.sample.events.CreatedEvent2;
-import de.bennyboer.eventsourcing.testing.TestEventPublisher;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.AgentType;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.author.eventsourcing.sample.commands.CreateCmd;
+import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent;
+import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent2;
+import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 

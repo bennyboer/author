@@ -1,10 +1,10 @@
-package de.bennyboer.eventsourcing.persistence;
+package de.bennyboer.author.eventsourcing.persistence;
 
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.EventWithMetadata;
-import de.bennyboer.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

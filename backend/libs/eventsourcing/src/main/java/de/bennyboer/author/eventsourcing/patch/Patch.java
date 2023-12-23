@@ -1,9 +1,9 @@
-package de.bennyboer.eventsourcing.patch;
+package de.bennyboer.author.eventsourcing.patch;
 
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.eventsourcing.event.Event;
-import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
 
 /**
  * A patch is able to turn an old version of an event into a new one.

@@ -1,4 +1,4 @@
-package de.bennyboer.eventsourcing.aggregate;
+package de.bennyboer.author.eventsourcing.aggregate;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

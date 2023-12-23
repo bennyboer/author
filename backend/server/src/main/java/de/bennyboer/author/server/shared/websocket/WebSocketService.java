@@ -7,9 +7,9 @@ import de.bennyboer.author.server.shared.websocket.api.*;
 import de.bennyboer.author.server.shared.websocket.subscriptions.EventTopic;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionManager;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.EventName;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 

@@ -6,10 +6,10 @@ import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.nodes.Node;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
 import de.bennyboer.author.structure.tree.nodes.NodeName;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.eventsourcing.testing.TestEventPublisher;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 

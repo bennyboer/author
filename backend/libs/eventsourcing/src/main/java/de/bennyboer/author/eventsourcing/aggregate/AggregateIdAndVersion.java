@@ -1,6 +1,6 @@
-package de.bennyboer.eventsourcing.aggregate;
+package de.bennyboer.author.eventsourcing.aggregate;
 
-import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

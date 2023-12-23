@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.shared.websocket.subscriptions;
 
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.EventName;
 
 import java.util.Map;
 

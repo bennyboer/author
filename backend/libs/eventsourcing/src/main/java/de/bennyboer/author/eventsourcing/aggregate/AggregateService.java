@@ -1,9 +1,9 @@
-package de.bennyboer.eventsourcing.aggregate;
+package de.bennyboer.author.eventsourcing.aggregate;
 
-import de.bennyboer.eventsourcing.EventSourcingService;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.command.Command;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.EventSourcingService;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 

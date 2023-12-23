@@ -1,4 +1,4 @@
-package de.bennyboer.eventsourcing.event;
+package de.bennyboer.author.eventsourcing.event;
 
 /**
  * Marker interface for snapshot events.

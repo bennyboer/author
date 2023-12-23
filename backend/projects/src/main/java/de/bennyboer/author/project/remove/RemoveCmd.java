@@ -1,6 +1,6 @@
 package de.bennyboer.author.project.remove;
 
-import de.bennyboer.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

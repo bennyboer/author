@@ -2,7 +2,7 @@ package de.bennyboer.author.server.shared.modules;
 
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
-import de.bennyboer.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import io.javalin.plugin.Plugin;
 import io.javalin.plugin.PluginLifecycleInit;

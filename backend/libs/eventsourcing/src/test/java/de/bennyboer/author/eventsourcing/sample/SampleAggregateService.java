@@ -1,17 +1,17 @@
-package de.bennyboer.eventsourcing.sample;
+package de.bennyboer.author.eventsourcing.sample;
 
-import de.bennyboer.eventsourcing.EventPublisher;
-import de.bennyboer.eventsourcing.EventSourcingService;
-import de.bennyboer.eventsourcing.Version;
-import de.bennyboer.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.eventsourcing.aggregate.AggregateService;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.eventsourcing.persistence.EventSourcingRepo;
-import de.bennyboer.eventsourcing.sample.commands.CreateCmd;
-import de.bennyboer.eventsourcing.sample.commands.DeleteCmd;
-import de.bennyboer.eventsourcing.sample.commands.UpdateDescriptionCmd;
-import de.bennyboer.eventsourcing.sample.commands.UpdateTitleCmd;
-import de.bennyboer.eventsourcing.sample.patches.CreatedEventPatch1;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.eventsourcing.EventPublisher;
+import de.bennyboer.author.eventsourcing.EventSourcingService;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.eventsourcing.sample.commands.CreateCmd;
+import de.bennyboer.author.eventsourcing.sample.commands.DeleteCmd;
+import de.bennyboer.author.eventsourcing.sample.commands.UpdateDescriptionCmd;
+import de.bennyboer.author.eventsourcing.sample.commands.UpdateTitleCmd;
+import de.bennyboer.author.eventsourcing.sample.patches.CreatedEventPatch1;
 import reactor.core.publisher.Mono;
 
 import java.util.List;

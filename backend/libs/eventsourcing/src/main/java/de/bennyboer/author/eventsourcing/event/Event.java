@@ -1,6 +1,6 @@
-package de.bennyboer.eventsourcing.event;
+package de.bennyboer.author.eventsourcing.event;
 
-import de.bennyboer.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.Version;
 
 /**
  * Events in CQRS/Event Sourcing are the result of a command.

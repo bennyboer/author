@@ -5,7 +5,7 @@ import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.facade.UsersFacade;
 import de.bennyboer.author.user.login.UserLockedException;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;

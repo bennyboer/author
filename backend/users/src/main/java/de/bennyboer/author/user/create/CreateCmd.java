@@ -2,7 +2,7 @@ package de.bennyboer.author.user.create;
 
 import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.UserName;
-import de.bennyboer.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.Command;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;

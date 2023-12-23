@@ -2,7 +2,7 @@ package de.bennyboer.author.server.shared.http;
 
 import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.auth.token.TokenVerifier;
-import de.bennyboer.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
