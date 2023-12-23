@@ -1,23 +1,28 @@
 package de.bennyboer.author.server.shared.modules;
 
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
 import io.javalin.Javalin;
 import io.javalin.plugin.Plugin;
 import io.javalin.plugin.PluginLifecycleInit;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public abstract class Module implements Plugin, PluginLifecycleInit {
 
     private final ModuleConfig config;
+    private final MessagingEventPublisher eventPublisher;
 
     protected Module(ModuleConfig config) {
         this.config = config;
+        this.eventPublisher = new MessagingEventPublisher(config.getMessaging(), config.getJsonMapper());
     }
 
     @Override
@@ -50,7 +55,7 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
 
     private void registerAggregateEventPayloadTransformers() {
         for (var entry : getAggregateEventPayloadTransformers().entrySet()) {
-            config.getEventPublisher().registerAggregateEventPayloadTransformer(entry.getKey(), entry.getValue());
+            eventPublisher.registerAggregateEventPayloadTransformer(entry.getKey(), entry.getValue());
         }
     }
 

@@ -1,5 +1,7 @@
 package de.bennyboer.author.server.projects;
 
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectsService;
 import de.bennyboer.author.server.projects.facade.ProjectsFacade;
@@ -10,7 +12,6 @@ import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +27,9 @@ public class ProjectsModule extends Module {
     public ProjectsModule(ModuleConfig config) {
         super(config);
 
-        var projectsService = new ProjectsService(config.getEventSourcingRepo(), config.getEventPublisher());
+        var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
+        var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
+
         facade = new ProjectsFacade(projectsService);
     }
 

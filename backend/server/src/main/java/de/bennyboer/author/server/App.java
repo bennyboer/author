@@ -8,18 +8,16 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenGenerators;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.auth.token.TokenVerifiers;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.projects.ProjectsModule;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
-import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.StructureModule;
 import de.bennyboer.author.server.users.UsersModule;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import io.javalin.Javalin;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
@@ -47,14 +45,10 @@ public class App {
         Auth.init(tokenVerifier);
 
         var messaging = new Messaging(jsonMapper);
-
-        var eventSourcingRepo = new InMemoryEventSourcingRepo();
-        var eventPublisher = new MessagingEventPublisher(messaging, jsonMapper);
-
         var webSocketService = new WebSocketService(messaging);
 
         Javalin.create(config -> {
-                    ModuleConfig moduleConfig = ModuleConfig.of(eventSourcingRepo, eventPublisher, messaging);
+                    ModuleConfig moduleConfig = ModuleConfig.of(messaging, jsonMapper);
 
                     registerModule(config, new UsersModule(moduleConfig, tokenGenerator));
                     registerModule(config, new ProjectsModule(moduleConfig));

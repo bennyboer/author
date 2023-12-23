@@ -1,16 +1,17 @@
 package de.bennyboer.author.server.users.facade;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.users.api.AccessTokenDTO;
 import de.bennyboer.author.server.users.api.UserDTO;
+import de.bennyboer.author.server.users.permissions.UserPermissionsService;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
 import de.bennyboer.author.server.users.transformer.AccessTokenTransformer;
 import de.bennyboer.author.server.users.transformer.UserTransformer;
 import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.UserName;
 import de.bennyboer.author.user.UserService;
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,8 @@ public class UsersFacade {
     private static final Password DEFAULT_USER_PASSWORD = Password.of("password");
 
     UserService userService;
+
+    UserPermissionsService userPermissionsService;
 
     UserLookupRepo userLookupRepo;
 
@@ -68,6 +71,14 @@ public class UsersFacade {
         return userLookupRepo.countUsers()
                 .filter(count -> count == 0)
                 .flatMap(count -> createDefaultUser());
+    }
+
+    public Mono<Void> addPermissionsForUser(UserId userId) {
+        return userPermissionsService.addPermissionsForUser(userId);
+    }
+
+    public Mono<Void> removePermissionsForUser(UserId userId) {
+        return userPermissionsService.removePermissionsForUser(userId);
     }
 
     private Mono<Void> createDefaultUser() {

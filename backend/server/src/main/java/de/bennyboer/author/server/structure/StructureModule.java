@@ -1,5 +1,7 @@
 package de.bennyboer.author.server.structure;
 
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.modules.Module;
@@ -10,7 +12,6 @@ import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
 import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.author.structure.tree.TreeService;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import io.javalin.Javalin;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
@@ -27,7 +28,9 @@ public class StructureModule extends Module {
     public StructureModule(ModuleConfig config) {
         super(config);
 
-        var treeService = new TreeService(config.getEventSourcingRepo(), config.getEventPublisher());
+        var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
+        var treeService = new TreeService(eventSourcingRepo, getEventPublisher());
+
         facade = new TreeFacade(treeService);
     }
 
