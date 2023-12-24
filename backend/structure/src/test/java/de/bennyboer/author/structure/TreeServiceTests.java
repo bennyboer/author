@@ -1,15 +1,15 @@
 package de.bennyboer.author.structure;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
+import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import de.bennyboer.author.structure.tree.nodes.Node;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
 import de.bennyboer.author.structure.tree.nodes.NodeName;
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
-import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -22,6 +22,7 @@ public class TreeServiceTests {
 
     private final TreeService treeService = new TreeService(new InMemoryEventSourcingRepo(), new TestEventPublisher());
 
+    private final String testProjectId = "PROJECT_ID";
     private final Agent testAgent = Agent.user(UserId.of("TEST_USER_ID"));
 
     @Test
@@ -30,7 +31,7 @@ public class TreeServiceTests {
         var rootNodeName = NodeName.of("Alice in Wonderland");
 
         // when: a tree is created
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
 
@@ -44,7 +45,7 @@ public class TreeServiceTests {
     void shouldAddNode() {
         // given: a tree with a root node
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -72,7 +73,7 @@ public class TreeServiceTests {
     void shouldRenameNode() {
         // given: a tree with a root node with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -106,7 +107,7 @@ public class TreeServiceTests {
     void shouldToggleNode() {
         // given: a tree with a root node with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -149,7 +150,7 @@ public class TreeServiceTests {
     void shouldRemoveLeafNode() {
         // given: a tree with a root node with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -180,7 +181,7 @@ public class TreeServiceTests {
     void shouldNotAllowRemovingRootNode() {
         // given: a tree with a root node
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -205,7 +206,7 @@ public class TreeServiceTests {
     void shouldRemoveParentNode() {
         // given: a tree with a root node with a child with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -247,7 +248,7 @@ public class TreeServiceTests {
     void shouldSwapLeafNodes() {
         // given: a tree with a root node with two children
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -293,7 +294,7 @@ public class TreeServiceTests {
     void shouldSwapParentNodesThatAreNotDirectlyRelated() {
         // given: a tree with a root node with two children that themselves have children
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();
@@ -354,7 +355,7 @@ public class TreeServiceTests {
     void shouldNotBeAbleToSwapNodesThatAreDirectlyRelated() {
         // given: a tree with a root node with a child with a child
         var rootNodeName = NodeName.of("Alice in Wonderland");
-        var treeIdAndVersion = treeService.create(rootNodeName, testAgent).block();
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
         var treeId = treeIdAndVersion.getId();
         var version = treeIdAndVersion.getVersion();
         var initialTree = treeService.get(treeId, version).block();

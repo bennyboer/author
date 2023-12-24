@@ -1,9 +1,14 @@
 package de.bennyboer.author.structure.tree;
 
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.Aggregate;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.ApplyCommandResult;
+import de.bennyboer.author.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.structure.tree.create.CreateCmd;
 import de.bennyboer.author.structure.tree.create.CreatedEvent;
 import de.bennyboer.author.structure.tree.nodes.Node;
@@ -20,11 +25,6 @@ import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
 import de.bennyboer.author.structure.tree.nodes.toggle.NodeToggledEvent;
 import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
 import de.bennyboer.author.structure.tree.snapshot.SnapshottedEvent;
-import de.bennyboer.author.eventsourcing.aggregate.Aggregate;
-import de.bennyboer.author.eventsourcing.aggregate.ApplyCommandResult;
-import de.bennyboer.author.eventsourcing.command.Command;
-import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -46,12 +46,14 @@ public class Tree implements Aggregate {
 
     Version version;
 
+    String projectId;
+
     NodeId rootNodeId;
 
     Map<NodeId, Node> nodes;
 
     public static Tree init() {
-        return new Tree(null, null, null, null);
+        return new Tree(null, null, null, null, null);
     }
 
     @Override
@@ -62,9 +64,7 @@ public class Tree implements Aggregate {
             throw new IllegalStateException("Tree must be initialized with CreateCmd before applying other commands");
         }
 
-        // TODO Allow removal of tree
-
-        // TODO Check if agent is allowed to apply command
+        // TODO Allow removal of tree (when project is removed)
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
@@ -104,9 +104,11 @@ public class Tree implements Aggregate {
     public Tree apply(Event event, EventMetadata metadata) {
         var updatedTree = switch (event) {
             case SnapshottedEvent e -> withId(TreeId.of(metadata.getAggregateId().getValue()))
+                    .withProjectId(e.getProjectId())
                     .withRootNodeId(e.getRootNodeId())
                     .withNodes(e.getNodes());
             case CreatedEvent e -> withId(TreeId.of(metadata.getAggregateId().getValue()))
+                    .withProjectId(e.getProjectId())
                     .withRootNodeId(e.getRootNode().getId())
                     .withNodes(Map.of(e.getRootNode().getId(), e.getRootNode()));
             case NodeAddedEvent e -> addNode(e.getParentNodeId(), e.getNewNodeId(), e.getNewNodeName());

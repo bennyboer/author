@@ -1,5 +1,6 @@
 package de.bennyboer.author.server.shared.messaging.messages;
 
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,6 +23,9 @@ public class AggregateEventMessage {
 
     long aggregateVersion;
 
+    @Nullable
+    String userId;
+
     Instant date;
 
     String eventName;
@@ -33,6 +38,7 @@ public class AggregateEventMessage {
             String aggregateType,
             String aggregateId,
             long aggregateVersion,
+            @Nullable String userId,
             Instant date,
             String eventName,
             long eventVersion,
@@ -42,11 +48,16 @@ public class AggregateEventMessage {
                 aggregateType,
                 aggregateId,
                 aggregateVersion,
+                userId,
                 date,
                 eventName,
                 eventVersion,
                 payload
         );
+    }
+
+    public Optional<String> getUserId() {
+        return Optional.ofNullable(userId);
     }
 
 }

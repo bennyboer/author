@@ -1,11 +1,11 @@
-package de.bennyboer.author.server.projects.messaging;
+package de.bennyboer.author.server.structure.messaging;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
-import de.bennyboer.author.server.projects.facade.ProjectsPermissionsFacade;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.author.server.structure.facade.TreePermissionsFacade;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.remove.RemovedEvent;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserRemovedRemovePermissionsMsgListener implements AggregateEventMessageListener {
 
-    private final ProjectsPermissionsFacade permissionsFacade;
+    private final TreePermissionsFacade permissionsFacade;
 
     @Override
     public AggregateType aggregateType() {

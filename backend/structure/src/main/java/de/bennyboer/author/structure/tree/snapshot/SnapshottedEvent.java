@@ -1,11 +1,11 @@
 package de.bennyboer.author.structure.tree.snapshot;
 
-import de.bennyboer.author.structure.tree.Tree;
-import de.bennyboer.author.structure.tree.nodes.Node;
-import de.bennyboer.author.structure.tree.nodes.NodeId;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.structure.tree.Tree;
+import de.bennyboer.author.structure.tree.nodes.Node;
+import de.bennyboer.author.structure.tree.nodes.NodeId;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -20,12 +20,14 @@ public class SnapshottedEvent implements Event {
 
     public static final Version VERSION = Version.zero();
 
+    String projectId;
+
     NodeId rootNodeId;
 
     Map<NodeId, Node> nodes;
 
     public static SnapshottedEvent of(Tree tree) {
-        return new SnapshottedEvent(tree.getRootNodeId(), tree.getNodes());
+        return new SnapshottedEvent(tree.getProjectId(), tree.getRootNodeId(), tree.getNodes());
     }
 
     @Override

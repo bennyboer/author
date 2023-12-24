@@ -8,6 +8,8 @@ import de.bennyboer.author.project.ProjectsService;
 import de.bennyboer.author.server.projects.facade.ProjectsCommandFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsPermissionsFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsQueryFacade;
+import de.bennyboer.author.server.projects.messaging.ProjectCreatedAddPermissionForCreatorMsgListener;
+import de.bennyboer.author.server.projects.messaging.ProjectRemovedRemovePermissionsMsgListener;
 import de.bennyboer.author.server.projects.messaging.UserRemovedRemovePermissionsMsgListener;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
 import de.bennyboer.author.server.projects.rest.ProjectsRestHandler;
@@ -63,7 +65,9 @@ public class ProjectsModule extends Module {
     @Override
     protected List<AggregateEventMessageListener> createMessageListeners() {
         return List.of(
-                new UserRemovedRemovePermissionsMsgListener(permissionsFacade)
+                new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new ProjectCreatedAddPermissionForCreatorMsgListener(permissionsFacade),
+                new ProjectRemovedRemovePermissionsMsgListener(permissionsFacade)
         );
     }
 

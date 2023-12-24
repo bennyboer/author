@@ -1,7 +1,13 @@
 package de.bennyboer.author.structure.tree;
 
+import de.bennyboer.author.eventsourcing.EventPublisher;
+import de.bennyboer.author.eventsourcing.EventSourcingService;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateIdAndVersion;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.structure.tree.create.CreateCmd;
 import de.bennyboer.author.structure.tree.nodes.Node;
 import de.bennyboer.author.structure.tree.nodes.NodeId;
@@ -11,12 +17,6 @@ import de.bennyboer.author.structure.tree.nodes.remove.RemoveNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.rename.RenameNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
 import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
-import de.bennyboer.author.eventsourcing.EventPublisher;
-import de.bennyboer.author.eventsourcing.EventSourcingService;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateIdAndVersion;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -33,11 +33,11 @@ public class TreeService extends AggregateService<Tree, TreeId> {
         ));
     }
 
-    public Mono<AggregateIdAndVersion<TreeId>> create(NodeName rootNodeName, Agent agent) {
+    public Mono<AggregateIdAndVersion<TreeId>> create(String projectId, NodeName rootNodeName, Agent agent) {
         TreeId id = TreeId.create();
         Node rootNode = Node.createRoot(rootNodeName);
 
-        return dispatchCommandToLatest(id, agent, CreateCmd.of(rootNode))
+        return dispatchCommandToLatest(id, agent, CreateCmd.of(projectId, rootNode))
                 .map(version -> AggregateIdAndVersion.of(id, version));
     }
 

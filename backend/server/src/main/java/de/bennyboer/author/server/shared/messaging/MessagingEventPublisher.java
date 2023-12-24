@@ -1,11 +1,12 @@
 package de.bennyboer.author.server.shared.messaging;
 
+import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.EventPublisher;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
 import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
-import de.bennyboer.author.eventsourcing.EventPublisher;
-import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
 import io.javalin.json.JsonMapper;
 import lombok.Value;
 import reactor.core.publisher.Mono;
@@ -69,6 +70,7 @@ public class MessagingEventPublisher implements EventPublisher {
                 event.getMetadata().getAggregateType().getValue(),
                 event.getMetadata().getAggregateId().getValue(),
                 event.getMetadata().getAggregateVersion().getValue(),
+                event.getMetadata().getAgent().getUserId().map(UserId::getValue).orElse(null),
                 event.getMetadata().getDate(),
                 event.getEvent().getEventName().getValue(),
                 event.getEvent().getVersion().getValue(),
