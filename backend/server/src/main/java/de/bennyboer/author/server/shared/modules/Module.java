@@ -4,6 +4,7 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
+import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
 import io.javalin.Javalin;
 import io.javalin.plugin.Plugin;
 import io.javalin.plugin.PluginLifecycleInit;
@@ -41,10 +42,19 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
 
     protected abstract List<AggregateEventMessageListener> createMessageListeners();
 
+    protected abstract List<EventPermissionChecker> getEventPermissionCheckers();
+
     private void initializeModule() {
         registerAggregatesWithMessaging();
         registerAggregateEventPayloadTransformers();
         registerMessageListeners();
+        registerWebSocketPermissions();
+    }
+
+    private void registerWebSocketPermissions() {
+        for (var permissionChecker : getEventPermissionCheckers()) {
+            config.getWebSocketService().registerSubscriptionPermissionChecker(permissionChecker);
+        }
     }
 
     private void registerAggregatesWithMessaging() {

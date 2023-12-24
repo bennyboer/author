@@ -1,18 +1,21 @@
 package de.bennyboer.author.server.shared.websocket;
 
 import de.bennyboer.author.auth.token.Token;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.websocket.api.*;
+import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
 import de.bennyboer.author.server.shared.websocket.subscriptions.EventTopic;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionManager;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.event.EventName;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketService {
 
     private final SubscriptionManager subscriptionManager;
+
+    private final Map<AggregateType, EventPermissionChecker> eventPermissionCheckers = new HashMap<>();
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
@@ -93,6 +98,10 @@ public class WebSocketService {
         publishEventMsgToSubscribers(eventTopic, msg);
     }
 
+    public void registerSubscriptionPermissionChecker(EventPermissionChecker permissionChecker) {
+        eventPermissionCheckers.put(permissionChecker.getAggregateType(), permissionChecker);
+    }
+
     private void publishEventMsgToSubscribers(EventTopic topic, WebSocketMessage msg) {
         for (var subscriber : findSubscribers(topic)) {
             subscriber.send(msg);
@@ -124,8 +133,9 @@ public class WebSocketService {
             case HEARTBEAT -> ctx.send(WebSocketMessage.heartbeat());
             case SUBSCRIBE -> subscribe(
                     ctx,
-                    msg.getSubscribe().orElseThrow()
-            ); // TODO Check if agent is allowed to subscribe to target
+                    msg.getSubscribe().orElseThrow(),
+                    agent
+            );
             case UNSUBSCRIBE -> unsubscribe(ctx, msg.getUnsubscribe().orElseThrow());
             default -> throw new IllegalArgumentException(
                     "Encountered message with unsupported method from client" + msg.getMethod()
@@ -133,7 +143,9 @@ public class WebSocketService {
         }
     }
 
-    private void subscribe(WsContext ctx, SubscribeMessage msg) {
+    private void subscribe(WsContext ctx, SubscribeMessage msg, Agent agent) {
+        assertThatAgentIsAllowedToSubscribeToTargetEvents(msg.getTarget(), agent);
+
         subscriptionManager.subscribe(msg.getTarget(), SessionId.of(ctx));
     }
 
@@ -145,6 +157,23 @@ public class WebSocketService {
         Optional.ofNullable(sessions.remove(sessionId))
                 .filter(ctx -> ctx.session.isOpen())
                 .ifPresent(ctx -> ctx.session.close());
+    }
+
+    private void assertThatAgentIsAllowedToSubscribeToTargetEvents(SubscriptionTarget target, Agent agent) {
+        EventPermissionChecker permissionChecker = eventPermissionCheckers.get(target.getAggregateType());
+
+        if (permissionChecker == null) {
+            throw new IllegalArgumentException(
+                    "No permission checker registered for aggregate type " + target.getAggregateType()
+            );
+        }
+
+        var hasPermission = permissionChecker.hasPermissionToReceiveEvents(agent, target.getAggregateId()).block();
+        if (!hasPermission) {
+            throw new IllegalArgumentException(
+                    agent + " is not allowed to subscribe to events of aggregate " + target.getAggregateId()
+            );
+        }
     }
 
 }

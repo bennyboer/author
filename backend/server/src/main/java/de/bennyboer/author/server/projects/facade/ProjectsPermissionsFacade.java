@@ -1,6 +1,7 @@
 package de.bennyboer.author.server.projects.facade;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,10 @@ public class ProjectsPermissionsFacade {
 
     public Mono<Void> removePermissionsOnProject(ProjectId projectId) {
         return permissionsService.removePermissionsOnProject(projectId);
+    }
+
+    public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, ProjectId projectId) {
+        return permissionsService.hasPermissionToReceiveEvents(agent, projectId);
     }
 
 }

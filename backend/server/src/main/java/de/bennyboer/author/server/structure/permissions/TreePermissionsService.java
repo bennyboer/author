@@ -2,6 +2,7 @@ package de.bennyboer.author.server.structure.permissions;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.shared.permissions.AggregatePermissionsService;
@@ -12,6 +13,8 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static de.bennyboer.author.server.structure.permissions.TreeAction.READ;
 
 public class TreePermissionsService extends AggregatePermissionsService<TreeId, TreeAction> {
 
@@ -49,6 +52,10 @@ public class TreePermissionsService extends AggregatePermissionsService<TreeId, 
 
     public Mono<Void> removePermissionsForUser(UserId userId) {
         return removePermissionsByUserId(userId);
+    }
+
+    public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, TreeId treeId) {
+        return hasPermission(agent, READ, treeId);
     }
 
 }

@@ -48,7 +48,7 @@ public class App {
         var webSocketService = new WebSocketService(messaging);
 
         Javalin.create(config -> {
-                    ModuleConfig moduleConfig = ModuleConfig.of(messaging, jsonMapper);
+                    ModuleConfig moduleConfig = ModuleConfig.of(messaging, jsonMapper, webSocketService);
 
                     registerModule(config, new UsersModule(moduleConfig, tokenGenerator));
                     registerModule(config, new ProjectsModule(moduleConfig));

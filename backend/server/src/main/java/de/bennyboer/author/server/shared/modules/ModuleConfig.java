@@ -1,6 +1,7 @@
 package de.bennyboer.author.server.shared.modules;
 
 import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import io.javalin.json.JsonMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,14 +17,18 @@ public class ModuleConfig {
 
     JsonMapper jsonMapper;
 
+    WebSocketService webSocketService;
+
     public static ModuleConfig of(
             Messaging messaging,
-            JsonMapper jsonMapper
+            JsonMapper jsonMapper,
+            WebSocketService webSocketService
     ) {
         checkNotNull(messaging, "Messaging must be given");
         checkNotNull(jsonMapper, "JsonMapper must be given");
+        checkNotNull(webSocketService, "WebSocketService must be given");
 
-        return new ModuleConfig(messaging, jsonMapper);
+        return new ModuleConfig(messaging, jsonMapper, webSocketService);
     }
 
 }

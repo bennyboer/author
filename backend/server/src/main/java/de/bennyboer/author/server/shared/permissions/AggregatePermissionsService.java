@@ -5,7 +5,6 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
-import jakarta.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
 import java.util.Set;
@@ -36,6 +35,10 @@ public abstract class AggregatePermissionsService<ID, A> {
         return assertHasPermission(agent, toAction(action), null);
     }
 
+    public Mono<Boolean> hasPermission(Agent agent, A action, ID id) {
+        return hasPermission(agent, toAction(action), toResource(id));
+    }
+
     public Mono<Void> removePermissionsByResource(ID id) {
         return permissionsService.removePermissionsByResource(toResource(id));
     }
@@ -56,9 +59,23 @@ public abstract class AggregatePermissionsService<ID, A> {
         return permissionsService.removePermissionsByResource(resource);
     }
 
-    protected Mono<Void> assertHasPermission(Agent agent, Action action, @Nullable Resource resource) {
+    protected Mono<Void> assertHasPermission(Agent agent, Action action, Resource resource) {
+        return hasPermission(agent, action, resource)
+                .flatMap(hasPermission -> {
+                    if (hasPermission) {
+                        return Mono.empty();
+                    }
+
+                    return Mono.error(new MissingPermissionException(Permission.builder()
+                            .user(agent.getUserId().orElse(UserId.of("ANONYMOUS")))
+                            .isAllowedTo(action)
+                            .on(resource)));
+                });
+    }
+
+    protected Mono<Boolean> hasPermission(Agent agent, Action action, Resource resource) {
         if (agent.isSystem()) {
-            return Mono.empty();
+            return Mono.just(true);
         }
 
         UserId userId = agent.getUserId().orElse(UserId.of("ANONYMOUS"));
@@ -67,14 +84,7 @@ public abstract class AggregatePermissionsService<ID, A> {
                 .isAllowedTo(action)
                 .on(resource);
 
-        return permissionsService.hasPermission(permission)
-                .flatMap(hasPermission -> {
-                    if (hasPermission) {
-                        return Mono.empty();
-                    }
-
-                    return Mono.error(new MissingPermissionException(permission));
-                });
+        return permissionsService.hasPermission(permission);
     }
 
 }

@@ -1,7 +1,10 @@
 package de.bennyboer.author.server.users;
 
 import de.bennyboer.author.auth.token.TokenGenerator;
+import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
@@ -9,6 +12,7 @@ import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransfor
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.permissions.MessagingAggregatePermissionsEventPublisher;
+import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
 import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgListener;
@@ -79,6 +83,23 @@ public class UsersModule extends Module {
                 new UserCreatedAddPermissionsMsgListener(permissionsFacade),
                 new UserRemovedUpdateLookupMsgListener(syncFacade),
                 new UserRemovedRemovePermissionsMsgListener(permissionsFacade)
+        );
+    }
+
+    @Override
+    protected List<EventPermissionChecker> getEventPermissionCheckers() {
+        return List.of(
+                new EventPermissionChecker() {
+                    @Override
+                    public AggregateType getAggregateType() {
+                        return User.TYPE;
+                    }
+
+                    @Override
+                    public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, AggregateId aggregateId) {
+                        return permissionsFacade.hasPermissionToReceiveEvents(agent, UserId.of(aggregateId.getValue()));
+                    }
+                }
         );
     }
 

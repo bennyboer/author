@@ -2,6 +2,7 @@ package de.bennyboer.author.server.projects.permissions;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.project.Project;
@@ -12,6 +13,8 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static de.bennyboer.author.server.projects.permissions.ProjectAction.READ;
 
 public class ProjectPermissionsService extends AggregatePermissionsService<ProjectId, ProjectAction> {
 
@@ -55,4 +58,8 @@ public class ProjectPermissionsService extends AggregatePermissionsService<Proje
         return removePermissionsByResource(projectId);
     }
 
+    public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, ProjectId projectId) {
+        return hasPermission(agent, READ, projectId);
+    }
+    
 }
