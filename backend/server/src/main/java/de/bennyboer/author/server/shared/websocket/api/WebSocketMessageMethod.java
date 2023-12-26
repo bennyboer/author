@@ -3,6 +3,9 @@ package de.bennyboer.author.server.shared.websocket.api;
 public enum WebSocketMessageMethod {
     HEARTBEAT,
     EVENT,
+    PERMISSION_EVENT,
     SUBSCRIBE,
-    UNSUBSCRIBE
+    SUBSCRIBE_TO_PERMISSIONS,
+    UNSUBSCRIBE,
+    UNSUBSCRIBE_FROM_PERMISSIONS
 }

@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.shared.permissions;
+package de.bennyboer.author.server.shared.messaging.permissions;
 
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.permissions.PermissionsEventPublisher;
@@ -58,6 +58,13 @@ public class MessagingAggregatePermissionsEventPublisher implements PermissionsE
             String json = jsonMapper.toJsonString(message, AggregatePermissionEventMessage.class);
 
             TextMessage textMessage = ctx.createTextMessage(json);
+
+            try {
+                textMessage.setStringProperty("userId", message.getUserId());
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
+            }
+
             message.getAggregateId().ifPresent(aggregateId -> {
                 try {
                     textMessage.setStringProperty("aggregateId", aggregateId);

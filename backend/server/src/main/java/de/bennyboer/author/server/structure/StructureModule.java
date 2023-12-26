@@ -5,12 +5,12 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.structure.facade.TreeCommandFacade;
 import de.bennyboer.author.server.structure.facade.TreePermissionsFacade;
 import de.bennyboer.author.server.structure.facade.TreeQueryFacade;
@@ -26,7 +26,6 @@ import de.bennyboer.author.structure.tree.Tree;
 import de.bennyboer.author.structure.tree.TreeId;
 import de.bennyboer.author.structure.tree.TreeService;
 import io.javalin.Javalin;
-import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -64,7 +63,7 @@ public class StructureModule extends Module {
     }
 
     @Override
-    public void apply(@NotNull Javalin javalin) {
+    public void apply(Javalin javalin) {
         var restHandler = new TreeRestHandler(queryFacade, commandFacade);
         var restRouting = new StructureRestRouting(restHandler);
 
@@ -83,9 +82,9 @@ public class StructureModule extends Module {
     }
 
     @Override
-    protected List<EventPermissionChecker> getEventPermissionCheckers() {
+    protected List<AggregateEventPermissionChecker> getEventPermissionCheckers() {
         return List.of(
-                new EventPermissionChecker() {
+                new AggregateEventPermissionChecker() {
                     @Override
                     public AggregateType getAggregateType() {
                         return Tree.TYPE;
@@ -93,10 +92,7 @@ public class StructureModule extends Module {
 
                     @Override
                     public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, AggregateId aggregateId) {
-                        return permissionsFacade.hasPermissionToReceiveEvents(
-                                agent,
-                                TreeId.of(aggregateId.getValue())
-                        );
+                        return permissionsFacade.hasPermissionToReceiveEvents(agent, TreeId.of(aggregateId.getValue()));
                     }
                 }
         );

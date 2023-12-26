@@ -25,5 +25,5 @@ public class TreePermissionsFacade {
     public Mono<Void> addPermissionsForCreator(UserId userId, TreeId treeId) {
         return permissionsService.addPermissionsForCreator(userId, treeId);
     }
-    
+
 }

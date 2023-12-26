@@ -14,20 +14,24 @@ export class LocalStorageProjectsService extends RemoteProjectsService {
 
   createProject(name: string): Observable<void> {
     const id = crypto.randomUUID();
-    const project = new Project({ id, name });
+    const project = new Project({ id, version: 0, name });
 
     this.projects.set(id, project);
 
     return EMPTY;
   }
 
-  removeProject(id: ProjectId): Observable<void> {
+  removeProject(id: ProjectId, version: number): Observable<void> {
     this.projects.delete(id);
 
     return EMPTY;
   }
 
-  renameProject(id: ProjectId, name: string): Observable<void> {
+  renameProject(
+    id: ProjectId,
+    version: number,
+    name: string,
+  ): Observable<void> {
     return Option.someOrNone(this.projects.get(id))
       .map((project) => new Project({ ...project, name }))
       .map((project) => this.projects.set(id, project))

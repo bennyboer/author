@@ -2,8 +2,11 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { RemoteProjectsService } from './remote';
 import {
+  accessibleProjectsLoaded,
   createProject,
   creatingProjectFailed,
+  loadAccessibleProjects,
+  loadingAccessibleProjectsFailed,
   projectCreated,
 } from './actions';
 import { catchError, map, mergeMap, of } from 'rxjs';
@@ -27,6 +30,22 @@ export class ProjectsStoreEffects {
       }),
     ),
   );
+
+  loadAccessibleProjects$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(loadAccessibleProjects),
+      mergeMap(() => {
+        return this.projectsService.getAccessibleProjects().pipe(
+          map((projects) => accessibleProjectsLoaded({ projects })),
+          catchError((error) =>
+            of(loadingAccessibleProjectsFailed({ message: error.message })),
+          ),
+        );
+      }),
+    ),
+  );
+
+  init$ = createEffect(() => of(loadAccessibleProjects()));
 
   constructor(
     private readonly actions: Actions,

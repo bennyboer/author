@@ -7,8 +7,8 @@ import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.project.create.CreatedEvent;
 import de.bennyboer.author.server.projects.facade.ProjectsPermissionsFacade;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 

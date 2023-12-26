@@ -19,28 +19,38 @@ import { Option } from '../util';
 import { environment } from '../../../../environments';
 import { LoginService } from '../../login';
 
-const WS_ENDPOINT: string = 'ws://localhost:7070/ws'; // TODO determine protocol and host based on environment
-
 enum WebSocketMessageMethod {
   HEARTBEAT = 'HEARTBEAT',
   EVENT = 'EVENT',
+  PERMISSION_EVENT = 'PERMISSION_EVENT',
   SUBSCRIBE = 'SUBSCRIBE',
+  SUBSCRIBE_TO_PERMISSIONS = 'SUBSCRIBE_TO_PERMISSIONS',
   UNSUBSCRIBE = 'UNSUBSCRIBE',
-}
-
-interface SubscriptionTarget {
-  aggregateType: string;
-  aggregateId?: string;
+  UNSUBSCRIBE_FROM_PERMISSIONS = 'UNSUBSCRIBE_FROM_PERMISSIONS',
 }
 
 interface HeartbeatMessage {}
 
 interface SubscribeMessage {
-  target: SubscriptionTarget;
+  aggregateType: string;
+  aggregateId: string;
+  eventName?: string;
+}
+
+interface SubscribeToPermissionsMessage {
+  aggregateType: string;
+  aggregateId?: string;
 }
 
 interface UnsubscribeMessage {
-  target: SubscriptionTarget;
+  aggregateType: string;
+  aggregateId: string;
+  eventName?: string;
+}
+
+interface UnsubscribeFromPermissionsMessage {
+  aggregateType: string;
+  aggregateId?: string;
 }
 
 // TODO Should not export since its a DTO
@@ -48,6 +58,7 @@ export interface EventTopicDTO {
   aggregateType: string;
   aggregateId: string;
   version: number;
+  eventName: string;
 }
 
 export interface EventMessage {
@@ -57,13 +68,29 @@ export interface EventMessage {
   payload: any;
 }
 
+export enum PermissionEventType {
+  ADDED = 'ADDED',
+  REMOVED = 'REMOVED',
+}
+
+export interface PermissionEventMessage {
+  type: PermissionEventType;
+  aggregateType: string;
+  aggregateId?: string;
+  action: string;
+  userId: string;
+}
+
 interface WebSocketMessage {
   method: WebSocketMessageMethod;
   token?: string;
   heartbeat?: HeartbeatMessage;
   event?: EventMessage;
+  permissionEvent?: PermissionEventMessage;
   subscribe?: SubscribeMessage;
+  subscribeToPermissions?: SubscribeToPermissionsMessage;
   unsubscribe?: UnsubscribeMessage;
+  unsubscribeFromPermissions?: UnsubscribeFromPermissionsMessage;
 }
 
 const HEARTBEAT_INTERVAL_MS: number = 5000;
@@ -106,12 +133,12 @@ export class WebSocketService implements OnDestroy {
   subscribeTo(
     aggregateType: string,
     aggregateId: string,
+    eventName?: string,
   ): Observable<EventMessage> {
     const subscribeMsg: SubscribeMessage = {
-      target: {
-        aggregateType,
-        aggregateId,
-      },
+      aggregateType,
+      aggregateId,
+      eventName,
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.SUBSCRIBE,
@@ -125,9 +152,38 @@ export class WebSocketService implements OnDestroy {
       filter(
         (event) =>
           event.topic.aggregateType === aggregateType &&
-          event.topic.aggregateId === aggregateId,
+          event.topic.aggregateId === aggregateId &&
+          event.topic.eventName === eventName,
       ),
-      finalize(() => this.unsubscribe(aggregateType, aggregateId)),
+      finalize(() => this.unsubscribe(aggregateType, aggregateId, eventName)),
+    );
+  }
+
+  subscribeToPermissions(
+    aggregateType: string,
+    aggregateId?: string,
+  ): Observable<PermissionEventMessage> {
+    const subscribeToPermissionsMsg: SubscribeToPermissionsMessage = {
+      aggregateType,
+      aggregateId,
+    };
+    const msg: WebSocketMessage = {
+      method: WebSocketMessageMethod.SUBSCRIBE_TO_PERMISSIONS,
+      token: this.token.orElse(''),
+      subscribeToPermissions: subscribeToPermissionsMsg,
+    };
+
+    this.send(msg);
+
+    return this.getPermissionEvents$().pipe(
+      filter(
+        (event) =>
+          event.aggregateType === aggregateType &&
+          (aggregateId === undefined || event.aggregateId === aggregateId),
+      ),
+      finalize(() =>
+        this.unsubscribeFromPermissions(aggregateType, aggregateId),
+      ),
     );
   }
 
@@ -145,12 +201,15 @@ export class WebSocketService implements OnDestroy {
     return result$;
   }
 
-  private unsubscribe(aggregateType: string, aggregateId: string) {
+  private unsubscribe(
+    aggregateType: string,
+    aggregateId: string,
+    eventName?: string,
+  ) {
     const unsubscribeMsg: UnsubscribeMessage = {
-      target: {
-        aggregateType,
-        aggregateId,
-      },
+      aggregateType,
+      aggregateId,
+      eventName,
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.UNSUBSCRIBE,
@@ -161,10 +220,34 @@ export class WebSocketService implements OnDestroy {
     this.send(msg);
   }
 
+  private unsubscribeFromPermissions(
+    aggregateType: string,
+    aggregateId?: string,
+  ) {
+    const unsubscribeFromPermissionsMsg: UnsubscribeFromPermissionsMessage = {
+      aggregateType,
+      aggregateId,
+    };
+    const msg: WebSocketMessage = {
+      method: WebSocketMessageMethod.UNSUBSCRIBE_FROM_PERMISSIONS,
+      token: this.token.orElse(''),
+      unsubscribeFromPermissions: unsubscribeFromPermissionsMsg,
+    };
+
+    this.send(msg);
+  }
+
   private getEvents$(): Observable<EventMessage> {
     return this.messages$.asObservable().pipe(
       filter((msg) => msg.method === WebSocketMessageMethod.EVENT),
       map((msg) => msg.event!),
+    );
+  }
+
+  private getPermissionEvents$(): Observable<PermissionEventMessage> {
+    return this.messages$.asObservable().pipe(
+      filter((msg) => msg.method === WebSocketMessageMethod.PERMISSION_EVENT),
+      map((msg) => msg.permissionEvent!),
     );
   }
 

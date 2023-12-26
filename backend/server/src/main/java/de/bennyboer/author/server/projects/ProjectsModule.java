@@ -11,21 +11,20 @@ import de.bennyboer.author.project.ProjectsService;
 import de.bennyboer.author.server.projects.facade.ProjectsCommandFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsPermissionsFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsQueryFacade;
-import de.bennyboer.author.server.projects.messaging.ProjectCreatedAddPermissionForCreatorMsgListener;
-import de.bennyboer.author.server.projects.messaging.ProjectRemovedRemovePermissionsMsgListener;
-import de.bennyboer.author.server.projects.messaging.UserRemovedRemovePermissionsMsgListener;
+import de.bennyboer.author.server.projects.facade.ProjectsSyncFacade;
+import de.bennyboer.author.server.projects.messaging.*;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
+import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
 import de.bennyboer.author.server.projects.rest.ProjectsRestHandler;
 import de.bennyboer.author.server.projects.rest.ProjectsRestRouting;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
-import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -41,6 +40,8 @@ public class ProjectsModule extends Module {
 
     private final ProjectsPermissionsFacade permissionsFacade;
 
+    private final ProjectsSyncFacade syncFacade;
+
     public ProjectsModule(ModuleConfig config) {
         super(config);
 
@@ -54,13 +55,16 @@ public class ProjectsModule extends Module {
         );
         var projectPermissionsService = new ProjectPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService);
+        var lookupRepo = new InMemoryProjectLookupRepo(); // TODO Use persistent repo
+
+        queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService, lookupRepo);
         commandFacade = new ProjectsCommandFacade(projectsService, projectPermissionsService);
         permissionsFacade = new ProjectsPermissionsFacade(projectPermissionsService);
+        syncFacade = new ProjectsSyncFacade(projectsService, lookupRepo);
     }
 
     @Override
-    public void apply(@NotNull Javalin javalin) {
+    public void apply(Javalin javalin) {
         var restHandler = new ProjectsRestHandler(queryFacade, commandFacade);
         var restRouting = new ProjectsRestRouting(restHandler);
 
@@ -70,16 +74,20 @@ public class ProjectsModule extends Module {
     @Override
     protected List<AggregateEventMessageListener> createMessageListeners() {
         return List.of(
+                new UserCreatedAddPermissionToCreateProjectsMsgListener(permissionsFacade),
                 new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
                 new ProjectCreatedAddPermissionForCreatorMsgListener(permissionsFacade),
-                new ProjectRemovedRemovePermissionsMsgListener(permissionsFacade)
+                new ProjectRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new ProjectCreatedAddToLookupMsgListener(syncFacade),
+                new ProjectRenamedUpdateInLookupMsgListener(syncFacade),
+                new ProjectRemovedRemoveFromLookupMsgListener(syncFacade)
         );
     }
 
     @Override
-    protected List<EventPermissionChecker> getEventPermissionCheckers() {
+    protected List<AggregateEventPermissionChecker> getEventPermissionCheckers() {
         return List.of(
-                new EventPermissionChecker() {
+                new AggregateEventPermissionChecker() {
                     @Override
                     public AggregateType getAggregateType() {
                         return Project.TYPE;

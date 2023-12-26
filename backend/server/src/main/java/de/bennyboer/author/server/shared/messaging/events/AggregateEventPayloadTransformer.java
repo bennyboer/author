@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.shared.messaging;
+package de.bennyboer.author.server.shared.messaging.events;
 
 import de.bennyboer.author.eventsourcing.event.Event;
 

@@ -5,8 +5,11 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
+import jakarta.annotation.Nullable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.Set;
 
 public abstract class AggregatePermissionsService<ID, A> {
@@ -21,6 +24,8 @@ public abstract class AggregatePermissionsService<ID, A> {
 
     public abstract ResourceId getResourceId(ID id);
 
+    public abstract ID toId(ResourceId resourceId);
+
     public abstract Action toAction(A action);
 
     public Resource toResource(ID id) {
@@ -32,19 +37,34 @@ public abstract class AggregatePermissionsService<ID, A> {
     }
 
     public Mono<Void> assertHasPermission(Agent agent, A action) {
-        return assertHasPermission(agent, toAction(action), null);
+        return assertHasPermission(agent, toAction(action), Resource.ofType(getResourceType()));
     }
 
     public Mono<Boolean> hasPermission(Agent agent, A action, ID id) {
         return hasPermission(agent, toAction(action), toResource(id));
     }
 
+    public Mono<Boolean> hasPermission(Agent agent, A action) {
+        return hasPermission(agent, toAction(action), Resource.ofType(getResourceType()));
+    }
+
     public Mono<Void> removePermissionsByResource(ID id) {
         return permissionsService.removePermissionsByResource(toResource(id));
     }
 
+    public Flux<ID> getAccessibleResourceIds(Agent agent) {
+        return agent.getUserId()
+                .map(userId -> permissionsService.findPermissionsByUserIdAndResourceType(userId, getResourceType())
+                        .mapNotNull(permission -> toNullableId(permission.getResource().getId().orElse(null))))
+                .orElse(Flux.empty());
+    }
+
     protected ResourceType getResourceType() {
         return ResourceType.of(getAggregateType().getValue());
+    }
+
+    protected Mono<Void> addPermission(Permission permission) {
+        return permissionsService.addPermission(permission);
     }
 
     protected Mono<Void> addPermissions(Set<Permission> permissions) {
@@ -85,6 +105,12 @@ public abstract class AggregatePermissionsService<ID, A> {
                 .on(resource);
 
         return permissionsService.hasPermission(permission);
+    }
+
+    private ID toNullableId(@Nullable ResourceId resourceId) {
+        return Optional.ofNullable(resourceId)
+                .map(this::toId)
+                .orElse(null);
     }
 
 }

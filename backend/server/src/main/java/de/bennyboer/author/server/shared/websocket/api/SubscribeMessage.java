@@ -1,11 +1,16 @@
 package de.bennyboer.author.server.shared.websocket.api;
 
-import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
+
+import java.util.Optional;
 
 import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
@@ -15,12 +20,33 @@ import static de.bennyboer.author.common.Preconditions.checkNotNull;
 @Jacksonized
 public class SubscribeMessage {
 
-    SubscriptionTarget target;
+    String aggregateType;
 
-    public static SubscribeMessage of(SubscriptionTarget target) {
-        checkNotNull(target, "target must not be null");
+    String aggregateId;
 
-        return new SubscribeMessage(target);
+    @Nullable
+    String eventName;
+
+    public static SubscribeMessage of(
+            String aggregateType,
+            String aggregateId,
+            @Nullable String eventName
+    ) {
+        checkNotNull(aggregateType, "Aggregate type must not be null");
+
+        return new SubscribeMessage(aggregateType, aggregateId, eventName);
     }
 
+    public AggregateType getAggregateType() {
+        return AggregateType.of(aggregateType);
+    }
+
+    public AggregateId getAggregateId() {
+        return AggregateId.of(aggregateId);
+    }
+
+    public Optional<EventName> getEventName() {
+        return Optional.ofNullable(eventName).map(EventName::of);
+    }
+    
 }

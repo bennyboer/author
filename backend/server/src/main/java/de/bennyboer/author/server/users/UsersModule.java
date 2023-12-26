@@ -7,12 +7,12 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
 import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgListener;
@@ -26,7 +26,6 @@ import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserService;
 import io.javalin.Javalin;
-import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -69,7 +68,7 @@ public class UsersModule extends Module {
     }
 
     @Override
-    public void apply(@NotNull Javalin javalin) {
+    public void apply(Javalin javalin) {
         var restHandler = new UsersRestHandler(queryFacade, commandFacade);
         var restRouting = new UsersRestRouting(restHandler);
 
@@ -87,9 +86,9 @@ public class UsersModule extends Module {
     }
 
     @Override
-    protected List<EventPermissionChecker> getEventPermissionCheckers() {
+    protected List<AggregateEventPermissionChecker> getEventPermissionCheckers() {
         return List.of(
-                new EventPermissionChecker() {
+                new AggregateEventPermissionChecker() {
                     @Override
                     public AggregateType getAggregateType() {
                         return User.TYPE;

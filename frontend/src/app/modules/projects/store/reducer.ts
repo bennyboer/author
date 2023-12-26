@@ -25,7 +25,7 @@ export const reducer = createReducer(
   })),
 
   on(createProject, (state) => ({ ...state, creating: true })),
-  on(projectCreated, (state, { project }) => ({
+  on(projectCreated, (state) => ({
     ...state,
     creating: false,
   })),

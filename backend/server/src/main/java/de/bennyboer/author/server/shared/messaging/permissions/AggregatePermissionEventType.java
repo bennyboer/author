@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.shared.permissions;
+package de.bennyboer.author.server.shared.messaging.permissions;
 
 public enum AggregatePermissionEventType {
     ADDED,

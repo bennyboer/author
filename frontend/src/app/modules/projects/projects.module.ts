@@ -11,10 +11,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { CommonModule } from '@angular/common';
 import {
-  LocalStorageProjectsService,
+  HttpProjectsService,
   ProjectsService,
+  projectsStore,
+  ProjectsStoreEffects,
   RemoteProjectsService,
 } from './store';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
 
 const PAGES = [ProjectsPage];
 
@@ -26,13 +30,20 @@ const COMPONENTS = [
 ];
 
 @NgModule({
-  imports: [CommonModule, ProjectsRoutingModule, MatIconModule, MatMenuModule],
+  imports: [
+    CommonModule,
+    ProjectsRoutingModule,
+    StoreModule.forFeature(projectsStore.featureName, projectsStore.reducer),
+    EffectsModule.forFeature([ProjectsStoreEffects]),
+    MatIconModule,
+    MatMenuModule,
+  ],
   declarations: [...PAGES, ...COMPONENTS],
   providers: [
     ProjectsService,
     {
       provide: RemoteProjectsService,
-      useClass: LocalStorageProjectsService, // TODO Use HttpProjectsService instead
+      useClass: HttpProjectsService,
     },
   ],
   exports: [],

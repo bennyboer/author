@@ -1,9 +1,13 @@
 package de.bennyboer.author.server.shared.messaging;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
+import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import io.javalin.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.core.config.Configuration;
@@ -84,19 +88,37 @@ public class Messaging {
         Topic topic = getTopic(type);
         String messageSelector = buildMessageSelectorForAggregateEventMessageListener(listener);
 
-        JMSConsumer consumer = ctx.createConsumer(topic, messageSelector);
-        consumer.setMessageListener(message -> parseAggregateEventMessage(message)
+        return registerMessageListener(topic, messageSelector, message -> parseAggregateEventMessage(message)
                 .ifPresent(msg -> listener.onMessage(msg).block()));
+    }
 
-        MessageListenerId id = MessageListenerId.create();
-        messageListeners.put(id, consumer);
+    public MessageListenerId registerAggregatePermissionEventMessageListener(AggregatePermissionEventMessageListener listener) {
+        AggregateType type = listener.aggregateType();
 
-        return id;
+        Topic topic = getTopic(type);
+        String messageSelector = buildMessageSelectorForAggregatePermissionEventMessageListener(listener);
+
+        return registerMessageListener(topic, messageSelector, message -> parseAggregatePermissionEventMessage(message)
+                .ifPresent(msg -> listener.onMessage(msg).block()));
     }
 
     public void deregisterAggregateEventMessageListener(MessageListenerId id) {
         Optional.ofNullable(messageListeners.remove(id))
                 .ifPresent(JMSConsumer::close);
+    }
+
+    private MessageListenerId registerMessageListener(
+            Destination destination,
+            String messageSelector,
+            MessageListener listener
+    ) {
+        JMSConsumer consumer = ctx.createConsumer(destination, messageSelector);
+        consumer.setMessageListener(listener);
+
+        MessageListenerId id = MessageListenerId.create();
+        messageListeners.put(id, consumer);
+
+        return id;
     }
 
     private void deregisterAllAggregateEventMessageListeners() {
@@ -105,12 +127,20 @@ public class Messaging {
     }
 
     private Optional<AggregateEventMessage> parseAggregateEventMessage(Message msg) {
+        return parseMessage(msg, AggregateEventMessage.class);
+    }
+
+    private Optional<AggregatePermissionEventMessage> parseAggregatePermissionEventMessage(Message msg) {
+        return parseMessage(msg, AggregatePermissionEventMessage.class);
+    }
+
+    private <T> Optional<T> parseMessage(Message msg, Class<T> type) {
         if (msg instanceof TextMessage textMessage) {
             try {
                 String json = textMessage.getText();
-                return Optional.of(jsonMapper.fromJsonString(json, AggregateEventMessage.class));
+                return Optional.of(jsonMapper.fromJsonString(json, type));
             } catch (Exception e) {
-                log.error("Failed to parse AggregateEventMessage", e);
+                log.error("Failed to parse message of type {}", type.getSimpleName(), e);
                 return Optional.empty();
             }
         }
@@ -121,18 +151,39 @@ public class Messaging {
     private String buildMessageSelectorForAggregateEventMessageListener(AggregateEventMessageListener listener) {
         Optional<AggregateId> aggregateId = listener.aggregateId();
         Optional<EventName> eventName = listener.eventName();
-        String messageSelector = "";
-        if (aggregateId.isPresent()) {
-            messageSelector += String.format("aggregateId = '%s'", aggregateId.get().getValue());
-        }
-        if (eventName.isPresent()) {
-            if (!messageSelector.isBlank()) {
-                messageSelector += " AND ";
-            }
-            messageSelector += String.format("eventName = '%s'", eventName.get().getValue());
-        }
 
-        return messageSelector;
+        StringBuilder messageSelector = new StringBuilder();
+
+        aggregateId.ifPresent(id -> messageSelector.append(String.format("aggregateId = '%s'", id.getValue())));
+        eventName.ifPresent(name -> {
+            if (aggregateId.isPresent()) {
+                messageSelector.append(" AND ");
+            }
+
+            messageSelector.append(String.format("eventName = '%s'", name.getValue()));
+        });
+
+        return messageSelector.toString();
+    }
+
+    private String buildMessageSelectorForAggregatePermissionEventMessageListener(
+            AggregatePermissionEventMessageListener listener
+    ) {
+        Optional<UserId> userId = listener.userId();
+        Optional<AggregateId> aggregateId = listener.aggregateId();
+
+        StringBuilder messageSelector = new StringBuilder();
+
+        userId.ifPresent(id -> messageSelector.append(String.format("userId = '%s'", id.getValue())));
+        aggregateId.ifPresent(id -> {
+            if (userId.isPresent()) {
+                messageSelector.append(" AND ");
+            }
+
+            messageSelector.append(String.format("aggregateId = '%s'", id.getValue()));
+        });
+
+        return messageSelector.toString();
     }
 
     private void start() throws Exception {

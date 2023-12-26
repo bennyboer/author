@@ -18,6 +18,14 @@ public class ProjectsRestHandler {
 
     ProjectsCommandFacade commandFacade;
 
+    public void getAccessibleProjects(Context ctx) {
+        ctx.future(() -> Auth.toAgent(ctx)
+                .flatMapMany(queryFacade::getAccessibleProjects)
+                .collectList()
+                .toFuture()
+                .thenAccept(ctx::json));
+    }
+
     public void getProject(Context ctx) {
         var projectId = ctx.pathParam("projectId");
 

@@ -1,36 +1,48 @@
 package de.bennyboer.author.server.shared.websocket;
 
 import de.bennyboer.author.auth.token.Token;
-import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
+import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
 import de.bennyboer.author.server.shared.websocket.api.*;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventTopic;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionManager;
-import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriptionTarget;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventSubscriptionManager;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.EventSubscriptionTarget;
+import de.bennyboer.author.server.shared.websocket.subscriptions.permissions.AggregatePermissionEventSubscriptionManager;
+import de.bennyboer.author.server.shared.websocket.subscriptions.permissions.PermissionEventSubscriptionTarget;
 import io.javalin.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class WebSocketService {
 
-    private final SubscriptionManager subscriptionManager;
+    private final SubscriptionManager<EventSubscriptionTarget> aggregateEventSubscriptionManager;
+    private final SubscriptionManager<PermissionEventSubscriptionTarget> aggregatePermissionEventSubscriptionManager;
 
-    private final Map<AggregateType, EventPermissionChecker> eventPermissionCheckers = new HashMap<>();
+    private final Map<AggregateType, AggregateEventPermissionChecker> eventPermissionCheckers = new HashMap<>();
 
     private final Map<SessionId, WsContext> sessions = new ConcurrentHashMap<>();
 
     public WebSocketService(Messaging messaging) {
-        subscriptionManager = new SubscriptionManager(messaging, this::publishEvent);
+        aggregateEventSubscriptionManager = new AggregateEventSubscriptionManager(
+                messaging,
+                this::publishAggregateEvent
+        );
+        aggregatePermissionEventSubscriptionManager = new AggregatePermissionEventSubscriptionManager(
+                messaging,
+                this::publishAggregatePermissionEvent
+        );
     }
 
     public void onConnect(WsConnectContext ctx) {
@@ -42,7 +54,7 @@ public class WebSocketService {
     public void onClose(WsCloseContext ctx) {
         SessionId sessionId = SessionId.of(ctx);
         closeSessionIfOpen(sessionId);
-        subscriptionManager.unsubscribeFromAllTargets(sessionId);
+        aggregateEventSubscriptionManager.unsubscribeFromAllTargets(sessionId);
 
         log.debug(
                 "Closed WebSocket for session ID '{}' with status code '{}' and reason '{}'",
@@ -76,43 +88,70 @@ public class WebSocketService {
         onMessage(ctx, msg);
     }
 
-    public void publishEvent(
-            EventTopic eventTopic,
-            EventName eventName,
-            Version eventVersion,
-            Map<String, Object> payload
-    ) {
-        var topic = EventTopicDTO.builder()
-                .aggregateType(eventTopic.getAggregateType().getValue())
-                .aggregateId(eventTopic.getAggregateId().getValue())
-                .version(eventTopic.getVersion().getValue())
-                .build();
-
-        var msg = WebSocketMessage.event(EventMessage.of(
-                topic,
-                eventName.getValue(),
-                eventVersion.getValue(),
-                payload
-        ));
-
-        publishEventMsgToSubscribers(eventTopic, msg);
-    }
-
-    public void registerSubscriptionPermissionChecker(EventPermissionChecker permissionChecker) {
+    public void registerSubscriptionPermissionChecker(AggregateEventPermissionChecker permissionChecker) {
         eventPermissionCheckers.put(permissionChecker.getAggregateType(), permissionChecker);
     }
 
-    private void publishEventMsgToSubscribers(EventTopic topic, WebSocketMessage msg) {
-        for (var subscriber : findSubscribers(topic)) {
+    private void publishAggregateEvent(
+            AggregateEventMessage msg,
+            Set<SessionId> subscribers
+    ) {
+        String aggregateType = msg.getAggregateType();
+        String aggregateId = msg.getAggregateId();
+        long aggregateVersion = msg.getAggregateVersion();
+        long eventVersion = msg.getEventVersion();
+        String eventName = msg.getEventName();
+        Map<String, Object> payload = msg.getPayload();
+
+        var topic = EventTopicDTO.builder()
+                .aggregateType(aggregateType)
+                .aggregateId(aggregateId)
+                .version(aggregateVersion)
+                .build();
+
+        EventMessage eventMessage = EventMessage.of(
+                topic,
+                eventName,
+                eventVersion,
+                payload
+        );
+
+        publishMessageToSubscribers(WebSocketMessage.event(eventMessage), subscribers);
+    }
+
+    private void publishAggregatePermissionEvent(
+            AggregatePermissionEventMessage msg,
+            Set<SessionId> subscribers
+    ) {
+        String aggregateType = msg.getAggregateType();
+        String aggregateId = msg.getAggregateId().orElse(null);
+        String action = msg.getAction();
+        String userId = msg.getUserId();
+
+        var type = switch (msg.getEventType()) {
+            case ADDED -> PermissionEventMessage.EventType.ADDED;
+            case REMOVED -> PermissionEventMessage.EventType.REMOVED;
+        };
+
+        PermissionEventMessage permissionEvent = PermissionEventMessage.of(
+                type,
+                userId,
+                aggregateType,
+                aggregateId,
+                action
+        );
+
+        publishMessageToSubscribers(WebSocketMessage.permissionEvent(permissionEvent), subscribers);
+    }
+
+    private void publishMessageToSubscribers(WebSocketMessage msg, Set<SessionId> subscribers) {
+        for (var subscriber : findSubscribedSessions(subscribers)) {
             subscriber.send(msg);
         }
     }
 
-    private Iterable<WsContext> findSubscribers(EventTopic topic) {
-        SubscriptionTarget target = topic.toSubscriptionTarget();
-
-        return subscriptionManager.getSubscribers(target)
-                .stream()
+    private Iterable<WsContext> findSubscribedSessions(Set<SessionId> sessionIds) {
+        return sessionIds.stream()
                 .flatMap(sessionId -> Optional.ofNullable(sessions.get(sessionId)).stream())
                 .toList();
     }
@@ -136,7 +175,17 @@ public class WebSocketService {
                     msg.getSubscribe().orElseThrow(),
                     agent
             );
+            case SUBSCRIBE_TO_PERMISSIONS -> subscribeToPermissions(
+                    ctx,
+                    msg.getSubscribeToPermissions().orElseThrow(),
+                    agent
+            );
             case UNSUBSCRIBE -> unsubscribe(ctx, msg.getUnsubscribe().orElseThrow());
+            case UNSUBSCRIBE_FROM_PERMISSIONS -> unsubscribeFromPermissions(
+                    ctx,
+                    msg.getUnsubscribeFromPermissions().orElseThrow(),
+                    agent
+            );
             default -> throw new IllegalArgumentException(
                     "Encountered message with unsupported method from client" + msg.getMethod()
             );
@@ -144,13 +193,53 @@ public class WebSocketService {
     }
 
     private void subscribe(WsContext ctx, SubscribeMessage msg, Agent agent) {
-        assertThatAgentIsAllowedToSubscribeToTargetEvents(msg.getTarget(), agent);
+        EventSubscriptionTarget target = EventSubscriptionTarget.of(
+                msg.getAggregateType(),
+                msg.getAggregateId(),
+                msg.getEventName().orElse(null)
+        );
+        assertThatAgentIsAllowedToSubscribeToTargetEvents(target, agent);
 
-        subscriptionManager.subscribe(msg.getTarget(), SessionId.of(ctx));
+        aggregateEventSubscriptionManager.subscribe(target, SessionId.of(ctx));
+    }
+
+    private void subscribeToPermissions(
+            WsContext ctx,
+            SubscribeToPermissionsMessage msg,
+            Agent agent
+    ) {
+        PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
+                msg.getAggregateType(),
+                msg.getAggregateId().orElse(null),
+                agent.getUserId().orElse(null)
+        );
+
+        aggregatePermissionEventSubscriptionManager.subscribe(target, SessionId.of(ctx));
     }
 
     private void unsubscribe(WsContext ctx, UnsubscribeMessage msg) {
-        subscriptionManager.unsubscribe(msg.getTarget(), SessionId.of(ctx));
+        EventSubscriptionTarget target = EventSubscriptionTarget.of(
+                msg.getAggregateType(),
+                msg.getAggregateId(),
+                msg.getEventName().orElse(null)
+        );
+
+        aggregateEventSubscriptionManager.unsubscribe(target, SessionId.of(ctx));
+    }
+
+    private void unsubscribeFromPermissions(
+            WsContext ctx,
+            UnsubscribeFromPermissionsMessage msg,
+            Agent agent
+    ) {
+        UserId userId = agent.getUserId().orElse(null);
+        PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
+                msg.getAggregateType(),
+                msg.getAggregateId().orElse(null),
+                userId
+        );
+
+        aggregatePermissionEventSubscriptionManager.unsubscribe(target, SessionId.of(ctx));
     }
 
     private void closeSessionIfOpen(SessionId sessionId) {
@@ -159,8 +248,8 @@ public class WebSocketService {
                 .ifPresent(ctx -> ctx.session.close());
     }
 
-    private void assertThatAgentIsAllowedToSubscribeToTargetEvents(SubscriptionTarget target, Agent agent) {
-        EventPermissionChecker permissionChecker = eventPermissionCheckers.get(target.getAggregateType());
+    private void assertThatAgentIsAllowedToSubscribeToTargetEvents(EventSubscriptionTarget target, Agent agent) {
+        AggregateEventPermissionChecker permissionChecker = eventPermissionCheckers.get(target.getAggregateType());
 
         if (permissionChecker == null) {
             throw new IllegalArgumentException(
@@ -168,7 +257,10 @@ public class WebSocketService {
             );
         }
 
-        var hasPermission = permissionChecker.hasPermissionToReceiveEvents(agent, target.getAggregateId()).block();
+        var hasPermission = permissionChecker.hasPermissionToReceiveEvents(
+                agent,
+                target.getAggregateId()
+        ).block();
         if (!hasPermission) {
             throw new IllegalArgumentException(
                     agent + " is not allowed to subscribe to events of aggregate " + target.getAggregateId()

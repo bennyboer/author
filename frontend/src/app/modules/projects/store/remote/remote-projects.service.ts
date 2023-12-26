@@ -6,7 +6,11 @@ export abstract class RemoteProjectsService {
 
   abstract createProject(name: string): Observable<void>;
 
-  abstract removeProject(id: ProjectId): Observable<void>;
+  abstract removeProject(id: ProjectId, version: number): Observable<void>;
 
-  abstract renameProject(id: ProjectId, name: string): Observable<void>;
+  abstract renameProject(
+    id: ProjectId,
+    version: number,
+    name: string,
+  ): Observable<void>;
 }

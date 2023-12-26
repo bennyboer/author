@@ -1,14 +1,13 @@
-package de.bennyboer.author.server.shared.messaging;
+package de.bennyboer.author.server.shared.messaging.permissions;
 
+import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.author.eventsourcing.event.EventName;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
-public interface AggregateEventMessageListener {
+public interface AggregatePermissionEventMessageListener {
 
     AggregateType aggregateType();
 
@@ -16,10 +15,10 @@ public interface AggregateEventMessageListener {
         return Optional.empty();
     }
 
-    default Optional<EventName> eventName() {
+    default Optional<UserId> userId() {
         return Optional.empty();
     }
 
-    Mono<Void> onMessage(AggregateEventMessage message);
+    Mono<Void> onMessage(AggregatePermissionEventMessage message);
 
 }

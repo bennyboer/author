@@ -18,6 +18,10 @@ public class ProjectsPermissionsFacade {
         return permissionsService.removePermissionsForUser(userId);
     }
 
+    public Mono<Void> addPermissionToCreateProjectsForNewUser(UserId userId) {
+        return permissionsService.addPermissionToCreateProjectsForNewUser(userId);
+    }
+
     public Mono<Void> addPermissionsForCreator(UserId userId, ProjectId projectId) {
         return permissionsService.addPermissionsForCreator(userId, projectId);
     }

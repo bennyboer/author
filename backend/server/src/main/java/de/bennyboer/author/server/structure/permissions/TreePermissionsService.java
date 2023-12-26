@@ -33,6 +33,11 @@ public class TreePermissionsService extends AggregatePermissionsService<TreeId, 
     }
 
     @Override
+    public TreeId toId(ResourceId resourceId) {
+        return TreeId.of(resourceId.getValue());
+    }
+
+    @Override
     public Action toAction(TreeAction action) {
         return Action.of(action.name());
     }

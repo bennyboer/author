@@ -8,12 +8,14 @@ import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.server.shared.permissions.AggregatePermissionsService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static de.bennyboer.author.server.projects.permissions.ProjectAction.CREATE;
 import static de.bennyboer.author.server.projects.permissions.ProjectAction.READ;
 
 public class ProjectPermissionsService extends AggregatePermissionsService<ProjectId, ProjectAction> {
@@ -33,8 +35,20 @@ public class ProjectPermissionsService extends AggregatePermissionsService<Proje
     }
 
     @Override
+    public ProjectId toId(ResourceId resourceId) {
+        return ProjectId.of(resourceId.getValue());
+    }
+
+    @Override
     public Action toAction(ProjectAction action) {
         return Action.of(action.name());
+    }
+
+    public Mono<Void> addPermissionToCreateProjectsForNewUser(UserId userId) {
+        return addPermission(Permission.builder()
+                .user(userId)
+                .isAllowedTo(toAction(CREATE))
+                .on(Resource.ofType(getResourceType())));
     }
 
     public Mono<Void> addPermissionsForCreator(UserId userId, ProjectId projectId) {
@@ -61,5 +75,9 @@ public class ProjectPermissionsService extends AggregatePermissionsService<Proje
     public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, ProjectId projectId) {
         return hasPermission(agent, READ, projectId);
     }
-    
+
+    public Flux<ProjectId> getAccessibleProjectIds(Agent agent) {
+        return getAccessibleResourceIds(agent);
+    }
+
 }

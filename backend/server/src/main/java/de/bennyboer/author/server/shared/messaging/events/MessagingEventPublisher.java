@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.shared.messaging;
+package de.bennyboer.author.server.shared.messaging.events;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.EventPublisher;
@@ -6,7 +6,7 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
 import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
-import de.bennyboer.author.server.shared.messaging.messages.AggregateEventMessage;
+import de.bennyboer.author.server.shared.messaging.Messaging;
 import io.javalin.json.JsonMapper;
 import lombok.Value;
 import reactor.core.publisher.Mono;

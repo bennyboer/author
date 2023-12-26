@@ -32,6 +32,11 @@ public class UserPermissionsService extends AggregatePermissionsService<UserId, 
     }
 
     @Override
+    public UserId toId(ResourceId resourceId) {
+        return UserId.of(resourceId.getValue());
+    }
+
+    @Override
     public Action toAction(UserAction action) {
         return Action.of(action.name());
     }

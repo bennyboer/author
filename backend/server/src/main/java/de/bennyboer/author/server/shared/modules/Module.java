@@ -1,15 +1,14 @@
 package de.bennyboer.author.server.shared.modules;
 
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.author.server.shared.messaging.AggregateEventMessageListener;
-import de.bennyboer.author.server.shared.messaging.AggregateEventPayloadTransformer;
-import de.bennyboer.author.server.shared.messaging.MessagingEventPublisher;
-import de.bennyboer.author.server.shared.websocket.subscriptions.EventPermissionChecker;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
+import de.bennyboer.author.server.shared.messaging.events.MessagingEventPublisher;
+import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
 import io.javalin.plugin.Plugin;
 import io.javalin.plugin.PluginLifecycleInit;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
     }
 
     @Override
-    public void init(@NotNull Javalin javalin) {
+    public void init(Javalin javalin) {
         this.initializeModule();
         javalin.events(event -> event.serverStarted(() -> onServerStarted().block()));
     }
@@ -42,7 +41,7 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
 
     protected abstract List<AggregateEventMessageListener> createMessageListeners();
 
-    protected abstract List<EventPermissionChecker> getEventPermissionCheckers();
+    protected abstract List<AggregateEventPermissionChecker> getEventPermissionCheckers();
 
     private void initializeModule() {
         registerAggregatesWithMessaging();

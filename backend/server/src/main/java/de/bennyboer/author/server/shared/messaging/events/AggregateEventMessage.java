@@ -1,4 +1,4 @@
-package de.bennyboer.author.server.shared.messaging.messages;
+package de.bennyboer.author.server.shared.messaging.events;
 
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;

@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.shared.websocket.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,41 +27,39 @@ public class WebSocketMessage {
     EventMessage event;
 
     @Nullable
+    PermissionEventMessage permissionEvent;
+
+    @Nullable
     SubscribeMessage subscribe;
+
+    @Nullable
+    SubscribeToPermissionsMessage subscribeToPermissions;
 
     @Nullable
     UnsubscribeMessage unsubscribe;
 
+    @Nullable
+    UnsubscribeFromPermissionsMessage unsubscribeFromPermissions;
+
     public static WebSocketMessage heartbeat() {
-        return new WebSocketMessage(
-                WebSocketMessageMethod.HEARTBEAT,
-                null,
-                HeartbeatMessage.of(),
-                null,
-                null,
-                null
-        );
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.HEARTBEAT)
+                .heartbeat(HeartbeatMessage.of())
+                .build();
     }
 
     public static WebSocketMessage event(EventMessage event) {
-        return new WebSocketMessage(
-                WebSocketMessageMethod.EVENT,
-                null,
-                null,
-                event,
-                null,
-                null
-        );
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.EVENT)
+                .event(event)
+                .build();
     }
 
-    @JsonIgnore
-    public boolean isValid() {
-        return switch (method) {
-            case HEARTBEAT -> heartbeat != null;
-            case EVENT -> event != null;
-            case SUBSCRIBE -> subscribe != null;
-            case UNSUBSCRIBE -> unsubscribe != null;
-        };
+    public static WebSocketMessage permissionEvent(PermissionEventMessage permissionEvent) {
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.PERMISSION_EVENT)
+                .permissionEvent(permissionEvent)
+                .build();
     }
 
     public Optional<String> getToken() {
@@ -77,12 +74,24 @@ public class WebSocketMessage {
         return Optional.ofNullable(event);
     }
 
+    public Optional<PermissionEventMessage> getPermissionEvent() {
+        return Optional.ofNullable(permissionEvent);
+    }
+
     public Optional<SubscribeMessage> getSubscribe() {
         return Optional.ofNullable(subscribe);
     }
 
+    public Optional<SubscribeToPermissionsMessage> getSubscribeToPermissions() {
+        return Optional.ofNullable(subscribeToPermissions);
+    }
+
     public Optional<UnsubscribeMessage> getUnsubscribe() {
         return Optional.ofNullable(unsubscribe);
+    }
+
+    public Optional<UnsubscribeFromPermissionsMessage> getUnsubscribeFromPermissions() {
+        return Optional.ofNullable(unsubscribeFromPermissions);
     }
 
 }
