@@ -23,6 +23,10 @@ public abstract class AbstractSubscriptionManager<T> implements SubscriptionMana
 
     protected abstract Set<SessionId> findSubscribers(T target);
 
+    protected abstract void addSubscriber(T target, SessionId sessionId);
+
+    protected abstract void removeSubscriber(T target, SessionId sessionId);
+
     protected abstract MessageListenerId registerMessageListenerForTarget(T target, Messaging messaging);
 
     public AbstractSubscriptionManager(Messaging messaging) {
@@ -31,7 +35,7 @@ public abstract class AbstractSubscriptionManager<T> implements SubscriptionMana
 
     @Override
     public void subscribe(T target, SessionId sessionId) {
-        findSubscribers(target).add(sessionId);
+        addSubscriber(target, sessionId);
         eventTargetsPerSession.computeIfAbsent(sessionId, key -> new ConcurrentHashSet<>()).add(target);
 
         boolean added = eventSubscriptionTargets.add(target);
@@ -42,7 +46,7 @@ public abstract class AbstractSubscriptionManager<T> implements SubscriptionMana
 
     @Override
     public void unsubscribe(T target, SessionId sessionId) {
-        findSubscribers(target).remove(sessionId);
+        removeSubscriber(target, sessionId);
         Optional.ofNullable(eventTargetsPerSession.get(sessionId))
                 .ifPresent(targets -> targets.remove(target));
 

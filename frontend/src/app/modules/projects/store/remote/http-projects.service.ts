@@ -1,9 +1,10 @@
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { Project } from '../../models';
 import { RemoteProjectsService } from './remote-projects.service';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
+import { WebSocketService } from '../../../shared';
 
 interface CreateProjectRequest {
   name: string;
@@ -21,10 +22,31 @@ interface ProjectDTO {
 }
 
 @Injectable()
-export class HttpProjectsService extends RemoteProjectsService {
-  constructor(private readonly http: HttpClient) {
+export class HttpProjectsService
+  extends RemoteProjectsService
+  implements OnDestroy
+{
+  private readonly accessibleProjectsEvents$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
+
+  constructor(
+    private readonly http: HttpClient,
+    private readonly webSocketService: WebSocketService,
+  ) {
     super();
-    // TODO Connect to websocket for tracking permission changes
+
+    this.listenForAccessibleProjectsEvents();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    this.accessibleProjectsEvents$.complete();
+  }
+
+  getAccessibleProjectsEvents(): Observable<void> {
+    return this.accessibleProjectsEvents$.asObservable();
   }
 
   getAccessibleProjects(): Observable<Project[]> {
@@ -65,5 +87,20 @@ export class HttpProjectsService extends RemoteProjectsService {
       version: project.version,
       name: project.name,
     };
+  }
+
+  private listenForAccessibleProjectsEvents(): void {
+    this.webSocketService
+      .onConnected$()
+      .pipe(
+        switchMap(() =>
+          this.webSocketService.subscribeToPermissions({
+            aggregateType: 'PROJECT',
+            action: 'READ',
+          }),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((event) => this.accessibleProjectsEvents$.next());
   }
 }

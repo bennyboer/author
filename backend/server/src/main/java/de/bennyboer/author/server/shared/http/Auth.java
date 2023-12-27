@@ -20,7 +20,9 @@ public class Auth {
 
     public static Mono<Agent> toAgent(Context ctx) {
         // TODO Add a backend token that is to be mapped to the system agent
-        return extractToken(ctx).flatMap(Auth::toAgent);
+        return extractToken(ctx)
+                .flatMap(Auth::toAgent)
+                .defaultIfEmpty(Agent.anonymous());
     }
 
     public static Mono<Agent> toAgent(Token token) {

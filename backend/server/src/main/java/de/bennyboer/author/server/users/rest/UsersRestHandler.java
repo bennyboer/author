@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.users.rest;
 
-import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.facade.UsersCommandFacade;
@@ -12,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+
+import static de.bennyboer.author.server.shared.http.ReactiveHandler.handle;
 
 @Slf4j
 @Value
@@ -25,14 +26,10 @@ public class UsersRestHandler {
     public void getUser(Context ctx) {
         var userId = ctx.pathParam("userId");
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> queryFacade.getUser(userId, agent))
-                .singleOptional()
-                .toFuture()
-                .thenAccept(tree -> tree.ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(HttpStatus.NOT_FOUND)
-                )));
+        handle(ctx, agent -> queryFacade.getUser(userId, agent).singleOptional(), user -> user.ifPresentOrElse(
+                ctx::json,
+                () -> ctx.status(HttpStatus.NOT_FOUND)
+        ));
     }
 
     public void renameUser(Context ctx) {
@@ -40,43 +37,47 @@ public class UsersRestHandler {
         var userId = ctx.pathParam("userId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.rename(userId, version, request.getName(), agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                agent -> commandFacade.rename(userId, version, request.getName(), agent),
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void removeUser(Context ctx) {
         var userId = ctx.pathParam("userId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.remove(userId, version, agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                agent -> commandFacade.remove(userId, version, agent),
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void login(Context ctx) {
         var request = ctx.bodyAsClass(LoginUserRequest.class);
 
-        ctx.future(() -> commandFacade.login(request.getName(), request.getPassword())
-                .switchIfEmpty(Mono.defer(() -> {
-                    ctx.status(HttpStatus.UNAUTHORIZED);
-                    return Mono.empty();
-                }))
-                .onErrorResume(e -> {
-                    if (e instanceof UserLockedException) {
-                        ctx.status(HttpStatus.TOO_MANY_REQUESTS);
-                    } else {
-                        ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
+        handle(
+                ctx,
+                agent -> commandFacade.login(request.getName(), request.getPassword())
+                        .switchIfEmpty(Mono.defer(() -> {
+                            ctx.status(HttpStatus.UNAUTHORIZED);
+                            return Mono.empty();
+                        }))
+                        .onErrorResume(e -> {
+                            if (e instanceof UserLockedException) {
+                                ctx.status(HttpStatus.TOO_MANY_REQUESTS);
+                            } else {
+                                ctx.status(HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
 
-                    log.warn("Login failed", e);
-                    return Mono.empty();
-                })
-                .singleOptional()
-                .toFuture()
-                .thenAccept(token -> token.ifPresent(ctx::json)));
+                            log.warn("Login failed", e);
+                            return Mono.empty();
+                        })
+                        .singleOptional(),
+                token -> token.ifPresent(ctx::json)
+        );
     }
 
 }

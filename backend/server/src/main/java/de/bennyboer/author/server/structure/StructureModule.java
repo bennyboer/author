@@ -15,10 +15,9 @@ import de.bennyboer.author.server.structure.facade.TreeCommandFacade;
 import de.bennyboer.author.server.structure.facade.TreePermissionsFacade;
 import de.bennyboer.author.server.structure.facade.TreeQueryFacade;
 import de.bennyboer.author.server.structure.facade.TreeSyncFacade;
-import de.bennyboer.author.server.structure.messaging.ProjectCreatedCreateTreeMsgListener;
-import de.bennyboer.author.server.structure.messaging.TreeCreatedAddPermissionsMsgListener;
-import de.bennyboer.author.server.structure.messaging.UserRemovedRemovePermissionsMsgListener;
+import de.bennyboer.author.server.structure.messaging.*;
 import de.bennyboer.author.server.structure.permissions.TreePermissionsService;
+import de.bennyboer.author.server.structure.persistence.lookup.InMemoryTreeLookupRepo;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.rest.TreeRestHandler;
 import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
@@ -56,9 +55,11 @@ public class StructureModule extends Module {
         );
         var treePermissionsService = new TreePermissionsService(permissionsRepo, permissionsEventPublisher);
 
+        var lookupRepo = new InMemoryTreeLookupRepo();
+
         commandFacade = new TreeCommandFacade(treeService, treePermissionsService);
-        queryFacade = new TreeQueryFacade(treeService, treePermissionsService);
-        syncFacade = new TreeSyncFacade(treeService);
+        queryFacade = new TreeQueryFacade(treeService, treePermissionsService, lookupRepo);
+        syncFacade = new TreeSyncFacade(treeService, lookupRepo);
         permissionsFacade = new TreePermissionsFacade(treePermissionsService);
     }
 
@@ -74,11 +75,13 @@ public class StructureModule extends Module {
     protected List<AggregateEventMessageListener> createMessageListeners() {
         return List.of(
                 new ProjectCreatedCreateTreeMsgListener(syncFacade),
+                new ProjectRemovedRemoveTreeMsgListener(syncFacade),
                 new TreeCreatedAddPermissionsMsgListener(permissionsFacade),
-                new UserRemovedRemovePermissionsMsgListener(permissionsFacade)
+                new TreeRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new TreeCreatedAddToLookupMsgListener(syncFacade),
+                new TreeRemovedRemoveFromLookupMsgListener(syncFacade)
         );
-        // TODO Add listener to remove tree on project delete
-        // TODO Add listener to remove permissions on tree deletion
     }
 
     @Override

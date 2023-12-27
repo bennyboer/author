@@ -77,7 +77,7 @@ public class ProjectPermissionsService extends AggregatePermissionsService<Proje
     }
 
     public Flux<ProjectId> getAccessibleProjectIds(Agent agent) {
-        return getAccessibleResourceIds(agent);
+        return getAccessibleResourceIds(agent, READ);
     }
 
 }

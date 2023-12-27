@@ -26,4 +26,8 @@ public class TreePermissionsFacade {
         return permissionsService.addPermissionsForCreator(userId, treeId);
     }
 
+    public Mono<Void> removePermissionsForTree(TreeId treeId) {
+        return permissionsService.removePermissionsByResource(treeId);
+    }
+
 }

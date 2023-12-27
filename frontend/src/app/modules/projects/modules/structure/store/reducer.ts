@@ -3,6 +3,8 @@ import { initialState, StructureTree, TreeMutator } from './state';
 import {
   addingNodeFailed,
   eventReceived,
+  loadingTreeFailed,
+  loadTree,
   removingNodeFailed,
   renamingNodeFailed,
   swappingNodesFailed,
@@ -23,7 +25,12 @@ import { Option } from '../../../../shared';
 export const reducer = createReducer(
   initialState,
 
-  on(treeLoaded, (state, { tree }) => ({ ...state, tree })),
+  on(loadTree, (state) => ({ ...state, tree: undefined, loading: true })),
+  on(treeLoaded, (state, { tree }) => ({ ...state, tree, loading: false })),
+  on(loadingTreeFailed, (state, { message }) => ({
+    ...state,
+    errorMessage: `Failed to load tree: ${message}`,
+  })),
 
   on(eventReceived, (state, { event }) =>
     Option.someOrNone(state.tree)

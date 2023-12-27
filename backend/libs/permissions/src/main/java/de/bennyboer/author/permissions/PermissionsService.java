@@ -29,12 +29,13 @@ public class PermissionsService {
 
     public Mono<Void> addPermission(Permission permission) {
         return permissionsRepo.insert(permission)
-                .then(eventPublisher.publish(PermissionEvent.added(permission)));
+                .flatMap(addedPermission -> eventPublisher.publish(PermissionEvent.added(addedPermission)));
     }
 
     public Mono<Void> addPermissions(Set<Permission> permissions) {
         return permissionsRepo.insertAll(permissions)
-                .then(eventPublisher.publish(PermissionEvent.added(permissions)));
+                .collect(Collectors.toSet())
+                .flatMap(addedPermissions -> eventPublisher.publish(PermissionEvent.added(addedPermissions)));
     }
 
     public Mono<Boolean> hasPermission(Permission permission) {
@@ -53,9 +54,17 @@ public class PermissionsService {
         return permissionsRepo.findPermissionsByUserIdAndResource(userId, resource);
     }
 
+    public Flux<Permission> findPermissionsByUserIdAndResourceTypeAndAction(
+            UserId userId,
+            ResourceType resourceType,
+            Action action
+    ) {
+        return permissionsRepo.findPermissionsByUserIdAndResourceTypeAndAction(userId, resourceType, action);
+    }
+
     public Mono<Void> removePermission(Permission permission) {
         return permissionsRepo.removeByPermission(permission)
-                .then(eventPublisher.publish(PermissionEvent.removed(permission)));
+                .flatMap(removedPermission -> eventPublisher.publish(PermissionEvent.removed(removedPermission)));
     }
 
     public Mono<Void> removePermissionsByUserId(UserId userId) {

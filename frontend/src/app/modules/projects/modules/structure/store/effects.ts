@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { TreeService } from './remote';
-import { catchError, map, mergeMap, of } from 'rxjs';
+import { RemoteTreeService } from './remote';
+import { catchError, map, mergeMap, of, switchMap } from 'rxjs';
 import {
   addingNodeFailed,
   addNode,
   eventReceived,
+  loadingTreeFailed,
+  loadTree,
   nodeAdded,
   nodeRenamed,
   nodesSwapped,
@@ -27,8 +29,8 @@ export class StructureStoreEffects {
   toggleNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(toggleNode),
-      mergeMap(({ nodeId }) => {
-        return this.remoteStructureTreeService.toggleNode(nodeId).pipe(
+      mergeMap(({ treeId, version, nodeId }) => {
+        return this.treeService.toggleNode(treeId, version, nodeId).pipe(
           map(() => nodeToggled({ nodeId })),
           catchError((error) =>
             of(
@@ -46,18 +48,20 @@ export class StructureStoreEffects {
   addNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(addNode),
-      mergeMap(({ parentNodeId, name }) => {
-        return this.remoteStructureTreeService.addNode(parentNodeId, name).pipe(
-          map(() => nodeAdded({ parentNodeId })),
-          catchError((error) =>
-            of(
-              addingNodeFailed({
-                parentNodeId: error.nodeId,
-                message: error.message,
-              }),
+      mergeMap(({ treeId, version, parentNodeId, name }) => {
+        return this.treeService
+          .addNode(treeId, version, parentNodeId, name)
+          .pipe(
+            map(() => nodeAdded({ parentNodeId })),
+            catchError((error) =>
+              of(
+                addingNodeFailed({
+                  parentNodeId: error.nodeId,
+                  message: error.message,
+                }),
+              ),
             ),
-          ),
-        );
+          );
       }),
     ),
   );
@@ -65,8 +69,8 @@ export class StructureStoreEffects {
   removeNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(removeNode),
-      mergeMap(({ nodeId }) => {
-        return this.remoteStructureTreeService.removeNode(nodeId).pipe(
+      mergeMap(({ treeId, version, nodeId }) => {
+        return this.treeService.removeNode(treeId, version, nodeId).pipe(
           map(() => removedNode({ nodeId })),
           catchError((error) =>
             of(
@@ -84,8 +88,8 @@ export class StructureStoreEffects {
   renameNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(renameNode),
-      mergeMap(({ nodeId, name }) => {
-        return this.remoteStructureTreeService.renameNode(nodeId, name).pipe(
+      mergeMap(({ treeId, version, nodeId, name }) => {
+        return this.treeService.renameNode(treeId, version, nodeId, name).pipe(
           map(() => nodeRenamed({ nodeId })),
           catchError((error) =>
             of(
@@ -103,37 +107,49 @@ export class StructureStoreEffects {
   swapNodes$ = createEffect(() =>
     this.actions.pipe(
       ofType(swapNodes),
-      mergeMap(({ nodeId1, nodeId2 }) => {
-        return this.remoteStructureTreeService.swapNodes(nodeId1, nodeId2).pipe(
-          map(() => nodesSwapped({ nodeId1, nodeId2 })),
-          catchError((error) =>
-            of(
-              swappingNodesFailed({
-                nodeId1: error.nodeId1,
-                nodeId2: error.nodeId2,
-                message: error.message,
-              }),
+      mergeMap(({ treeId, version, nodeId1, nodeId2 }) => {
+        return this.treeService
+          .swapNodes(treeId, version, nodeId1, nodeId2)
+          .pipe(
+            map(() => nodesSwapped({ nodeId1, nodeId2 })),
+            catchError((error) =>
+              of(
+                swappingNodesFailed({
+                  nodeId1: error.nodeId1,
+                  nodeId2: error.nodeId2,
+                  message: error.message,
+                }),
+              ),
             ),
+          );
+      }),
+    ),
+  );
+
+  subscribeToTreeEvents$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(treeLoaded),
+      switchMap(({ tree }) => this.treeService.getEvents(tree.id)),
+      map((event) => eventReceived({ event })),
+    ),
+  );
+
+  loadTree$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(loadTree),
+      mergeMap(({ treeId }) => {
+        return this.treeService.getTree(treeId).pipe(
+          map((tree) => treeLoaded({ tree })),
+          catchError((error) =>
+            of(loadingTreeFailed({ message: error.message })),
           ),
         );
       }),
     ),
   );
 
-  dispatchEvent$ = createEffect(() =>
-    this.remoteStructureTreeService
-      .getEvents()
-      .pipe(map((event) => eventReceived({ event }))),
-  );
-
-  init$ = createEffect(() =>
-    this.remoteStructureTreeService
-      .getTree()
-      .pipe(map((tree) => treeLoaded({ tree }))),
-  );
-
   constructor(
     private readonly actions: Actions,
-    private readonly remoteStructureTreeService: TreeService,
+    private readonly treeService: RemoteTreeService,
   ) {}
 }

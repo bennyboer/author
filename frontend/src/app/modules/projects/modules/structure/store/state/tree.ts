@@ -1,6 +1,7 @@
-import { StructureTreeNodeId, StructureTreeNode } from './node';
+import { StructureTreeNode, StructureTreeNodeId } from './node';
 
 export interface StructureTree {
+  id: string;
   version: number;
   nodes: StructureTreeNodeLookup;
   rootId: StructureTreeNodeId;

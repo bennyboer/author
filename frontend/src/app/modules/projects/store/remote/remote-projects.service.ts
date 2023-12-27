@@ -2,6 +2,8 @@ import { Observable } from 'rxjs';
 import { Project, ProjectId } from '../../models';
 
 export abstract class RemoteProjectsService {
+  abstract getAccessibleProjectsEvents(): Observable<void>;
+
   abstract getAccessibleProjects(): Observable<Project[]>;
 
   abstract createProject(name: string): Observable<void>;

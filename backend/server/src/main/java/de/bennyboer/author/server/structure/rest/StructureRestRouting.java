@@ -14,18 +14,21 @@ public class StructureRestRouting implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
-        path("/trees", () -> path("/{treeId}", () -> {
-            get(treeHandler::getTree);
-            path("/nodes", () -> {
-                post("/swap", treeHandler::swapNodes);
-                path("/{nodeId}", () -> {
-                    post("/rename", treeHandler::renameNode);
-                    post("/toggle", treeHandler::toggleNode);
-                    post("/add-child", treeHandler::addChild);
-                    delete(treeHandler::removeNode);
+        path("/trees", () -> {
+            get("/by-project-id/{projectId}", treeHandler::findTreeByProjectId);
+            path("/{treeId}", () -> {
+                get(treeHandler::getTree);
+                path("/nodes", () -> {
+                    post("/swap", treeHandler::swapNodes);
+                    path("/{nodeId}", () -> {
+                        post("/rename", treeHandler::renameNode);
+                        post("/toggle", treeHandler::toggleNode);
+                        post("/add-child", treeHandler::addChild);
+                        delete(treeHandler::removeNode);
+                    });
                 });
             });
-        }));
+        });
     }
 
 }

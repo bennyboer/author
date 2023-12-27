@@ -1,5 +1,5 @@
-import { TreeService } from './tree.service';
-import { map, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { RemoteTreeService } from './tree.service';
+import { map, Observable, Subject } from 'rxjs';
 import {
   NodeAddedEvent,
   NodeRemovedEvent,
@@ -36,6 +36,7 @@ interface RenameNodeRequest {
 type NodeId = string;
 
 interface TreeDTO {
+  id: string;
   version: number;
   rootNodeId: string;
   nodes: NodeLookup;
@@ -52,118 +53,115 @@ interface NodeDTO {
 }
 
 @Injectable()
-export class HttpTreeService implements TreeService, OnDestroy {
-  // TODO Fetch tree Id from project?
-  private readonly treeId: string = 'b4f8c89e-8c05-47f7-b957-5cb2648959c2'; // TODO Taken from server log
-  private readonly events$: Subject<StructureTreeEvent> =
-    new Subject<StructureTreeEvent>();
-  private readonly tree$: Subject<StructureTree> = new Subject<StructureTree>();
+export class HttpTreeService implements RemoteTreeService, OnDestroy {
   private readonly destroy$: Subject<void> = new Subject<void>();
-  private version: number = 0;
 
   constructor(
     private readonly http: HttpClient,
     private readonly webSocketService: WebSocketService,
-  ) {
-    this.webSocketService
-      .onConnected$()
-      .pipe(
-        switchMap(() => {
-          return this.http.get<TreeDTO>(this.url(this.treeId)).pipe(
-            map((tree) => this.mapToStructureTree(tree)),
-            tap((tree) => {
-              this.version = tree.version;
-              this.tree$.next(tree);
-            }),
-            switchMap((tree) =>
-              this.webSocketService.subscribeTo('TREE', this.treeId),
-            ),
-          );
-        }),
-        tap((msg) => {
-          this.version = msg.topic.version;
-        }),
-        map((msg) => this.mapToStructureTreeEvent(msg)),
-        takeUntil(this.destroy$),
-      )
-      .subscribe((event) => this.events$.next(event));
-  }
+  ) {}
 
   ngOnDestroy() {
-    this.events$.complete();
-    this.tree$.complete();
-
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  addNode(parentNodeId: string, name: string): Observable<void> {
+  addNode(
+    treeId: string,
+    version: number,
+    parentNodeId: string,
+    name: string,
+  ): Observable<void> {
     const request: AddChildRequest = { name };
     return this.http.post<void>(
-      this.url(`${this.treeId}/nodes/${parentNodeId}/add-child`),
+      this.url(`${treeId}/nodes/${parentNodeId}/add-child`),
       request,
       {
         params: {
-          version: this.version,
+          version,
         },
       },
     );
   }
 
-  getEvents(): Observable<StructureTreeEvent> {
-    return this.events$.asObservable();
+  getEvents(treeId: string): Observable<StructureTreeEvent> {
+    return this.webSocketService
+      .subscribeTo('TREE', treeId)
+      .pipe(map((msg) => this.mapToStructureTreeEvent(msg)));
   }
 
-  getTree(): Observable<StructureTree> {
-    return this.tree$.asObservable();
+  getTree(treeId: string): Observable<StructureTree> {
+    return this.http
+      .get<TreeDTO>(this.url(treeId))
+      .pipe(map((tree) => this.mapToStructureTree(tree)));
   }
 
-  removeNode(nodeId: string): Observable<void> {
-    return this.http.delete<void>(this.url(`${this.treeId}/nodes/${nodeId}`), {
+  removeNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+  ): Observable<void> {
+    return this.http.delete<void>(this.url(`${treeId}/nodes/${nodeId}`), {
       params: {
-        version: this.version,
+        version,
       },
     });
   }
 
-  swapNodes(nodeId1: string, nodeId2: string): Observable<void> {
+  swapNodes(
+    treeId: string,
+    version: number,
+    nodeId1: string,
+    nodeId2: string,
+  ): Observable<void> {
     const request: SwapNodesRequest = { nodeId1, nodeId2 };
 
-    return this.http.post<void>(
-      this.url(`${this.treeId}/nodes/swap`),
-      request,
-      {
-        params: {
-          version: this.version,
-        },
+    return this.http.post<void>(this.url(`${treeId}/nodes/swap`), request, {
+      params: {
+        version,
       },
-    );
+    });
   }
 
-  toggleNode(nodeId: string): Observable<void> {
+  toggleNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+  ): Observable<void> {
     return this.http.post<void>(
-      this.url(`${this.treeId}/nodes/${nodeId}/toggle`),
+      this.url(`${treeId}/nodes/${nodeId}/toggle`),
       {},
       {
         params: {
-          version: this.version,
+          version,
         },
       },
     );
   }
 
-  renameNode(nodeId: string, name: string): Observable<void> {
+  renameNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+    name: string,
+  ): Observable<void> {
     const request: RenameNodeRequest = { name };
 
     return this.http.post<void>(
-      this.url(`${this.treeId}/nodes/${nodeId}/rename`),
+      this.url(`${treeId}/nodes/${nodeId}/rename`),
       request,
       {
         params: {
-          version: this.version,
+          version,
         },
       },
     );
+  }
+
+  findTreeIdByProjectId(projectId: string): Observable<string> {
+    return this.http.get(this.url(`by-project-id/${projectId}`), {
+      responseType: 'text',
+    });
   }
 
   private url(postfix: string): string {
@@ -172,6 +170,7 @@ export class HttpTreeService implements TreeService, OnDestroy {
 
   private mapToStructureTree(tree: TreeDTO): StructureTree {
     return {
+      id: tree.id,
       version: tree.version,
       rootId: tree.rootNodeId,
       nodes: this.mapToStructureTreeNodeLookup(tree.nodes),

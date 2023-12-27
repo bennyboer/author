@@ -1,4 +1,10 @@
-import {ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild,} from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import {
   AddNodeCommand,
   RemoveNodeCommand,
@@ -11,12 +17,13 @@ import {
   TreeGraphComponent,
   TreeGraphNode,
   TreeGraphNodeId,
-} from "../../components";
-import {MatDialog} from "@angular/material/dialog";
-import {NodeDetailsDialog} from "../../dialogs";
-import {map, Observable, Subject, takeUntil} from "rxjs";
-import {StructureTreeService} from "../../store";
-import {StructureTree, StructureTreeNode} from "../../store/state";
+} from '../../components';
+import { MatDialog } from '@angular/material/dialog';
+import { NodeDetailsDialog } from '../../dialogs';
+import { map, Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { RemoteTreeService, StructureTreeService } from '../../store';
+import { StructureTree, StructureTreeNode } from '../../store/state';
+import { ActivatedRoute } from '@angular/router';
 
 /*
 TODO:
@@ -42,10 +49,22 @@ export class StructurePage implements OnInit, OnDestroy {
 
   constructor(
     private readonly structureTreeService: StructureTreeService,
+    private readonly remoteTreeService: RemoteTreeService,
+    private readonly route: ActivatedRoute,
     private readonly dialog: MatDialog,
   ) {}
 
   ngOnInit() {
+    const projectId$ = this.route.params.pipe(
+      map((params) => params['projectId']),
+    );
+    const treeId$ = projectId$.pipe(
+      switchMap((projectId) =>
+        this.remoteTreeService.findTreeIdByProjectId(projectId),
+      ),
+    );
+    treeId$.subscribe((treeId) => this.structureTreeService.loadTree(treeId));
+
     this.treeGraph$ = this.structureTreeService.getTree().pipe(
       map((tree) => this.mapToTreeGraph(tree)),
       takeUntil(this.destroy$),

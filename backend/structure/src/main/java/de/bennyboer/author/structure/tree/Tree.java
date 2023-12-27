@@ -24,12 +24,16 @@ import de.bennyboer.author.structure.tree.nodes.swap.NodesSwappedEvent;
 import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
 import de.bennyboer.author.structure.tree.nodes.toggle.NodeToggledEvent;
 import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
+import de.bennyboer.author.structure.tree.remove.RemoveCmd;
+import de.bennyboer.author.structure.tree.remove.RemovedEvent;
 import de.bennyboer.author.structure.tree.snapshot.SnapshottedEvent;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.With;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +56,21 @@ public class Tree implements Aggregate {
 
     Map<NodeId, Node> nodes;
 
+    Instant createdAt;
+
+    @Nullable
+    Instant removedAt;
+
     public static Tree init() {
-        return new Tree(null, null, null, null, null);
+        return new Tree(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     @Override
@@ -64,11 +81,14 @@ public class Tree implements Aggregate {
             throw new IllegalStateException("Tree must be initialized with CreateCmd before applying other commands");
         }
 
-        // TODO Allow removal of tree (when project is removed)
+        if (isRemoved()) {
+            throw new IllegalStateException("Cannot apply command to removed Tree");
+        }
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
             case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
+            case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case AddNodeCmd c -> {
                 assertNodeExists(c.getParentNodeId());
                 yield ApplyCommandResult.of(NodeAddedEvent.of(c));
@@ -106,11 +126,15 @@ public class Tree implements Aggregate {
             case SnapshottedEvent e -> withId(TreeId.of(metadata.getAggregateId().getValue()))
                     .withProjectId(e.getProjectId())
                     .withRootNodeId(e.getRootNodeId())
-                    .withNodes(e.getNodes());
+                    .withNodes(e.getNodes())
+                    .withCreatedAt(e.getCreatedAt())
+                    .withRemovedAt(e.getRemovedAt().orElse(null));
             case CreatedEvent e -> withId(TreeId.of(metadata.getAggregateId().getValue()))
                     .withProjectId(e.getProjectId())
                     .withRootNodeId(e.getRootNode().getId())
-                    .withNodes(Map.of(e.getRootNode().getId(), e.getRootNode()));
+                    .withNodes(Map.of(e.getRootNode().getId(), e.getRootNode()))
+                    .withCreatedAt(metadata.getDate());
+            case RemovedEvent ignored -> withRemovedAt(metadata.getDate());
             case NodeAddedEvent e -> addNode(e.getParentNodeId(), e.getNewNodeId(), e.getNewNodeName());
             case NodeToggledEvent e -> toggleNode(e.getNodeId());
             case NodeRemovedEvent e -> removeNode(e.getNodeId());
@@ -128,6 +152,14 @@ public class Tree implements Aggregate {
 
     public Node getRootNode() {
         return getNodeById(rootNodeId).orElseThrow();
+    }
+
+    public boolean isRemoved() {
+        return getRemovedAt().isPresent();
+    }
+
+    public Optional<Instant> getRemovedAt() {
+        return Optional.ofNullable(removedAt);
     }
 
     private Tree addNode(NodeId parentNodeId, NodeId newNodeId, NodeName newNodeName) {

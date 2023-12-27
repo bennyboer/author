@@ -45,7 +45,11 @@ export class ProjectsStoreEffects {
     ),
   );
 
-  init$ = createEffect(() => of(loadAccessibleProjects()));
+  reloadAccessibleProjectsOnEvent$ = createEffect(() =>
+    this.projectsService
+      .getAccessibleProjectsEvents()
+      .pipe(map(() => loadAccessibleProjects())),
+  );
 
   constructor(
     private readonly actions: Actions,

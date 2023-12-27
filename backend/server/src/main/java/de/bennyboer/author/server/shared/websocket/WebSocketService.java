@@ -209,9 +209,10 @@ public class WebSocketService {
             Agent agent
     ) {
         PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
+                agent.getUserId().orElseThrow(),
                 msg.getAggregateType(),
                 msg.getAggregateId().orElse(null),
-                agent.getUserId().orElse(null)
+                msg.getAction().orElse(null)
         );
 
         aggregatePermissionEventSubscriptionManager.subscribe(target, SessionId.of(ctx));
@@ -234,9 +235,10 @@ public class WebSocketService {
     ) {
         UserId userId = agent.getUserId().orElse(null);
         PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
+                agent.getUserId().orElseThrow(),
                 msg.getAggregateType(),
                 msg.getAggregateId().orElse(null),
-                userId
+                msg.getAction().orElse(null)
         );
 
         aggregatePermissionEventSubscriptionManager.unsubscribe(target, SessionId.of(ctx));

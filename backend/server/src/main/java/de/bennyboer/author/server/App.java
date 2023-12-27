@@ -15,6 +15,7 @@ import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.permissions.MissingPermissionException;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.StructureModule;
 import de.bennyboer.author.server.users.UsersModule;
@@ -71,6 +72,7 @@ public class App {
                     ws.onMessage(webSocketService::onMessage);
                 }, UNAUTHORIZED)
                 .events(event -> event.serverStopping(messaging::stop))
+                .exception(MissingPermissionException.class, (exception, ctx) -> ctx.status(403).result("Forbidden"))
                 .start(7070);
     }
 

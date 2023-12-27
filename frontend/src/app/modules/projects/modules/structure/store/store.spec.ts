@@ -4,8 +4,8 @@ import { StructureTreeService } from './service';
 import { StoreModule } from '@ngrx/store';
 import {
   LocalStorageRemoteStructureTreeService,
+  RemoteTreeService,
   structureStore,
-  TreeService,
 } from './index';
 import { EffectsModule } from '@ngrx/effects';
 import { filter, firstValueFrom } from 'rxjs';
@@ -32,7 +32,7 @@ describe('StructureStore', () => {
       providers: [
         StructureTreeService,
         {
-          provide: TreeService,
+          provide: RemoteTreeService,
           useClass: LocalStorageRemoteStructureTreeService,
         },
         {

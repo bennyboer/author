@@ -2,6 +2,7 @@ package de.bennyboer.author.server.shared.websocket.api;
 
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.permissions.Action;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,13 +25,16 @@ public class SubscribeToPermissionsMessage {
     @Nullable
     String aggregateId;
 
+    String action;
+
     public static SubscribeToPermissionsMessage of(
             String aggregateType,
-            @Nullable String aggregateId
+            @Nullable String aggregateId,
+            @Nullable String action
     ) {
         checkNotNull(aggregateType, "Aggregate type must not be null");
 
-        return new SubscribeToPermissionsMessage(aggregateType, aggregateId);
+        return new SubscribeToPermissionsMessage(aggregateType, aggregateId, action);
     }
 
     public AggregateType getAggregateType() {
@@ -39,6 +43,10 @@ public class SubscribeToPermissionsMessage {
 
     public Optional<AggregateId> getAggregateId() {
         return Optional.ofNullable(aggregateId).map(AggregateId::of);
+    }
+
+    public Optional<Action> getAction() {
+        return Optional.ofNullable(action).map(Action::of);
     }
 
 }

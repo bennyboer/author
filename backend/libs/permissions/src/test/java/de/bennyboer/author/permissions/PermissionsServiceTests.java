@@ -63,6 +63,24 @@ public class PermissionsServiceTests {
     }
 
     @Test
+    void shouldNotAllowHavingAPermissionTwice() {
+        // given: a permission to add
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(testAction)
+                .on(resource);
+
+        // and: the permission is added
+        service.addPermission(permission).block();
+
+        // when: adding the permission again
+        service.addPermission(permission).block();
+
+        // then: the permission is still present only once
+        assertEquals(1, service.findPermissionsByUserId(userId).collectList().block().size());
+    }
+
+    @Test
     void shouldHavePermissionOnNoSpecificResource() {
         // given: a permission on no specific resource
         Permission permission = Permission.builder()
@@ -257,6 +275,57 @@ public class PermissionsServiceTests {
     }
 
     @Test
+    void shouldFindPermissionsByUserIdAndResourceTypeAndAction() {
+        var userId1 = UserId.of("USER_ID_1");
+        var userId2 = UserId.of("USER_ID_2");
+
+        var resource1 = Resource.of(ResourceType.of("RESOURCE_TYPE_1"), ResourceId.of("RESOURCE_ID_1"));
+        var resource2 = Resource.of(ResourceType.of("RESOURCE_TYPE_2"), ResourceId.of("RESOURCE_ID_2"));
+        var resource3 = Resource.of(ResourceType.of("RESOURCE_TYPE_1"), ResourceId.of("RESOURCE_ID_3"));
+
+        var action1 = Action.of("ACTION_1");
+        var action2 = Action.of("ACTION_2");
+
+        // given: some permissions
+        Set<Permission> permissions = Set.of(
+                Permission.builder()
+                        .user(userId1)
+                        .isAllowedTo(action1)
+                        .on(resource1),
+                Permission.builder()
+                        .user(userId1)
+                        .isAllowedTo(action2)
+                        .on(resource2),
+                Permission.builder()
+                        .user(userId2)
+                        .isAllowedTo(action2)
+                        .on(resource2),
+                Permission.builder()
+                        .user(userId2)
+                        .isAllowedTo(action1)
+                        .on(resource3)
+        );
+
+        service.addPermissions(permissions).block();
+
+        // when: finding permissions for user 1 and resource type 1 and action 1
+        var foundPermissions = service.findPermissionsByUserIdAndResourceTypeAndAction(
+                userId1,
+                ResourceType.of("RESOURCE_TYPE_1"),
+                action1
+        ).collectList().block();
+
+        // then: the permissions for user 1 and resource type 1 and action 1 are found
+        assertEquals(1, foundPermissions.size());
+        assertTrue(foundPermissions.containsAll(List.of(
+                Permission.builder()
+                        .user(userId1)
+                        .isAllowedTo(action1)
+                        .on(resource1)
+        )));
+    }
+
+    @Test
     void shouldFindPermissionsByUserIdAndResource() {
         var userId1 = UserId.of("USER_ID_1");
         var userId2 = UserId.of("USER_ID_2");
@@ -343,6 +412,21 @@ public class PermissionsServiceTests {
 
         // and: an event is published
         assertTrue(seenEvents.contains(PermissionEvent.removed(permission)));
+    }
+
+    @Test
+    void shouldNotPublishEventWhenPermissionToBeRemovedIsAbsent() {
+        // given: a permission to remove
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(testAction)
+                .on(resource);
+
+        // when: removing the permission
+        service.removePermission(permission).block();
+
+        // then: no event is published
+        assertTrue(seenEvents.isEmpty());
     }
 
     @Test

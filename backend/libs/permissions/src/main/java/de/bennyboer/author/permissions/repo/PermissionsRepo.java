@@ -1,6 +1,7 @@
 package de.bennyboer.author.permissions.repo;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.Resource;
 import de.bennyboer.author.permissions.ResourceType;
@@ -15,9 +16,9 @@ import java.util.Collection;
  */
 public interface PermissionsRepo {
 
-    Mono<Void> insert(Permission permission);
+    Mono<Permission> insert(Permission permission);
 
-    Mono<Void> insertAll(Collection<Permission> permissions);
+    Flux<Permission> insertAll(Collection<Permission> permissions);
 
     Mono<Boolean> hasPermission(Permission permission);
 
@@ -33,6 +34,17 @@ public interface PermissionsRepo {
      * For example if you want to query all accessible projects for a user.
      */
     Flux<Permission> findPermissionsByUserIdAndResourceType(UserId userId, ResourceType resourceType);
+
+    /**
+     * Find all permissions for a specific user, resource type and action.
+     * This may be useful if you want to display all permissions for a user on a specific resource type and action.
+     * For example if you want to query all readable projects for a user.
+     */
+    Flux<Permission> findPermissionsByUserIdAndResourceTypeAndAction(
+            UserId userId,
+            ResourceType resourceType,
+            Action action
+    );
 
     /**
      * Find all permissions for a specific resource.
@@ -61,6 +73,6 @@ public interface PermissionsRepo {
     /**
      * Remove a specific permission.
      */
-    Mono<Void> removeByPermission(Permission permission);
+    Mono<Permission> removeByPermission(Permission permission);
 
 }

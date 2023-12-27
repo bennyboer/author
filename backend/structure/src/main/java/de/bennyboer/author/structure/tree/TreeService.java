@@ -17,6 +17,7 @@ import de.bennyboer.author.structure.tree.nodes.remove.RemoveNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.rename.RenameNodeCmd;
 import de.bennyboer.author.structure.tree.nodes.swap.SwapNodesCmd;
 import de.bennyboer.author.structure.tree.nodes.toggle.ToggleNodeCmd;
+import de.bennyboer.author.structure.tree.remove.RemoveCmd;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -39,6 +40,10 @@ public class TreeService extends AggregateService<Tree, TreeId> {
 
         return dispatchCommandToLatest(id, agent, CreateCmd.of(projectId, rootNode))
                 .map(version -> AggregateIdAndVersion.of(id, version));
+    }
+
+    public Mono<Version> remove(TreeId treeId, Agent agent) {
+        return dispatchCommandToLatest(treeId, agent, RemoveCmd.of());
     }
 
     public Mono<Version> toggleNode(TreeId id, Version version, NodeId nodeId, Agent agent) {
@@ -87,7 +92,7 @@ public class TreeService extends AggregateService<Tree, TreeId> {
 
     @Override
     protected boolean isRemoved(Tree aggregate) {
-        return false;
+        return aggregate.isRemoved();
     }
 
 }

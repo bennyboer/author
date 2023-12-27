@@ -52,9 +52,13 @@ public abstract class AggregatePermissionsService<ID, A> {
         return permissionsService.removePermissionsByResource(toResource(id));
     }
 
-    public Flux<ID> getAccessibleResourceIds(Agent agent) {
+    public Flux<ID> getAccessibleResourceIds(Agent agent, A action) {
         return agent.getUserId()
-                .map(userId -> permissionsService.findPermissionsByUserIdAndResourceType(userId, getResourceType())
+                .map(userId -> permissionsService.findPermissionsByUserIdAndResourceTypeAndAction(
+                                userId,
+                                getResourceType(),
+                                toAction(action)
+                        )
                         .mapNotNull(permission -> toNullableId(permission.getResource().getId().orElse(null))))
                 .orElse(Flux.empty());
     }

@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.structure.rest;
 
-import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
 import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
 import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
@@ -11,6 +10,8 @@ import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import static de.bennyboer.author.server.shared.http.ReactiveHandler.handle;
+
 @Value
 @AllArgsConstructor
 public class TreeRestHandler {
@@ -19,17 +20,26 @@ public class TreeRestHandler {
 
     TreeCommandFacade commandFacade;
 
+    public void findTreeByProjectId(Context ctx) {
+        var projectId = ctx.pathParam("projectId");
+
+        handle(
+                ctx,
+                (agent) -> queryFacade.findTreeIdByProjectId(projectId, agent).singleOptional(),
+                tree -> tree.ifPresentOrElse(
+                        ctx::json,
+                        () -> ctx.status(HttpStatus.NOT_FOUND)
+                )
+        );
+    }
+
     public void getTree(Context ctx) {
         var treeId = ctx.pathParam("treeId");
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> queryFacade.getTree(treeId, agent))
-                .singleOptional()
-                .toFuture()
-                .thenAccept(tree -> tree.ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(HttpStatus.NOT_FOUND)
-                )));
+        handle(ctx, (agent) -> queryFacade.getTree(treeId, agent).singleOptional(), tree -> tree.ifPresentOrElse(
+                ctx::json,
+                () -> ctx.status(HttpStatus.NOT_FOUND)
+        ));
     }
 
     public void toggleNode(Context ctx) {
@@ -37,10 +47,11 @@ public class TreeRestHandler {
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var nodeId = ctx.pathParam("nodeId");
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.toggleNode(treeId, treeVersion, nodeId, agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                (agent) -> commandFacade.toggleNode(treeId, treeVersion, nodeId, agent),
+                tree -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void addChild(Context ctx) {
@@ -49,10 +60,11 @@ public class TreeRestHandler {
         var parentNodeId = ctx.pathParam("nodeId");
         var request = ctx.bodyAsClass(AddChildRequest.class);
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.addNode(treeId, treeVersion, parentNodeId, request.getName(), agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                (agent) -> commandFacade.addNode(treeId, treeVersion, parentNodeId, request.getName(), agent),
+                tree -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void renameNode(Context ctx) {
@@ -61,10 +73,11 @@ public class TreeRestHandler {
         var nodeId = ctx.pathParam("nodeId");
         var request = ctx.bodyAsClass(RenameNodeRequest.class);
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.renameNode(treeId, treeVersion, nodeId, request.getName(), agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                (agent) -> commandFacade.renameNode(treeId, treeVersion, nodeId, request.getName(), agent),
+                tree -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void removeNode(Context ctx) {
@@ -72,10 +85,11 @@ public class TreeRestHandler {
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var nodeId = ctx.pathParam("nodeId");
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.removeNode(treeId, treeVersion, nodeId, agent))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+        handle(
+                ctx,
+                (agent) -> commandFacade.removeNode(treeId, treeVersion, nodeId, agent),
+                tree -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
     public void swapNodes(Context ctx) {
@@ -83,16 +97,17 @@ public class TreeRestHandler {
         var treeVersion = ctx.queryParamAsClass("version", Long.class).get();
         var request = ctx.bodyAsClass(SwapNodesRequest.class);
 
-        ctx.future(() -> Auth.toAgent(ctx)
-                .flatMap(agent -> commandFacade.swapNodes(
+        handle(
+                ctx,
+                (agent) -> commandFacade.swapNodes(
                         treeId,
                         treeVersion,
                         request.getNodeId1(),
                         request.getNodeId2(),
                         agent
-                ))
-                .toFuture()
-                .thenRun(() -> ctx.status(HttpStatus.NO_CONTENT)));
+                ),
+                tree -> ctx.status(HttpStatus.NO_CONTENT)
+        );
     }
 
 }

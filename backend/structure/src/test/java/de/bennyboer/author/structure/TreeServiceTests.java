@@ -15,8 +15,7 @@ import org.junit.jupiter.api.function.Executable;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TreeServiceTests {
 
@@ -39,6 +38,46 @@ public class TreeServiceTests {
         var tree = treeService.get(treeId).block();
         var rootNode = tree.getRootNode();
         assertEquals(rootNodeName, rootNode.getName());
+    }
+
+    @Test
+    void shouldRemoveTree() {
+        // given: a tree
+        var rootNodeName = NodeName.of("Alice in Wonderland");
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
+        var treeId = treeIdAndVersion.getId();
+
+        // when: the tree is removed
+        treeService.remove(treeId, testAgent).block();
+
+        // then: the tree cannot be retrieved
+        var tree = treeService.get(treeId).block();
+        assertNull(tree);
+    }
+
+    @Test
+    void shouldNotBeAbleToDispatchCommandsAfterTreeIsRemoved() {
+        // given: a deleted tree
+        var rootNodeName = NodeName.of("Alice in Wonderland");
+        var treeIdAndVersion = treeService.create(testProjectId, rootNodeName, testAgent).block();
+        var treeId = treeIdAndVersion.getId();
+        var version = treeService.remove(treeId, testAgent).block();
+
+        // when: trying to add a node to the deleted tree
+        Executable executable = () -> treeService.addNode(
+                treeId,
+                version,
+                NodeId.create(),
+                NodeName.of("Chapter 1"),
+                testAgent
+        ).block();
+
+        // then: an exception is thrown
+        var exception = assertThrows(
+                IllegalStateException.class,
+                executable
+        );
+        assertEquals("Cannot apply command to removed Tree", exception.getMessage());
     }
 
     @Test

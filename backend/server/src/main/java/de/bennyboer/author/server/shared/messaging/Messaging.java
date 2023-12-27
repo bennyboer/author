@@ -4,6 +4,7 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
@@ -16,10 +17,7 @@ import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 
 import javax.jms.*;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Since the server is currently not expected to face any severe load
@@ -152,18 +150,12 @@ public class Messaging {
         Optional<AggregateId> aggregateId = listener.aggregateId();
         Optional<EventName> eventName = listener.eventName();
 
-        StringBuilder messageSelector = new StringBuilder();
+        List<String> parts = new ArrayList<>();
 
-        aggregateId.ifPresent(id -> messageSelector.append(String.format("aggregateId = '%s'", id.getValue())));
-        eventName.ifPresent(name -> {
-            if (aggregateId.isPresent()) {
-                messageSelector.append(" AND ");
-            }
+        aggregateId.ifPresent(id -> parts.add(String.format("aggregateId = '%s'", id.getValue())));
+        eventName.ifPresent(name -> parts.add(String.format("eventName = '%s'", name.getValue())));
 
-            messageSelector.append(String.format("eventName = '%s'", name.getValue()));
-        });
-
-        return messageSelector.toString();
+        return String.join(" AND ", parts);
     }
 
     private String buildMessageSelectorForAggregatePermissionEventMessageListener(
@@ -171,19 +163,15 @@ public class Messaging {
     ) {
         Optional<UserId> userId = listener.userId();
         Optional<AggregateId> aggregateId = listener.aggregateId();
+        Optional<Action> action = listener.action();
 
-        StringBuilder messageSelector = new StringBuilder();
+        List<String> parts = new ArrayList<>();
 
-        userId.ifPresent(id -> messageSelector.append(String.format("userId = '%s'", id.getValue())));
-        aggregateId.ifPresent(id -> {
-            if (userId.isPresent()) {
-                messageSelector.append(" AND ");
-            }
+        userId.ifPresent(id -> parts.add(String.format("userId = '%s'", id.getValue())));
+        aggregateId.ifPresent(id -> parts.add(String.format("aggregateId = '%s'", id.getValue())));
+        action.ifPresent(a -> parts.add(String.format("action = '%s'", a.getName())));
 
-            messageSelector.append(String.format("aggregateId = '%s'", id.getValue()));
-        });
-
-        return messageSelector.toString();
+        return String.join(" AND ", parts);
     }
 
     private void start() throws Exception {

@@ -6,6 +6,6 @@
   @if (items.length === 0) {
     <p>You seem to have no access to any projects yet. Try creating a new one!</p>
   } @else {
-    <app-project-list [items]="items"></app-project-list>
+    <app-project-list [items]="items" (clicked)="navigateToProject($event)"></app-project-list>
   }
 }

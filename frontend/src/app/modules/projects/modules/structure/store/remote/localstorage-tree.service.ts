@@ -1,4 +1,4 @@
-import { TreeService } from './tree.service';
+import { RemoteTreeService } from './tree.service';
 import {
   BehaviorSubject,
   delay,
@@ -39,6 +39,7 @@ export const LOCALSTORAGE_REMOTE_STRUCTURE_TREE_SERVICE_CONFIG =
 const LOCALSTORAGE_KEY = 'structure.tree';
 const ROOT_ID: StructureTreeNodeId = 'ROOT_ID';
 const DEFAULT_TREE: StructureTree = {
+  id: 'LOCALSTORAGE_TREE_ID',
   version: 0,
   nodes: {
     [ROOT_ID]: {
@@ -52,7 +53,10 @@ const DEFAULT_TREE: StructureTree = {
 };
 
 @Injectable()
-export class LocalStorageTreeService extends TreeService implements OnDestroy {
+export class LocalStorageTreeService
+  extends RemoteTreeService
+  implements OnDestroy
+{
   private readonly config: LocalStorageRemoteStructureTreeServiceConfig;
 
   private readonly tree$: BehaviorSubject<StructureTree> = new BehaviorSubject(
@@ -77,15 +81,20 @@ export class LocalStorageTreeService extends TreeService implements OnDestroy {
     this.tree$.complete();
   }
 
-  getTree(): Observable<StructureTree> {
+  getTree(treeId: string): Observable<StructureTree> {
     return this.tree$.asObservable().pipe(first());
   }
 
-  getEvents(): Observable<StructureTreeEvent> {
+  getEvents(treeId: string): Observable<StructureTreeEvent> {
     return this.events$.asObservable();
   }
 
-  addNode(parentNodeId: string, name: string): Observable<void> {
+  addNode(
+    treeId: string,
+    version: number,
+    parentNodeId: string,
+    name: string,
+  ): Observable<void> {
     const newNodeId = this.createUniqueId();
 
     return this.updateTreeAndFireEvent(
@@ -94,26 +103,48 @@ export class LocalStorageTreeService extends TreeService implements OnDestroy {
     );
   }
 
-  removeNode(nodeId: string): Observable<void> {
+  removeNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+  ): Observable<void> {
     return this.updateTreeAndFireEvent(new NodeRemovedEvent(nodeId), (tree) =>
       new TreeMutator(tree).removeNode(nodeId),
     );
   }
 
-  swapNodes(nodeId1: string, nodeId2: string): Observable<void> {
+  swapNodes(
+    treeId: string,
+    version: number,
+    nodeId1: string,
+    nodeId2: string,
+  ): Observable<void> {
     return this.updateTreeAndFireEvent(
       new NodesSwappedEvent(nodeId1, nodeId2),
       (tree) => new TreeMutator(tree).swapNodes(nodeId1, nodeId2),
     );
   }
 
-  toggleNode(nodeId: string): Observable<void> {
+  toggleNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+  ): Observable<void> {
     return this.updateTreeAndFireEvent(new NodeToggledEvent(nodeId), (tree) =>
       new TreeMutator(tree).toggleNode(nodeId),
     );
   }
 
-  override renameNode(nodeId: string, name: string): Observable<void> {
+  findTreeIdByProjectId(projectId: string): Observable<string> {
+    return of('LOCALSTORAGE_TREE_ID');
+  }
+
+  override renameNode(
+    treeId: string,
+    version: number,
+    nodeId: string,
+    name: string,
+  ): Observable<void> {
     return this.updateTreeAndFireEvent(
       new NodeRenamedEvent(nodeId, name),
       (tree) => new TreeMutator(tree).renameNode(nodeId, name),

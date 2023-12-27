@@ -1,6 +1,7 @@
 package de.bennyboer.author.permissions.repo;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.Resource;
 import de.bennyboer.author.permissions.ResourceType;
@@ -23,13 +24,15 @@ public class InMemoryPermissionsRepo implements PermissionsRepo {
     private final Set<Permission> permissions = ConcurrentHashMap.newKeySet();
 
     @Override
-    public Mono<Void> insert(Permission permission) {
-        return Mono.fromRunnable(() -> permissions.add(permission));
+    public Mono<Permission> insert(Permission permission) {
+        return Mono.just(permission)
+                .mapNotNull(p -> permissions.add(p) ? p : null);
     }
 
     @Override
-    public Mono<Void> insertAll(Collection<Permission> permissions) {
-        return Mono.fromRunnable(() -> this.permissions.addAll(permissions));
+    public Flux<Permission> insertAll(Collection<Permission> permissions) {
+        return Flux.fromIterable(permissions)
+                .flatMap(this::insert);
     }
 
     @Override
@@ -47,6 +50,17 @@ public class InMemoryPermissionsRepo implements PermissionsRepo {
     public Flux<Permission> findPermissionsByUserIdAndResourceType(UserId userId, ResourceType resourceType) {
         return findPermissionsByUserId(userId)
                 .filter(permission -> permission.getResource().getType().equals(resourceType));
+    }
+
+    @Override
+    public Flux<Permission> findPermissionsByUserIdAndResourceTypeAndAction(
+            UserId userId,
+            ResourceType resourceType,
+            Action action
+    ) {
+        return findPermissionsByUserId(userId)
+                .filter(permission -> permission.getResource().getType().equals(resourceType)
+                        && permission.getAction().equals(action));
     }
 
     @Override
@@ -72,8 +86,9 @@ public class InMemoryPermissionsRepo implements PermissionsRepo {
     }
 
     @Override
-    public Mono<Void> removeByPermission(Permission permission) {
-        return Mono.fromRunnable(() -> permissions.remove(permission));
+    public Mono<Permission> removeByPermission(Permission permission) {
+        return Mono.just(permission)
+                .mapNotNull(p -> permissions.remove(p) ? p : null);
     }
 
     private Flux<Permission> removeBy(Predicate<Permission> predicate) {

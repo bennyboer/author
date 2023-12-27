@@ -8,6 +8,10 @@ import { Injectable } from '@angular/core';
 export class LocalStorageProjectsService extends RemoteProjectsService {
   private readonly projects: Map<ProjectId, Project> = new Map();
 
+  override getAccessibleProjectsEvents(): Observable<void> {
+    return of();
+  }
+
   getAccessibleProjects(): Observable<Project[]> {
     return of(Array.from(this.projects.values()));
   }

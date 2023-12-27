@@ -61,6 +61,7 @@ public class MessagingAggregatePermissionsEventPublisher implements PermissionsE
 
             try {
                 textMessage.setStringProperty("userId", message.getUserId());
+                textMessage.setStringProperty("action", message.getAction());
             } catch (JMSException e) {
                 throw new RuntimeException(e);
             }

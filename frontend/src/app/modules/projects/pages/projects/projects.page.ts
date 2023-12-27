@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ProjectListItem } from '../../components';
 import { ProjectsService } from '../../store';
+import { Router } from '@angular/router';
 
 @Component({
   templateUrl: './projects.page.html',
@@ -20,11 +21,18 @@ export class ProjectsPage {
       ),
     );
 
-  constructor(private readonly projectsService: ProjectsService) {
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly router: Router,
+  ) {
     this.projectsService.loadAccessibleProjects();
   }
 
   createNewProject(): void {
     this.projectsService.createProject('Test');
+  }
+
+  navigateToProject(item: ProjectListItem) {
+    this.router.navigate(['projects', item.id]);
   }
 }

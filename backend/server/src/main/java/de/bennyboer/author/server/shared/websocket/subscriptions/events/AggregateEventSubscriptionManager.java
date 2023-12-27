@@ -10,10 +10,12 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageL
 import de.bennyboer.author.server.shared.websocket.SessionId;
 import de.bennyboer.author.server.shared.websocket.subscriptions.EventPublishingSubscriptionManager;
 import de.bennyboer.author.server.shared.websocket.subscriptions.SubscriberEventPublisher;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.artemis.utils.collections.ConcurrentHashSet;
 import reactor.core.publisher.Mono;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -23,7 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AggregateEventSubscriptionManager
         extends EventPublishingSubscriptionManager<EventSubscriptionTarget, AggregateEventMessage> {
 
-    private final Map<AggregateType, Map<AggregateId, Map<Optional<EventName>, Set<SessionId>>>> eventSubscriptions =
+    private final Map<AggregateType, Map<AggregateId, Set<SessionId>>> aggregateTypeAndIdSubscriptions =
+            new ConcurrentHashMap<>();
+    private final Map<AggregateType, Map<AggregateId, Map<Optional<EventName>, Set<SessionId>>>> aggregateTypeAndIdAndEventNameSubscriptions =
             new ConcurrentHashMap<>();
 
     public AggregateEventSubscriptionManager(
@@ -34,14 +38,45 @@ public class AggregateEventSubscriptionManager
     }
 
     @Override
+    protected void addSubscriber(EventSubscriptionTarget target, SessionId sessionId) {
+        AggregateType aggregateType = target.getAggregateType();
+        AggregateId aggregateId = target.getAggregateId();
+        Optional<EventName> eventName = target.getEventName();
+
+        findSubscribersOnAggregateTypeAndId(aggregateType, aggregateId).add(sessionId);
+        findSubscribersOnAggregateTypeAndIdAndEventName(aggregateType, aggregateId, eventName.orElse(null)).add(
+                sessionId
+        );
+    }
+
+    @Override
+    protected void removeSubscriber(EventSubscriptionTarget target, SessionId sessionId) {
+        AggregateType aggregateType = target.getAggregateType();
+        AggregateId aggregateId = target.getAggregateId();
+        Optional<EventName> eventName = target.getEventName();
+
+        findSubscribersOnAggregateTypeAndId(aggregateType, aggregateId).remove(sessionId);
+        findSubscribersOnAggregateTypeAndIdAndEventName(aggregateType, aggregateId, eventName.orElse(null)).remove(
+                sessionId
+        );
+    }
+
+    @Override
     protected Set<SessionId> findSubscribers(EventSubscriptionTarget target) {
         AggregateType aggregateType = target.getAggregateType();
         AggregateId aggregateId = target.getAggregateId();
         Optional<EventName> eventName = target.getEventName();
 
-        return eventSubscriptions.computeIfAbsent(aggregateType, key -> new ConcurrentHashMap<>())
-                .computeIfAbsent(aggregateId, key -> new ConcurrentHashMap<>())
-                .computeIfAbsent(eventName, key -> new ConcurrentHashSet<>());
+        Set<SessionId> subscribers = new HashSet<>();
+
+        subscribers.addAll(findSubscribersOnAggregateTypeAndId(aggregateType, aggregateId));
+        subscribers.addAll(findSubscribersOnAggregateTypeAndIdAndEventName(
+                aggregateType,
+                aggregateId,
+                eventName.orElse(null)
+        ));
+
+        return subscribers;
     }
 
     @Override
@@ -76,6 +111,24 @@ public class AggregateEventSubscriptionManager
         EventName eventName = EventName.of(msg.getEventName());
 
         return EventSubscriptionTarget.of(aggregateType, aggregateId, eventName);
+    }
+
+    private Set<SessionId> findSubscribersOnAggregateTypeAndId(AggregateType aggregateType, AggregateId aggregateId) {
+        return aggregateTypeAndIdSubscriptions.computeIfAbsent(aggregateType, key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(aggregateId, key -> new ConcurrentHashSet<>());
+    }
+
+    private Set<SessionId> findSubscribersOnAggregateTypeAndIdAndEventName(
+            AggregateType aggregateType,
+            AggregateId aggregateId,
+            @Nullable EventName eventName
+    ) {
+        return aggregateTypeAndIdAndEventNameSubscriptions.computeIfAbsent(
+                        aggregateType,
+                        key -> new ConcurrentHashMap<>()
+                )
+                .computeIfAbsent(aggregateId, key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(Optional.ofNullable(eventName), key -> new ConcurrentHashSet<>());
     }
 
 }

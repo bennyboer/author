@@ -3,6 +3,7 @@ package de.bennyboer.author.permissions.repo;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.Resource;
 import de.bennyboer.author.permissions.ResourceType;
@@ -35,12 +36,12 @@ public class CacheablePermissionsRepo implements PermissionsRepo {
     }
 
     @Override
-    public Mono<Void> insert(Permission permission) {
+    public Mono<Permission> insert(Permission permission) {
         return delegate.insert(permission);
     }
 
     @Override
-    public Mono<Void> insertAll(Collection<Permission> permissions) {
+    public Flux<Permission> insertAll(Collection<Permission> permissions) {
         return delegate.insertAll(permissions);
     }
 
@@ -59,6 +60,15 @@ public class CacheablePermissionsRepo implements PermissionsRepo {
     @Override
     public Flux<Permission> findPermissionsByUserIdAndResourceType(UserId userId, ResourceType resourceType) {
         return delegate.findPermissionsByUserIdAndResourceType(userId, resourceType);
+    }
+
+    @Override
+    public Flux<Permission> findPermissionsByUserIdAndResourceTypeAndAction(
+            UserId userId,
+            ResourceType resourceType,
+            Action action
+    ) {
+        return delegate.findPermissionsByUserIdAndResourceTypeAndAction(userId, resourceType, action);
     }
 
     @Override
@@ -82,7 +92,7 @@ public class CacheablePermissionsRepo implements PermissionsRepo {
     }
 
     @Override
-    public Mono<Void> removeByPermission(Permission permission) {
+    public Mono<Permission> removeByPermission(Permission permission) {
         return delegate.removeByPermission(permission);
     }
 

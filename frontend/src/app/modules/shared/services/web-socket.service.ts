@@ -12,6 +12,7 @@ import {
   Subject,
   Subscription,
   takeUntil,
+  tap,
   timer,
 } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
@@ -40,6 +41,7 @@ interface SubscribeMessage {
 interface SubscribeToPermissionsMessage {
   aggregateType: string;
   aggregateId?: string;
+  action?: string;
 }
 
 interface UnsubscribeMessage {
@@ -51,6 +53,7 @@ interface UnsubscribeMessage {
 interface UnsubscribeFromPermissionsMessage {
   aggregateType: string;
   aggregateId?: string;
+  action?: string;
 }
 
 // TODO Should not export since its a DTO
@@ -116,11 +119,17 @@ export class WebSocketService implements OnDestroy {
       .getToken()
       .pipe(
         map((token) => token.map((t) => t.getValue())),
+        tap((token) => (this.token = token)),
+        tap((token) => {
+          if (token.isNone()) {
+            this.disconnect();
+          } else {
+            this.connect();
+          }
+        }),
         takeUntil(this.destroy$),
       )
-      .subscribe((token) => (this.token = token));
-
-    this.connect();
+      .subscribe();
   }
 
   ngOnDestroy() {
@@ -159,13 +168,17 @@ export class WebSocketService implements OnDestroy {
     );
   }
 
-  subscribeToPermissions(
-    aggregateType: string,
-    aggregateId?: string,
-  ): Observable<PermissionEventMessage> {
+  subscribeToPermissions(props: {
+    aggregateType: string;
+    aggregateId?: string;
+    action?: string;
+  }): Observable<PermissionEventMessage> {
+    const { aggregateType, aggregateId, action } = props;
+
     const subscribeToPermissionsMsg: SubscribeToPermissionsMessage = {
       aggregateType,
       aggregateId,
+      action,
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.SUBSCRIBE_TO_PERMISSIONS,
@@ -182,9 +195,16 @@ export class WebSocketService implements OnDestroy {
           (aggregateId === undefined || event.aggregateId === aggregateId),
       ),
       finalize(() =>
-        this.unsubscribeFromPermissions(aggregateType, aggregateId),
+        this.unsubscribeFromPermissions({ aggregateType, aggregateId, action }),
       ),
     );
+  }
+
+  private disconnect(): void {
+    this.socket$.ifSome((socket) => socket.complete());
+    this.socket$ = Option.none();
+    this.isConnected = false;
+    this.reconnectionFailures = 0;
   }
 
   /**
@@ -220,13 +240,17 @@ export class WebSocketService implements OnDestroy {
     this.send(msg);
   }
 
-  private unsubscribeFromPermissions(
-    aggregateType: string,
-    aggregateId?: string,
-  ) {
+  private unsubscribeFromPermissions(props: {
+    aggregateType: string;
+    aggregateId?: string;
+    action?: string;
+  }) {
+    const { aggregateType, aggregateId, action } = props;
+
     const unsubscribeFromPermissionsMsg: UnsubscribeFromPermissionsMessage = {
       aggregateType,
       aggregateId,
+      action,
     };
     const msg: WebSocketMessage = {
       method: WebSocketMessageMethod.UNSUBSCRIBE_FROM_PERMISSIONS,
@@ -256,13 +280,11 @@ export class WebSocketService implements OnDestroy {
   }
 
   private connect() {
-    if (this.socket$.isSome()) {
+    if (this.socket$.isSome() && this.token.isNone()) {
       return;
     }
 
-    console.log(
-      `Connecting to WebSocket... Attempt ${this.reconnectionFailures + 1}`,
-    );
+    console.log(`Connecting to WebSocket...`);
 
     const socket: WebSocketSubject<WebSocketMessage> = webSocket({
       url: environment.webSocketUrl,
@@ -286,7 +308,7 @@ export class WebSocketService implements OnDestroy {
 
           if (isUnauthorized) {
             this.loginService.logout();
-          } else {
+          } else if (this.token.isSome()) {
             const backoff = Math.pow(2, this.reconnectionFailures) * 1000;
             this.reconnectionFailures++;
             of(1)

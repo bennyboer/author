@@ -14,7 +14,7 @@ export { StructureStoreEffects } from './effects';
 export { StructureTreeService } from './service';
 
 export {
-  TreeService,
+  RemoteTreeService,
   HttpTreeService,
   LocalStorageTreeService,
 } from './remote';
