@@ -1,0 +1,16 @@
+<h1 mat-dialog-title>Create Project</h1>
+<form [formGroup]="formGroup">
+  <div mat-dialog-content>
+    <mat-form-field appearance="outline" class="remove-subscript-sizing">
+      <mat-label>Project Name</mat-label>
+      <input matInput formControlName="name" placeholder="Project Name" required>
+    </mat-form-field>
+  </div>
+  <mat-progress-bar [class.visible]="loading$ |async" mode="indeterminate"></mat-progress-bar>
+  <div mat-dialog-actions align="center">
+    <button mat-button mat-dialog-close>Close</button>
+    <button mat-button color="accent" (click)="createProject()" [disabled]="!formGroup.valid" type="submit">
+      Create
+    </button>
+  </div>
+</form>

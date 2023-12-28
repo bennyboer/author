@@ -1,11 +1,26 @@
-<h1>Your projects!</h1>
+<app-user-profile-details></app-user-profile-details>
 
-<button (click)="createNewProject()">Create a new one</button>
+<div class="projects-container">
+  <h1>
+    <span class="title">
+      Projects
+    </span>
+    <span class="actions">
+      <button mat-flat-button (click)="createNewProject()" color="accent">
+        <mat-icon>add</mat-icon>
+        New
+      </button>
+    </span>
+  </h1>
 
-@if (projectListItems$ | async;as items) {
-  @if (items.length === 0) {
-    <p>You seem to have no access to any projects yet. Try creating a new one!</p>
-  } @else {
-    <app-project-list [items]="items" (clicked)="navigateToProject($event)"></app-project-list>
+  @if (projectListItems$ | async;as items) {
+    @if (items.length === 0) {
+      <p>You seem to have no access to any projects yet. Try creating a new one!</p>
+    } @else {
+      <app-project-list [items]="items"
+                        (clicked)="navigateToProject($event)"
+                        (editClicked)="editProject($event)">
+      </app-project-list>
+    }
   }
-}
+</div>

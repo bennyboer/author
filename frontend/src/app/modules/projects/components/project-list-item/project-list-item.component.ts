@@ -8,11 +8,20 @@ import {
 
 export class ProjectListItem {
   readonly id: string;
+  readonly version: number;
   readonly name: string;
+  readonly createdAt: Date;
 
-  constructor(props: { id: string; name: string }) {
+  constructor(props: {
+    id: string;
+    version: number;
+    name: string;
+    createdAt: Date;
+  }) {
     this.id = props.id;
+    this.version = props.version;
     this.name = props.name;
+    this.createdAt = props.createdAt;
   }
 }
 
@@ -28,4 +37,7 @@ export class ProjectListItemComponent {
 
   @Output()
   clicked = new EventEmitter<ProjectListItem>();
+
+  @Output()
+  editClicked = new EventEmitter<ProjectListItem>();
 }

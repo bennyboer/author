@@ -1,0 +1,42 @@
+:host {
+  width: 600px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 0 20px;
+}
+
+.leading {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.name {
+  font-size: 24px;
+}
+
+.actions {
+  margin-left: 20px;
+}
+
+.avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  mat-icon {
+    color: #bdbdbd;
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+}

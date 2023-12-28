@@ -7,6 +7,12 @@ import {
   loadAccessibleProjects,
   loadingAccessibleProjectsFailed,
   projectCreated,
+  projectRemoved,
+  projectRenamed,
+  removeProject,
+  removingProjectFailed,
+  renameProject,
+  renamingProjectFailed,
 } from './actions';
 
 export const reducer = createReducer(
@@ -32,6 +38,28 @@ export const reducer = createReducer(
   on(creatingProjectFailed, (state, { message }) => ({
     ...state,
     creating: false,
+    errorMessage: message,
+  })),
+
+  on(removeProject, (state) => ({ ...state, removing: true })),
+  on(projectRemoved, (state) => ({
+    ...state,
+    removing: false,
+  })),
+  on(removingProjectFailed, (state, { message }) => ({
+    ...state,
+    removing: false,
+    errorMessage: message,
+  })),
+
+  on(renameProject, (state) => ({ ...state, renaming: true })),
+  on(projectRenamed, (state) => ({
+    ...state,
+    renaming: false,
+  })),
+  on(renamingProjectFailed, (state, { message }) => ({
+    ...state,
+    renaming: false,
     errorMessage: message,
   })),
 );

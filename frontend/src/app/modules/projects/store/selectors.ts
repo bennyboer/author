@@ -11,8 +11,14 @@ const selectAccessibleProjects = createSelector(
 const isError = createSelector(projectsState, (state) =>
   Option.someOrNone(state.errorMessage).isSome(),
 );
+const isCreating = createSelector(projectsState, (state) => state.creating);
+const isRemoving = createSelector(projectsState, (state) => state.removing);
+const isRenaming = createSelector(projectsState, (state) => state.renaming);
 
 export const selectors = {
   accessibleProjects: selectAccessibleProjects,
   isError,
+  isCreating,
+  isRemoving,
+  isRenaming,
 };

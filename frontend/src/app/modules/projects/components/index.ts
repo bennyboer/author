@@ -5,3 +5,4 @@ export {
   ProjectListItemComponent,
   ProjectListItem,
 } from './project-list-item/project-list-item.component';
+export { UserProfileDetailsComponent } from './user-profile-details/user-profile-details.component';

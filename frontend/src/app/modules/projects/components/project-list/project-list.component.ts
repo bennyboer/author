@@ -19,4 +19,7 @@ export class ProjectListComponent {
 
   @Output()
   clicked = new EventEmitter<ProjectListItem>();
+
+  @Output()
+  editClicked = new EventEmitter<ProjectListItem>();
 }

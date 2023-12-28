@@ -20,4 +20,24 @@ export class ProjectsService {
   createProject(name: string): void {
     this.store.dispatch(actions.createProject({ name }));
   }
+
+  removeProject(id: string, version: number): void {
+    this.store.dispatch(actions.removeProject({ id, version }));
+  }
+
+  renameProject(id: string, version: number, name: string): void {
+    this.store.dispatch(actions.renameProject({ id, version, name }));
+  }
+
+  isCreating(): Observable<boolean> {
+    return this.store.select(selectors.isCreating);
+  }
+
+  isRemoving(): Observable<boolean> {
+    return this.store.select(selectors.isRemoving);
+  }
+
+  isRenaming(): Observable<boolean> {
+    return this.store.select(selectors.isRenaming);
+  }
 }

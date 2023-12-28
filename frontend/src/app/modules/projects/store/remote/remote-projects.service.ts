@@ -6,6 +6,8 @@ export abstract class RemoteProjectsService {
 
   abstract getAccessibleProjects(): Observable<Project[]>;
 
+  abstract getProjectRenamedEvents(): Observable<void>;
+
   abstract createProject(name: string): Observable<void>;
 
   abstract removeProject(id: ProjectId, version: number): Observable<void>;

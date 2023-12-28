@@ -128,8 +128,8 @@ export class StructureStoreEffects {
 
   subscribeToTreeEvents$ = createEffect(() =>
     this.actions.pipe(
-      ofType(treeLoaded),
-      switchMap(({ tree }) => this.treeService.getEvents(tree.id)),
+      ofType(loadTree),
+      switchMap(({ treeId }) => this.treeService.getEvents(treeId)),
       map((event) => eventReceived({ event })),
     ),
   );

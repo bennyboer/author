@@ -61,7 +61,6 @@ export interface EventTopicDTO {
   aggregateType: string;
   aggregateId: string;
   version: number;
-  eventName: string;
 }
 
 export interface EventMessage {
@@ -139,11 +138,13 @@ export class WebSocketService implements OnDestroy {
     this.socket$.ifSome((socket) => socket.complete());
   }
 
-  subscribeTo(
-    aggregateType: string,
-    aggregateId: string,
-    eventName?: string,
-  ): Observable<EventMessage> {
+  subscribeTo(props: {
+    aggregateType: string;
+    aggregateId: string;
+    eventName?: string;
+  }): Observable<EventMessage> {
+    const { aggregateType, aggregateId, eventName } = props;
+
     const subscribeMsg: SubscribeMessage = {
       aggregateType,
       aggregateId,
@@ -162,9 +163,13 @@ export class WebSocketService implements OnDestroy {
         (event) =>
           event.topic.aggregateType === aggregateType &&
           event.topic.aggregateId === aggregateId &&
-          event.topic.eventName === eventName,
+          Option.someOrNone(eventName)
+            .map((name) => name == event.eventName)
+            .orElse(true),
       ),
-      finalize(() => this.unsubscribe(aggregateType, aggregateId, eventName)),
+      finalize(() =>
+        this.unsubscribe({ aggregateType, aggregateId, eventName }),
+      ),
     );
   }
 
@@ -221,11 +226,13 @@ export class WebSocketService implements OnDestroy {
     return result$;
   }
 
-  private unsubscribe(
-    aggregateType: string,
-    aggregateId: string,
-    eventName?: string,
-  ) {
+  private unsubscribe(props: {
+    aggregateType: string;
+    aggregateId: string;
+    eventName?: string;
+  }) {
+    const { aggregateType, aggregateId, eventName } = props;
+
     const unsubscribeMsg: UnsubscribeMessage = {
       aggregateType,
       aggregateId,

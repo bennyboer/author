@@ -1,0 +1,16 @@
+form {
+  padding-top: 10px;
+}
+
+mat-progress-bar {
+  visibility: hidden;
+
+  &.visible {
+    visibility: visible;
+  }
+}
+
+
+mat-form-field {
+  width: 100%;
+}

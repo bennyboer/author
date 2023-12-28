@@ -16,9 +16,18 @@ export class LocalStorageProjectsService extends RemoteProjectsService {
     return of(Array.from(this.projects.values()));
   }
 
+  getProjectRenamedEvents(): Observable<void> {
+    return of();
+  }
+
   createProject(name: string): Observable<void> {
     const id = crypto.randomUUID();
-    const project = new Project({ id, version: 0, name });
+    const project = new Project({
+      id,
+      version: 0,
+      name,
+      createdAt: new Date(),
+    });
 
     this.projects.set(id, project);
 

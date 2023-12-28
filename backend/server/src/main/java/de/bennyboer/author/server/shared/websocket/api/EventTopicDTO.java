@@ -18,9 +18,7 @@ public class EventTopicDTO {
 
     long version;
 
-    String eventName;
-
-    public static EventTopicDTO of(String aggregateType, String aggregateId, long version, String eventName) {
+    public static EventTopicDTO of(String aggregateType, String aggregateId, long version) {
         if (aggregateType == null) {
             throw new IllegalArgumentException("aggregateType must not be null");
         }
@@ -28,7 +26,7 @@ public class EventTopicDTO {
             throw new IllegalArgumentException("aggregateId must not be null");
         }
 
-        return new EventTopicDTO(aggregateType, aggregateId, version, eventName);
+        return new EventTopicDTO(aggregateType, aggregateId, version);
     }
 
 }

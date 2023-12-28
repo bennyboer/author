@@ -86,7 +86,7 @@ export class HttpTreeService implements RemoteTreeService, OnDestroy {
 
   getEvents(treeId: string): Observable<StructureTreeEvent> {
     return this.webSocketService
-      .subscribeTo('TREE', treeId)
+      .subscribeTo({ aggregateType: 'TREE', aggregateId: treeId })
       .pipe(map((msg) => this.mapToStructureTreeEvent(msg)));
   }
 
