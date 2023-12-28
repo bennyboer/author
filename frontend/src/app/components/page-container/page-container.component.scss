@@ -1,0 +1,16 @@
+:host {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+
+  header {
+    flex: 0 0 auto;
+  }
+
+  main {
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+}

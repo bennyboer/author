@@ -1,0 +1,48 @@
+@use "@angular/material" as mat;
+@use "../typography/config" as typography;
+
+@include mat.core();
+
+$mat-theme-primary-palette: map-merge(mat.$blue-grey-palette, (contrast: (100: #150c4a,)));
+$mat-theme-primary: mat.define-palette(
+    $mat-theme-primary-palette,
+  $default: 100,
+  $lighter: 100,
+  $darker: 700,
+  $text: 500
+);
+
+$mat-theme-accent-palette: map-merge(mat.$teal-palette, (contrast: (300: rgba(0, 0, 0, 0.87), A100: white, A200: white,)));
+$mat-theme-accent: mat.define-palette(
+    $mat-theme-accent-palette,
+  $default: 300,
+  $lighter: A100,
+  $darker: A200,
+  $text: 600
+);
+
+$mat-theme-warn-palette: map-merge(mat.$pink-palette, ());
+$mat-theme-warn: mat.define-palette(
+    $mat-theme-warn-palette,
+  $default: A200,
+  $lighter: 500,
+  $darker: 500,
+  $text: A700
+);
+
+$core-theme: mat.define-light-theme((
+  color: (
+    primary: $mat-theme-primary,
+    accent: $mat-theme-accent,
+    warn: $mat-theme-warn
+  ),
+  typography: typography.$mat-typography,
+  density: 0
+));
+
+@include mat.all-component-themes($core-theme);
+
+:root {
+  --low-contrast-color-1: #F5F5F5;
+  --low-contract-color-2: #EAEAEA;
+}

@@ -6,7 +6,6 @@ import {
   ProjectListComponent,
   ProjectListItemComponent,
   ProjectPageContainerComponent,
-  UserProfileDetailsComponent,
 } from './components';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -40,7 +39,6 @@ const COMPONENTS = [
   ProjectPageContainerComponent,
   ProjectListComponent,
   ProjectListItemComponent,
-  UserProfileDetailsComponent,
 ];
 
 const DIALOGS = [EditDialog, CreateDialog];

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { LoginService } from '../../../login';
+import { LoginService } from '../../modules/login';
 
 @Component({
   selector: 'app-user-profile-details',

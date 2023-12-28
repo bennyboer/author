@@ -1,0 +1,14 @@
+@use "@angular/material" as mat;
+
+@font-face {
+  font-family: Lexend;
+  src: url(../../assets/fonts/lexend/Lexend-VariableFont_wght.ttf);
+}
+
+$mat-typography: mat.define-typography-config(
+  $font-family: "Lexend",
+  $body-2: mat.define-typography-level($font-size: 14px, $font-weight: 400, $font-family: Lexend),
+  $body-1: mat.define-typography-level($font-size: 16px, $font-weight: 400, $font-family: Lexend),
+  $caption: mat.define-typography-level($font-size: 16px, $font-weight: Medium, $font-family: Lexend),
+  $button: mat.define-typography-level($font-size: 16px, $font-weight: 500, $font-family: Lexend),
+);

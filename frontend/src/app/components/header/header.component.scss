@@ -1,0 +1,15 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+
+  .leading, .trailing {
+    flex: 0 0 auto;
+  }
+
+  .center {
+    flex: 1 1 auto;
+  }
+}

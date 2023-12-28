@@ -1,10 +1,8 @@
-<li (click)="clicked.emit(item)">
-  <span class="label">
+<span class="label">
     {{ item.name }}
   </span>
-  <span class="actions">
-    <button mat-icon-button (click)="$event.stopPropagation(); editClicked.emit(item)">
-      <mat-icon>edit</mat-icon>
-    </button>
-  </span>
-</li>
+<span class="actions">
+  <button mat-icon-button (click)="$event.stopPropagation(); editClicked.emit(item)">
+    <mat-icon>edit</mat-icon>
+  </button>
+</span>

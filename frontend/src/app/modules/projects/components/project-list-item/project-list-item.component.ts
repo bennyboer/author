@@ -2,6 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  HostBinding,
+  HostListener,
   Input,
   Output,
 } from '@angular/core';
@@ -32,6 +34,9 @@ export class ProjectListItem {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectListItemComponent {
+  @HostBinding('class.project-list-item')
+  readonly projectListItemClass = true;
+
   @Input({ required: true })
   item!: ProjectListItem;
 
@@ -40,4 +45,9 @@ export class ProjectListItemComponent {
 
   @Output()
   editClicked = new EventEmitter<ProjectListItem>();
+
+  @HostListener('click')
+  onClick() {
+    this.clicked.emit(this.item);
+  }
 }

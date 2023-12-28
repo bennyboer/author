@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { loggedInGuard, loggedOutGuard, LoginModule } from './modules/login';
+import { PageContainerComponent } from './components';
 
 const routes: Routes = [
   {
@@ -10,6 +11,7 @@ const routes: Routes = [
   },
   {
     path: '',
+    component: PageContainerComponent,
     canActivate: [loggedInGuard],
     children: [
       {
