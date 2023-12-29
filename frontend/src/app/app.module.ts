@@ -6,6 +6,7 @@ import {
   AppComponent,
   DarkModeToggleComponent,
   HeaderComponent,
+  NavigationComponent,
   PageContainerComponent,
   QuickSettingsComponent,
   UserProfileDetailsComponent,
@@ -17,7 +18,8 @@ import { AuthInterceptor, LoginModule } from './modules/login';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { ThemeService } from './services';
+import { NavigationService, ThemeService } from './services';
+import { MatMenuModule } from '@angular/material/menu';
 
 const COMPONENTS = [
   AppComponent,
@@ -26,6 +28,7 @@ const COMPONENTS = [
   QuickSettingsComponent,
   UserProfileDetailsComponent,
   DarkModeToggleComponent,
+  NavigationComponent,
 ];
 
 @NgModule({
@@ -39,9 +42,11 @@ const COMPONENTS = [
     LoginModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
   ],
   providers: [
     ThemeService,
+    NavigationService,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],

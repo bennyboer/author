@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
+import { Project as StateProject } from './state';
 import { Project } from '../models';
 import { selectors } from './selectors';
 import { actions } from './actions';
@@ -14,7 +15,22 @@ export class ProjectsService {
   }
 
   getAccessibleProjects(): Observable<Project[]> {
-    return this.store.select(selectors.accessibleProjects);
+    return this.store
+      .select(selectors.accessibleProjects)
+      .pipe(
+        map((projects) =>
+          projects.map((p: StateProject) => this.mapToInternalProject(p)),
+        ),
+      );
+  }
+
+  getProject(projectId: string): Observable<Project> {
+    return this.store.select(selectors.project(projectId)).pipe(
+      filter((project) => project.isSome()),
+      map((project) =>
+        project.map((p) => this.mapToInternalProject(p)).orElseThrow(),
+      ),
+    );
   }
 
   createProject(name: string): void {
@@ -39,5 +55,14 @@ export class ProjectsService {
 
   isRenaming(): Observable<boolean> {
     return this.store.select(selectors.isRenaming);
+  }
+
+  private mapToInternalProject(p: StateProject): Project {
+    return new Project({
+      id: p.id,
+      version: p.version,
+      name: p.name,
+      createdAt: p.createdAt,
+    });
   }
 }

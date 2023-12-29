@@ -51,4 +51,10 @@ export class LocalStorageProjectsService extends RemoteProjectsService {
       .map(() => EMPTY)
       .orElse(EMPTY);
   }
+
+  getProject(projectId: string): Observable<Project> {
+    return Option.someOrNone(this.projects.get(projectId))
+      .map(of)
+      .orElse(EMPTY);
+  }
 }

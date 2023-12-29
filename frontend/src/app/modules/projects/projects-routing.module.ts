@@ -13,6 +13,11 @@ const routes: Routes = [
     component: ProjectPageContainerComponent,
     children: [
       {
+        path: '',
+        redirectTo: 'structure',
+        pathMatch: 'full',
+      },
+      {
         path: 'structure',
         loadChildren: () =>
           import('./modules/structure/structure.module').then(

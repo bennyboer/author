@@ -17,4 +17,6 @@ export abstract class RemoteProjectsService {
     version: number,
     name: string,
   ): Observable<void>;
+
+  abstract getProject(projectId: string): Observable<Project>;
 }

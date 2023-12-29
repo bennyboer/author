@@ -91,6 +91,13 @@ export class HttpProjectsService
     });
   }
 
+  getProject(projectId: string): Observable<Project> {
+    return this.http.get<ProjectDTO>(this.url(projectId)).pipe(
+      map((project) => this.mapToProject(project)),
+      tap((project) => this.updateProjectRenamedEventSubscriptions([project])),
+    );
+  }
+
   private url(postfix: string): string {
     return `${environment.apiUrl}/projects/${postfix}`;
   }

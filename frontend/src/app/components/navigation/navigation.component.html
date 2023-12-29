@@ -1,0 +1,51 @@
+<nav>
+  @if (overflow$ | async) {
+    <div class="menu-button-container">
+      @if (canNavigateBack$ | async) {
+        <button mat-icon-button (click)="navigateBack()">
+          <mat-icon>arrow_back_ios</mat-icon>
+        </button>
+      }
+
+      @if (items$ | async;as items) {
+        @if (items.length > 0) {
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>menu</mat-icon>
+          </button>
+        }
+      }
+
+      <span class="label">
+        {{ label$ | async }}
+      </span>
+    </div>
+
+    <mat-menu #menu="matMenu">
+      @for (item of items$ | async;track item.link) {
+        <button mat-menu-item (click)="navigateToItem(item)">
+          {{ item.label }}
+        </button>
+      }
+    </mat-menu>
+  }
+
+  <div class="navigation-container" [class.hidden]="overflow$ | async">
+    @if (canNavigateBack$ | async) {
+      <button mat-icon-button (click)="navigateBack()">
+        <mat-icon>arrow_back_ios</mat-icon>
+      </button>
+    }
+
+    <span class="label">
+      {{ label$ | async }}
+    </span>
+
+    <ul>
+      @for (item of items$ | async;track item.link) {
+        <li routerLinkActive="active-link" (click)="navigateToItem(item)">
+          {{ item.label }}
+        </li>
+      }
+    </ul>
+  </div>
+</nav>

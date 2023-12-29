@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { ProjectsPage } from './pages';
 import { ProjectsRoutingModule } from './projects-routing.module';
 import {
-  NavigationComponent,
   ProjectListComponent,
   ProjectListItemComponent,
   ProjectPageContainerComponent,
@@ -35,10 +34,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 const PAGES = [ProjectsPage];
 
 const COMPONENTS = [
-  NavigationComponent,
-  ProjectPageContainerComponent,
   ProjectListComponent,
   ProjectListItemComponent,
+  ProjectPageContainerComponent,
 ];
 
 const DIALOGS = [EditDialog, CreateDialog];

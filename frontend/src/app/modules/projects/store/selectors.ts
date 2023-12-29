@@ -2,12 +2,19 @@ import { createSelector } from '@ngrx/store';
 import { selectFeature } from '../../../store/selectors';
 import { FEATURE_NAME } from './options';
 import { Option } from '../../shared';
+import { Project } from './state';
 
 const projectsState = selectFeature(FEATURE_NAME);
 const selectAccessibleProjects = createSelector(
   projectsState,
   (state) => state.accessibleProjects,
 );
+const selectProject = (projectId: string) =>
+  createSelector(projectsState, (state) =>
+    Option.someOrNone(
+      state.accessibleProjects.find((p: Project) => p.id === projectId),
+    ),
+  );
 const isError = createSelector(projectsState, (state) =>
   Option.someOrNone(state.errorMessage).isSome(),
 );
@@ -17,6 +24,7 @@ const isRenaming = createSelector(projectsState, (state) => state.renaming);
 
 export const selectors = {
   accessibleProjects: selectAccessibleProjects,
+  project: selectProject,
   isError,
   isCreating,
   isRemoving,

@@ -4,3 +4,4 @@ export { PageContainerComponent } from './page-container/page-container.componen
 export { UserProfileDetailsComponent } from './user-profile-details/user-profile-details.component';
 export { QuickSettingsComponent } from './quick-settings/quick-settings.component';
 export { DarkModeToggleComponent } from './dark-mode-toggle/dark-mode-toggle.component';
+export { NavigationComponent } from './navigation/navigation.component';
