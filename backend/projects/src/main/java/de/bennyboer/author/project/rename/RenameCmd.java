@@ -15,7 +15,7 @@ public class RenameCmd implements Command {
     ProjectName newName;
 
     public static RenameCmd of(ProjectName newName) {
-        checkNotNull(newName, "New name must not be null");
+        checkNotNull(newName, "New name must be given");
 
         return new RenameCmd(newName);
     }

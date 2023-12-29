@@ -14,7 +14,7 @@ public class SessionId {
     String value;
 
     public static SessionId of(WsContext ctx) {
-        checkNotNull(ctx, "Context must not be null");
+        checkNotNull(ctx, "Context must be given");
 
         return new SessionId(ctx.getSessionId());
     }

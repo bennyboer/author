@@ -14,7 +14,7 @@ public class AggregateId {
     String value;
 
     public static AggregateId of(String value) {
-        checkNotNull(value, "AggregateId must not be null");
+        checkNotNull(value, "AggregateId must be given");
         checkArgument(!value.isBlank(), "AggregateId must not be blank");
 
         return new AggregateId(value);

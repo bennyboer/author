@@ -21,8 +21,8 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { NodeDetailsDialog } from '../../dialogs';
 import { map, Observable, Subject, switchMap, takeUntil } from 'rxjs';
-import { RemoteTreeService, StructureTreeService } from '../../store';
-import { StructureTree, StructureTreeNode } from '../../store/state';
+import { RemoteStructureService, StructureService } from '../../store';
+import { Structure, StructureNode } from '../../store/state';
 import { ActivatedRoute } from '@angular/router';
 
 /*
@@ -48,8 +48,8 @@ export class StructurePage implements OnInit, OnDestroy {
   private readonly destroy$: Subject<void> = new Subject<void>();
 
   constructor(
-    private readonly structureTreeService: StructureTreeService,
-    private readonly remoteTreeService: RemoteTreeService,
+    private readonly structureService: StructureService,
+    private readonly remoteStructureService: RemoteStructureService,
     private readonly route: ActivatedRoute,
     private readonly dialog: MatDialog,
   ) {}
@@ -58,15 +58,17 @@ export class StructurePage implements OnInit, OnDestroy {
     const projectId$ = this.route.params.pipe(
       map((params) => params['projectId']),
     );
-    const treeId$ = projectId$.pipe(
+    const structureId$ = projectId$.pipe(
       switchMap((projectId) =>
-        this.remoteTreeService.findTreeIdByProjectId(projectId),
+        this.remoteStructureService.findStructureIdByProjectId(projectId),
       ),
     );
-    treeId$.subscribe((treeId) => this.structureTreeService.loadTree(treeId));
+    structureId$.subscribe((structureId) =>
+      this.structureService.loadStructure(structureId),
+    );
 
-    this.treeGraph$ = this.structureTreeService.getTree().pipe(
-      map((tree) => this.mapToTreeGraph(tree)),
+    this.treeGraph$ = this.structureService.getStructure().pipe(
+      map((structure) => this.mapToTreeGraph(structure)),
       takeUntil(this.destroy$),
     );
   }
@@ -88,9 +90,9 @@ export class StructurePage implements OnInit, OnDestroy {
       );
   }
 
-  private mapToTreeGraph(tree: StructureTree): TreeGraph {
+  private mapToTreeGraph(structure: Structure): TreeGraph {
     const nodeList: [TreeGraphNodeId, TreeGraphNode][] = Object.values(
-      tree.nodes,
+      structure.nodes,
     ).map((node) => {
       const mappedNode: TreeGraphNode = this.mapToTreeGraphNode(node);
 
@@ -98,7 +100,7 @@ export class StructurePage implements OnInit, OnDestroy {
     });
 
     const nodes = new Map<TreeGraphNodeId, TreeGraphNode>(nodeList);
-    const root = tree.rootId;
+    const root = structure.rootId;
 
     return {
       nodes,
@@ -106,7 +108,7 @@ export class StructurePage implements OnInit, OnDestroy {
     };
   }
 
-  private mapToTreeGraphNode(node: StructureTreeNode): TreeGraphNode {
+  private mapToTreeGraphNode(node: StructureNode): TreeGraphNode {
     return {
       id: node.id,
       label: node.name,
@@ -119,29 +121,26 @@ export class StructurePage implements OnInit, OnDestroy {
     switch (cmd.type) {
       case TreeGraphCommandType.ADD_NODE:
         const addNodeCmd = cmd as AddNodeCommand;
-        this.structureTreeService.addNode(
-          addNodeCmd.parentNodeId,
-          addNodeCmd.name,
-        );
+        this.structureService.addNode(addNodeCmd.parentNodeId, addNodeCmd.name);
         break;
       case TreeGraphCommandType.REMOVE_NODE:
         const removeNodeCmd = cmd as RemoveNodeCommand;
-        this.structureTreeService.removeNode(removeNodeCmd.nodeId);
+        this.structureService.removeNode(removeNodeCmd.nodeId);
         break;
       case TreeGraphCommandType.TOGGLE_NODE:
         const toggleNodeCmd = cmd as ToggleNodeCommand;
-        this.structureTreeService.toggleNode(toggleNodeCmd.nodeId);
+        this.structureService.toggleNode(toggleNodeCmd.nodeId);
         break;
       case TreeGraphCommandType.SWAP_NODES:
         const swapNodesCmd = cmd as SwapNodesCommand;
-        this.structureTreeService.swapNodes(
+        this.structureService.swapNodes(
           swapNodesCmd.nodeId1,
           swapNodesCmd.nodeId2,
         );
         break;
       case TreeGraphCommandType.RENAME_NODE:
         const renameNodeCmd = cmd as RenameNodeCommand;
-        this.structureTreeService.renameNode(
+        this.structureService.renameNode(
           renameNodeCmd.nodeId,
           renameNodeCmd.name,
         );

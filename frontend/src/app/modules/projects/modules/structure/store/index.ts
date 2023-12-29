@@ -11,10 +11,10 @@ export const structureStore = {
 };
 
 export { StructureStoreEffects } from './effects';
-export { StructureTreeService } from './service';
+export { StructureService } from './service';
 
 export {
-  RemoteTreeService,
-  HttpTreeService,
-  LocalStorageTreeService,
+  RemoteStructureService,
+  HttpStructureService,
+  LocalStorageStructureService,
 } from './remote';

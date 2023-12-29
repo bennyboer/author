@@ -16,8 +16,8 @@ public class AggregateIdAndVersion<ID> {
     Version version;
 
     public static <ID> AggregateIdAndVersion<ID> of(ID id, Version version) {
-        checkNotNull(id, "Id must not be null");
-        checkNotNull(version, "Version must not be null");
+        checkNotNull(id, "Id must be given");
+        checkNotNull(version, "Version must be given");
 
         return new AggregateIdAndVersion<>(id, version);
     }

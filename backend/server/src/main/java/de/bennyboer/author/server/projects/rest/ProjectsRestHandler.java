@@ -26,10 +26,14 @@ public class ProjectsRestHandler {
     public void getProject(Context ctx) {
         var projectId = ctx.pathParam("projectId");
 
-        handle(ctx, (agent) -> queryFacade.getProject(projectId, agent).singleOptional(), tree -> tree.ifPresentOrElse(
-                ctx::json,
-                () -> ctx.status(HttpStatus.NOT_FOUND)
-        ));
+        handle(
+                ctx,
+                (agent) -> queryFacade.getProject(projectId, agent).singleOptional(),
+                project -> project.ifPresentOrElse(
+                        ctx::json,
+                        () -> ctx.status(HttpStatus.NOT_FOUND)
+                )
+        );
     }
 
     public void createProject(Context ctx) {

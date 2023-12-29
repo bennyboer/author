@@ -19,8 +19,8 @@ public class LoginCmd implements Command {
     Instant now;
 
     public static LoginCmd of(Password password, Instant now) {
-        checkNotNull(password, "Password must not be null");
-        checkNotNull(now, "Now must not be null");
+        checkNotNull(password, "Password must be given");
+        checkNotNull(now, "Now must be given");
 
         return new LoginCmd(password, now);
     }

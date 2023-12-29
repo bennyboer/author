@@ -15,11 +15,11 @@ import {
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import {
-  HttpTreeService,
-  RemoteTreeService,
+  HttpStructureService,
+  RemoteStructureService,
+  StructureService,
   structureStore,
   StructureStoreEffects,
-  StructureTreeService,
 } from './store';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
@@ -47,10 +47,10 @@ const DIALOGS = [NodeDetailsDialog];
   ],
   declarations: [...PAGES, ...COMPONENTS, ...DIALOGS],
   providers: [
-    StructureTreeService,
+    StructureService,
     {
-      provide: RemoteTreeService,
-      useClass: HttpTreeService,
+      provide: RemoteStructureService,
+      useClass: HttpStructureService,
     },
   ],
   exports: [],

@@ -37,7 +37,7 @@ public class PermissionEventSubscriptionTarget {
             @Nullable AggregateId aggregateId,
             @Nullable Action action
     ) {
-        checkNotNull(aggregateType, "Aggregate type must not be null");
+        checkNotNull(aggregateType, "Aggregate type must be given");
 
         return new PermissionEventSubscriptionTarget(userId, aggregateType, aggregateId, action);
     }

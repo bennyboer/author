@@ -1,8 +1,8 @@
 package de.bennyboer.author.server.structure.transformer;
 
 import de.bennyboer.author.server.structure.api.NodeDTO;
-import de.bennyboer.author.structure.tree.nodes.Node;
-import de.bennyboer.author.structure.tree.nodes.NodeId;
+import de.bennyboer.author.structure.nodes.Node;
+import de.bennyboer.author.structure.nodes.NodeId;
 
 import java.util.List;
 import java.util.Map;

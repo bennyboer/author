@@ -1,5 +1,5 @@
-export { StructureTreeEvent } from './event';
-export { StructureTreeEventType } from './structure-tree-event-type';
+export { StructureEvent } from './event';
+export { StructureEventType } from './structure-event-type';
 export { NodeAddedEvent } from './added';
 export { NodeRemovedEvent } from './removed';
 export { NodeToggledEvent } from './toggled';

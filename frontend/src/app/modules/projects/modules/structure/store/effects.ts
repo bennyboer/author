@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { RemoteTreeService } from './remote';
+import { RemoteStructureService } from './remote';
 import { catchError, map, mergeMap, of, switchMap } from 'rxjs';
 import {
   addingNodeFailed,
   addNode,
   eventReceived,
-  loadingTreeFailed,
-  loadTree,
+  loadingStructureFailed,
+  loadStructure,
   nodeAdded,
   nodeRenamed,
   nodesSwapped,
@@ -17,11 +17,11 @@ import {
   removingNodeFailed,
   renameNode,
   renamingNodeFailed,
+  structureLoaded,
   swapNodes,
   swappingNodesFailed,
   toggleNode,
   togglingNodeFailed,
-  treeLoaded,
 } from './actions';
 
 @Injectable()
@@ -29,18 +29,20 @@ export class StructureStoreEffects {
   toggleNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(toggleNode),
-      mergeMap(({ treeId, version, nodeId }) => {
-        return this.treeService.toggleNode(treeId, version, nodeId).pipe(
-          map(() => nodeToggled({ nodeId })),
-          catchError((error) =>
-            of(
-              togglingNodeFailed({
-                nodeId: error.nodeId,
-                message: error.message,
-              }),
+      mergeMap(({ structureId, version, nodeId }) => {
+        return this.structureService
+          .toggleNode(structureId, version, nodeId)
+          .pipe(
+            map(() => nodeToggled({ nodeId })),
+            catchError((error) =>
+              of(
+                togglingNodeFailed({
+                  nodeId: error.nodeId,
+                  message: error.message,
+                }),
+              ),
             ),
-          ),
-        );
+          );
       }),
     ),
   );
@@ -48,9 +50,9 @@ export class StructureStoreEffects {
   addNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(addNode),
-      mergeMap(({ treeId, version, parentNodeId, name }) => {
-        return this.treeService
-          .addNode(treeId, version, parentNodeId, name)
+      mergeMap(({ structureId, version, parentNodeId, name }) => {
+        return this.structureService
+          .addNode(structureId, version, parentNodeId, name)
           .pipe(
             map(() => nodeAdded({ parentNodeId })),
             catchError((error) =>
@@ -69,18 +71,20 @@ export class StructureStoreEffects {
   removeNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(removeNode),
-      mergeMap(({ treeId, version, nodeId }) => {
-        return this.treeService.removeNode(treeId, version, nodeId).pipe(
-          map(() => removedNode({ nodeId })),
-          catchError((error) =>
-            of(
-              removingNodeFailed({
-                nodeId: error.nodeId,
-                message: error.message,
-              }),
+      mergeMap(({ structureId, version, nodeId }) => {
+        return this.structureService
+          .removeNode(structureId, version, nodeId)
+          .pipe(
+            map(() => removedNode({ nodeId })),
+            catchError((error) =>
+              of(
+                removingNodeFailed({
+                  nodeId: error.nodeId,
+                  message: error.message,
+                }),
+              ),
             ),
-          ),
-        );
+          );
       }),
     ),
   );
@@ -88,18 +92,20 @@ export class StructureStoreEffects {
   renameNode$ = createEffect(() =>
     this.actions.pipe(
       ofType(renameNode),
-      mergeMap(({ treeId, version, nodeId, name }) => {
-        return this.treeService.renameNode(treeId, version, nodeId, name).pipe(
-          map(() => nodeRenamed({ nodeId })),
-          catchError((error) =>
-            of(
-              renamingNodeFailed({
-                nodeId: error.nodeId,
-                message: error.message,
-              }),
+      mergeMap(({ structureId, version, nodeId, name }) => {
+        return this.structureService
+          .renameNode(structureId, version, nodeId, name)
+          .pipe(
+            map(() => nodeRenamed({ nodeId })),
+            catchError((error) =>
+              of(
+                renamingNodeFailed({
+                  nodeId: error.nodeId,
+                  message: error.message,
+                }),
+              ),
             ),
-          ),
-        );
+          );
       }),
     ),
   );
@@ -107,9 +113,9 @@ export class StructureStoreEffects {
   swapNodes$ = createEffect(() =>
     this.actions.pipe(
       ofType(swapNodes),
-      mergeMap(({ treeId, version, nodeId1, nodeId2 }) => {
-        return this.treeService
-          .swapNodes(treeId, version, nodeId1, nodeId2)
+      mergeMap(({ structureId, version, nodeId1, nodeId2 }) => {
+        return this.structureService
+          .swapNodes(structureId, version, nodeId1, nodeId2)
           .pipe(
             map(() => nodesSwapped({ nodeId1, nodeId2 })),
             catchError((error) =>
@@ -126,22 +132,24 @@ export class StructureStoreEffects {
     ),
   );
 
-  subscribeToTreeEvents$ = createEffect(() =>
+  subscribeToStructureEvents$ = createEffect(() =>
     this.actions.pipe(
-      ofType(loadTree),
-      switchMap(({ treeId }) => this.treeService.getEvents(treeId)),
+      ofType(loadStructure),
+      switchMap(({ structureId }) =>
+        this.structureService.getEvents(structureId),
+      ),
       map((event) => eventReceived({ event })),
     ),
   );
 
-  loadTree$ = createEffect(() =>
+  loadStructure$ = createEffect(() =>
     this.actions.pipe(
-      ofType(loadTree),
-      mergeMap(({ treeId }) => {
-        return this.treeService.getTree(treeId).pipe(
-          map((tree) => treeLoaded({ tree })),
+      ofType(loadStructure),
+      mergeMap(({ structureId }) => {
+        return this.structureService.getStructure(structureId).pipe(
+          map((structure) => structureLoaded({ structure })),
           catchError((error) =>
-            of(loadingTreeFailed({ message: error.message })),
+            of(loadingStructureFailed({ message: error.message })),
           ),
         );
       }),
@@ -150,6 +158,6 @@ export class StructureStoreEffects {
 
   constructor(
     private readonly actions: Actions,
-    private readonly treeService: RemoteTreeService,
+    private readonly structureService: RemoteStructureService,
   ) {}
 }

@@ -25,7 +25,7 @@ public class Password {
     }
 
     public static Password withoutValidation(CharSequence value) {
-        checkNotNull(value, "Password value must not be null");
+        checkNotNull(value, "Password value must be given");
 
         return new Password(value);
     }

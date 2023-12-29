@@ -153,10 +153,10 @@ public class InMemoryEventSourcingRepo implements EventSourcingRepo {
 
         public static AggregateIdAndType of(AggregateId aggregateId, AggregateType type) {
             if (aggregateId == null) {
-                throw new IllegalArgumentException("AggregateId must not be null");
+                throw new IllegalArgumentException("AggregateId must be given");
             }
             if (type == null) {
-                throw new IllegalArgumentException("AggregateType must not be null");
+                throw new IllegalArgumentException("AggregateType must be given");
             }
 
             return new AggregateIdAndType(aggregateId, type);

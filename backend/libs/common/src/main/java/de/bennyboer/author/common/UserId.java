@@ -14,7 +14,7 @@ public class UserId {
 
     public static UserId of(String value) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("UserId must not be null or blank");
+            throw new IllegalArgumentException("UserId must be given or blank");
         }
 
         return new UserId(value);

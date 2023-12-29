@@ -16,8 +16,8 @@ public class EventWithMetadata {
     EventMetadata metadata;
 
     public static EventWithMetadata of(Event event, EventMetadata metadata) {
-        checkNotNull(event, "Event must not be null");
-        checkNotNull(metadata, "EventMetadata must not be null");
+        checkNotNull(event, "Event must be given");
+        checkNotNull(metadata, "EventMetadata must be given");
 
         return new EventWithMetadata(event, metadata);
     }

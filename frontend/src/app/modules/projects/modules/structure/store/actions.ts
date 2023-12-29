@@ -1,121 +1,121 @@
 import { createAction, props } from '@ngrx/store';
-import { StructureTree, StructureTreeNodeId } from './state';
-import { StructureTreeEvent } from './remote';
+import { Structure, StructureNodeId } from './state';
+import { StructureEvent } from './remote';
 
 export const toggleNode = createAction(
   '[Structure] Toggle Node',
   props<{
-    treeId: string;
+    structureId: string;
     version: number;
-    nodeId: StructureTreeNodeId;
+    nodeId: StructureNodeId;
   }>(),
 );
 export const nodeToggled = createAction(
   '[Structure] Node Toggled',
-  props<{ nodeId: StructureTreeNodeId }>(),
+  props<{ nodeId: StructureNodeId }>(),
 );
 export const togglingNodeFailed = createAction(
   '[Structure] Toggling Node Failed',
-  props<{ nodeId: StructureTreeNodeId; message: string }>(),
+  props<{ nodeId: StructureNodeId; message: string }>(),
 );
 
 export const addNode = createAction(
   '[Structure] Add Node',
   props<{
-    treeId: string;
+    structureId: string;
     version: number;
-    parentNodeId: StructureTreeNodeId;
+    parentNodeId: StructureNodeId;
     name: string;
   }>(),
 );
 export const nodeAdded = createAction(
   '[Structure] Node Added',
   props<{
-    parentNodeId: StructureTreeNodeId;
+    parentNodeId: StructureNodeId;
   }>(),
 );
 export const addingNodeFailed = createAction(
   '[Structure] Adding Node Failed',
-  props<{ parentNodeId: StructureTreeNodeId; message: string }>(),
+  props<{ parentNodeId: StructureNodeId; message: string }>(),
 );
 
 export const removeNode = createAction(
   '[Structure] Remove Node',
   props<{
-    treeId: string;
+    structureId: string;
     version: number;
-    nodeId: StructureTreeNodeId;
+    nodeId: StructureNodeId;
   }>(),
 );
 export const removedNode = createAction(
   '[Structure] Removed Node',
-  props<{ nodeId: StructureTreeNodeId }>(),
+  props<{ nodeId: StructureNodeId }>(),
 );
 export const removingNodeFailed = createAction(
   '[Structure] Removing Node Failed',
-  props<{ nodeId: StructureTreeNodeId; message: string }>(),
+  props<{ nodeId: StructureNodeId; message: string }>(),
 );
 
 export const renameNode = createAction(
   '[Structure] Rename Node',
   props<{
-    treeId: string;
+    structureId: string;
     version: number;
-    nodeId: StructureTreeNodeId;
+    nodeId: StructureNodeId;
     name: string;
   }>(),
 );
 export const nodeRenamed = createAction(
   '[Structure] Node Renamed',
-  props<{ nodeId: StructureTreeNodeId }>(),
+  props<{ nodeId: StructureNodeId }>(),
 );
 export const renamingNodeFailed = createAction(
   '[Structure] Renaming Node Failed',
-  props<{ nodeId: StructureTreeNodeId; message: string }>(),
+  props<{ nodeId: StructureNodeId; message: string }>(),
 );
 
 export const swapNodes = createAction(
   '[Structure] Swap Nodes',
   props<{
-    treeId: string;
+    structureId: string;
     version: number;
-    nodeId1: StructureTreeNodeId;
-    nodeId2: StructureTreeNodeId;
+    nodeId1: StructureNodeId;
+    nodeId2: StructureNodeId;
   }>(),
 );
 export const nodesSwapped = createAction(
   '[Structure] Nodes Swapped',
-  props<{ nodeId1: StructureTreeNodeId; nodeId2: StructureTreeNodeId }>(),
+  props<{ nodeId1: StructureNodeId; nodeId2: StructureNodeId }>(),
 );
 export const swappingNodesFailed = createAction(
   '[Structure] Swapping Nodes Failed',
   props<{
-    nodeId1: StructureTreeNodeId;
-    nodeId2: StructureTreeNodeId;
+    nodeId1: StructureNodeId;
+    nodeId2: StructureNodeId;
     message: string;
   }>(),
 );
 
 export const eventReceived = createAction(
   '[Structure] Event Received',
-  props<{ event: StructureTreeEvent }>(),
+  props<{ event: StructureEvent }>(),
 );
 
-export const loadTree = createAction(
-  '[Structure] Load Tree',
-  props<{ treeId: string }>(),
+export const loadStructure = createAction(
+  '[Structure] Load Structure',
+  props<{ structureId: string }>(),
 );
-export const treeLoaded = createAction(
-  '[Structure] Tree Loaded',
-  props<{ tree: StructureTree }>(),
+export const structureLoaded = createAction(
+  '[Structure] Structure Loaded',
+  props<{ structure: Structure }>(),
 );
-export const loadingTreeFailed = createAction(
-  '[Structure] Loading Tree Failed',
+export const loadingStructureFailed = createAction(
+  '[Structure] Loading Structure Failed',
   props<{ message: string }>(),
 );
 
 export const actions = {
-  loadTree,
+  loadStructure,
   toggleNode,
   addNode,
   removeNode,

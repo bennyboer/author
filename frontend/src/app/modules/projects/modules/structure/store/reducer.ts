@@ -1,15 +1,15 @@
 import { createReducer, on } from '@ngrx/store';
-import { initialState, StructureTree, TreeMutator } from './state';
+import { initialState, Structure, StructureMutator } from './state';
 import {
   addingNodeFailed,
   eventReceived,
-  loadingTreeFailed,
-  loadTree,
+  loadingStructureFailed,
+  loadStructure,
   removingNodeFailed,
   renamingNodeFailed,
+  structureLoaded,
   swappingNodesFailed,
   togglingNodeFailed,
-  treeLoaded,
 } from './actions';
 import {
   NodeAddedEvent,
@@ -17,29 +17,40 @@ import {
   NodeRenamedEvent,
   NodesSwappedEvent,
   NodeToggledEvent,
-  StructureTreeEvent,
-  StructureTreeEventType,
+  StructureEvent,
+  StructureEventType,
 } from './remote';
 import { Option } from '../../../../shared';
 
 export const reducer = createReducer(
   initialState,
 
-  on(loadTree, (state) => ({ ...state, tree: undefined, loading: true })),
-  on(treeLoaded, (state, { tree }) => ({ ...state, tree, loading: false })),
-  on(loadingTreeFailed, (state, { message }) => ({
+  on(loadStructure, (state) => ({
     ...state,
-    errorMessage: `Failed to load tree: ${message}`,
+    structure: undefined,
+    loading: true,
+  })),
+  on(structureLoaded, (state, { structure }) => ({
+    ...state,
+    structure,
+    loading: false,
+  })),
+  on(loadingStructureFailed, (state, { message }) => ({
+    ...state,
+    errorMessage: `Failed to load structure: ${message}`,
   })),
 
   on(eventReceived, (state, { event }) =>
-    Option.someOrNone(state.tree)
-      .flatMap((tree) =>
-        applyEvent(tree, event).map((tree) => ({ ...state, tree })),
+    Option.someOrNone(state.structure)
+      .flatMap((structure) =>
+        applyEvent(structure, event).map((structure) => ({
+          ...state,
+          structure,
+        })),
       )
       .orElse({
         ...state,
-        tree: state.tree!,
+        structure: state.structure!,
       }),
   ),
 
@@ -70,34 +81,37 @@ export const reducer = createReducer(
 );
 
 const applyEvent = (
-  tree: StructureTree,
-  event: StructureTreeEvent,
-): Option<StructureTree> => {
-  const treeMutator = new TreeMutator(tree);
+  structure: Structure,
+  event: StructureEvent,
+): Option<Structure> => {
+  const structureMutator = new StructureMutator(structure);
 
   switch (event.type) {
-    case StructureTreeEventType.NODE_ADDED:
+    case StructureEventType.NODE_ADDED:
       const nodeAddedEvent = event as NodeAddedEvent;
-      return treeMutator.addNode(
+      return structureMutator.addNode(
         nodeAddedEvent.parentNodeId,
         nodeAddedEvent.id,
         nodeAddedEvent.name,
       );
-    case StructureTreeEventType.NODE_REMOVED:
+    case StructureEventType.NODE_REMOVED:
       const nodeRemovedEvent = event as NodeRemovedEvent;
-      return treeMutator.removeNode(nodeRemovedEvent.id);
-    case StructureTreeEventType.NODE_TOGGLED:
+      return structureMutator.removeNode(nodeRemovedEvent.id);
+    case StructureEventType.NODE_TOGGLED:
       const nodeToggledEvent = event as NodeToggledEvent;
-      return treeMutator.toggleNode(nodeToggledEvent.id);
-    case StructureTreeEventType.NODES_SWAPPED:
+      return structureMutator.toggleNode(nodeToggledEvent.id);
+    case StructureEventType.NODES_SWAPPED:
       const nodesSwappedEvent = event as NodesSwappedEvent;
-      return treeMutator.swapNodes(
+      return structureMutator.swapNodes(
         nodesSwappedEvent.id1,
         nodesSwappedEvent.id2,
       );
-    case StructureTreeEventType.NODE_RENAMED:
+    case StructureEventType.NODE_RENAMED:
       const nodeRenamedEvent = event as NodeRenamedEvent;
-      return treeMutator.renameNode(nodeRenamedEvent.id, nodeRenamedEvent.name);
+      return structureMutator.renameNode(
+        nodeRenamedEvent.id,
+        nodeRenamedEvent.name,
+      );
     default:
       return Option.none();
   }

@@ -1,12 +1,12 @@
-import { StructureTree } from './tree';
+import { Structure } from './structure';
 
-export * from './tree';
+export * from './structure';
 export * from './node';
-export { TreeMutator } from './tree-mutator';
+export { StructureMutator } from './structure-mutator';
 
 export interface State {
   loading: boolean;
-  tree?: StructureTree | undefined;
+  structure?: Structure;
   errorMessage?: string;
 }
 

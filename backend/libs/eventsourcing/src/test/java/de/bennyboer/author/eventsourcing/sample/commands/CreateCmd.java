@@ -23,10 +23,10 @@ public class CreateCmd implements Command {
 
     public static CreateCmd of(String title, String description, Instant deletedAt) {
         if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title must not be null or empty");
+            throw new IllegalArgumentException("Title must be given or empty");
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Description must not be null or empty");
+            throw new IllegalArgumentException("Description must be given or empty");
         }
 
         return new CreateCmd(title, description, deletedAt);

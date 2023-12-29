@@ -1,6 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, takeUntil } from 'rxjs';
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { StyleManagerService } from '../style-manager/style-manager.service';
 
 export enum Theme {
@@ -23,15 +22,14 @@ export class ThemeService implements OnDestroy {
   private darkModeMediaQuery!: MediaQueryList;
   private darkModeEventListener!: (event: MediaQueryListEvent) => void;
 
-  constructor(
-    private readonly styleManager: StyleManagerService,
-    private readonly overlayContainer: OverlayContainer,
-  ) {
+  constructor(private readonly styleManager: StyleManagerService) {
+    console.log('ThemeService.constructor()');
     this.theme$
       .pipe(takeUntil(this.destroy$))
       .subscribe((theme) => this.applyTheme(theme));
 
     this.listenToSystemPreferences();
+    this.applyTheme(this.theme$.value);
   }
 
   ngOnDestroy(): void {
@@ -81,6 +79,7 @@ export class ThemeService implements OnDestroy {
     this.removeTheme();
 
     this.styleManager.setStyle('theme', `${THEME_NAME_LOOKUP[theme]}.css`);
+    console.log(`Applied theme: ${theme}`);
   }
 
   private removeTheme(): void {

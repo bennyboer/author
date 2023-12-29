@@ -14,7 +14,7 @@ public class ProjectName {
     String value;
 
     public static ProjectName of(String value) {
-        checkNotNull(value, "ProjectName must not be null");
+        checkNotNull(value, "ProjectName must be given");
         checkArgument(!value.isBlank(), "ProjectName must not be blank");
 
         return new ProjectName(value);

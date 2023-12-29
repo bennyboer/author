@@ -16,7 +16,7 @@ public class EventName {
     String value;
 
     public static EventName of(String name) {
-        checkNotNull(name, "Event name must not be null");
+        checkNotNull(name, "Event name must be given");
         checkArgument(!name.isBlank(), "Event name must not be blank");
 
         name = name.trim()

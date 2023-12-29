@@ -16,7 +16,7 @@ public class AggregateType {
     String value;
 
     public static AggregateType of(String value) {
-        checkNotNull(value, "AggregateType must not be null");
+        checkNotNull(value, "AggregateType must be given");
         checkArgument(!value.isBlank(), "AggregateType must not be blank");
 
         value = value.trim()

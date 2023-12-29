@@ -16,7 +16,7 @@ public class ProjectId {
     String value;
 
     public static ProjectId of(String value) {
-        checkNotNull(value, "ProjectId must not be null");
+        checkNotNull(value, "ProjectId must be given");
         checkArgument(!value.isBlank(), "ProjectId must not be blank");
 
         return new ProjectId(value);

@@ -44,7 +44,7 @@ public class Permission {
      * var permission = Permission.builder()
      *                            .user(userId)
      *                            .isAllowedTo(ADD_NODES)
-     *                            .on(treeResource);
+     *                            .on(structureResource);
      * </pre>
      */
     public static class Builder {

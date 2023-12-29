@@ -15,7 +15,7 @@ public class CreateCmd implements Command {
     ProjectName name;
 
     public static CreateCmd of(ProjectName name) {
-        checkNotNull(name, "Name must not be null");
+        checkNotNull(name, "Name must be given");
 
         return new CreateCmd(name);
     }

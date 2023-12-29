@@ -1,27 +1,28 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { filter, Observable, tap } from 'rxjs';
-import { StructureTree } from './state';
+import { filter, map, Observable, tap } from 'rxjs';
+import { Structure } from './state';
 import { structureStore } from './index';
 import { Option } from '../../../../shared';
 
 @Injectable()
-export class StructureTreeService {
-  private treeId: Option<string> = Option.none();
+export class StructureService {
+  private structureId: Option<string> = Option.none();
   private version: Option<number> = Option.none();
 
   constructor(private readonly store: Store) {}
 
-  loadTree(treeId: string): void {
-    this.store.dispatch(structureStore.actions.loadTree({ treeId }));
+  loadStructure(structureId: string): void {
+    this.store.dispatch(structureStore.actions.loadStructure({ structureId }));
   }
 
-  getTree(): Observable<StructureTree> {
-    return this.store.select(structureStore.selectors.tree).pipe(
-      filter((tree) => !!tree),
-      tap((tree) => {
-        this.treeId = Option.some(tree.id);
-        this.version = Option.some(tree.version);
+  getStructure(): Observable<Structure> {
+    return this.store.select(structureStore.selectors.structure).pipe(
+      filter((structure) => structure.isSome()),
+      map((structure) => structure.orElseThrow()),
+      tap((structure) => {
+        this.structureId = Option.some(structure.id);
+        this.version = Option.some(structure.version);
       }),
     );
   }
@@ -29,7 +30,7 @@ export class StructureTreeService {
   toggleNode(nodeId: string) {
     this.store.dispatch(
       structureStore.actions.toggleNode({
-        treeId: this.treeId.orElseThrow(),
+        structureId: this.structureId.orElseThrow(),
         version: this.version.orElseThrow(),
         nodeId,
       }),
@@ -39,7 +40,7 @@ export class StructureTreeService {
   addNode(parentNodeId: string, name: string) {
     this.store.dispatch(
       structureStore.actions.addNode({
-        treeId: this.treeId.orElseThrow(),
+        structureId: this.structureId.orElseThrow(),
         version: this.version.orElseThrow(),
         parentNodeId,
         name,
@@ -50,7 +51,7 @@ export class StructureTreeService {
   removeNode(nodeId: string) {
     this.store.dispatch(
       structureStore.actions.removeNode({
-        treeId: this.treeId.orElseThrow(),
+        structureId: this.structureId.orElseThrow(),
         version: this.version.orElseThrow(),
         nodeId,
       }),
@@ -60,7 +61,7 @@ export class StructureTreeService {
   swapNodes(nodeId1: string, nodeId2: string) {
     this.store.dispatch(
       structureStore.actions.swapNodes({
-        treeId: this.treeId.orElseThrow(),
+        structureId: this.structureId.orElseThrow(),
         version: this.version.orElseThrow(),
         nodeId1,
         nodeId2,
@@ -71,7 +72,7 @@ export class StructureTreeService {
   renameNode(nodeId: string, name: string) {
     this.store.dispatch(
       structureStore.actions.renameNode({
-        treeId: this.treeId.orElseThrow(),
+        structureId: this.structureId.orElseThrow(),
         version: this.version.orElseThrow(),
         nodeId,
         name,

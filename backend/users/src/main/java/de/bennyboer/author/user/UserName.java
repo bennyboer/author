@@ -13,7 +13,7 @@ public class UserName {
     String value;
 
     public static UserName of(String value) {
-        checkNotNull(value, "User name must not be null");
+        checkNotNull(value, "User name must be given");
 
         return new UserName(value);
     }

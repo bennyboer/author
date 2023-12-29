@@ -13,7 +13,7 @@ public class UpdateDescriptionCmd implements Command {
 
     public static UpdateDescriptionCmd of(String description) {
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Description must not be null or empty");
+            throw new IllegalArgumentException("Description must be given or empty");
         }
 
         return new UpdateDescriptionCmd(description);

@@ -4,6 +4,7 @@ import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import io.javalin.http.Context;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -12,10 +13,13 @@ import java.util.Optional;
 @Slf4j
 public class Auth {
 
+    @Getter
+    private static Token systemToken;
     private static TokenVerifier tokenVerifier;
 
-    public static void init(TokenVerifier tokenVerifier) {
+    public static void init(TokenVerifier tokenVerifier, Token systemToken) {
         Auth.tokenVerifier = tokenVerifier;
+        Auth.systemToken = systemToken;
     }
 
     public static Mono<Agent> toAgent(Context ctx) {
@@ -28,7 +32,9 @@ public class Auth {
     public static Mono<Agent> toAgent(Token token) {
         return Mono.just(token)
                 .flatMap(tokenVerifier::verify)
-                .map(content -> Agent.user(content.getUserId()))
+                .map(content -> content.getUserId()
+                        .map(Agent::user)
+                        .orElse(Agent.system()))
                 .onErrorResume(throwable -> {
                     log.warn("Could not verify access token", throwable);
 

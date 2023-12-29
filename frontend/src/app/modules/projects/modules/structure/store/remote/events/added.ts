@@ -1,13 +1,13 @@
-import { StructureTreeEvent } from './event';
-import { StructureTreeEventType } from './structure-tree-event-type';
-import { StructureTreeNodeId } from '../../state';
+import { StructureEvent } from './event';
+import { StructureEventType } from './structure-event-type';
+import { StructureNodeId } from '../../state';
 
-export class NodeAddedEvent implements StructureTreeEvent {
-  readonly type = StructureTreeEventType.NODE_ADDED;
+export class NodeAddedEvent implements StructureEvent {
+  readonly type = StructureEventType.NODE_ADDED;
 
   constructor(
-    public readonly parentNodeId: StructureTreeNodeId,
-    public readonly id: StructureTreeNodeId,
+    public readonly parentNodeId: StructureNodeId,
+    public readonly id: StructureNodeId,
     public readonly name: string,
   ) {}
 }

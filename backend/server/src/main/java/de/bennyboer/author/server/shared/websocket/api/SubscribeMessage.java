@@ -32,7 +32,7 @@ public class SubscribeMessage {
             String aggregateId,
             @Nullable String eventName
     ) {
-        checkNotNull(aggregateType, "Aggregate type must not be null");
+        checkNotNull(aggregateType, "Aggregate type must be given");
 
         return new SubscribeMessage(aggregateType, aggregateId, eventName);
     }
@@ -48,5 +48,5 @@ public class SubscribeMessage {
     public Optional<EventName> getEventName() {
         return Optional.ofNullable(eventName).map(EventName::of);
     }
-    
+
 }

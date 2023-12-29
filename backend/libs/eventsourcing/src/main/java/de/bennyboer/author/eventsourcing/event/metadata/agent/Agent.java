@@ -21,8 +21,8 @@ public class Agent {
     AgentId id;
 
     public static Agent of(AgentType type, AgentId id) {
-        checkNotNull(type, "AgentType must not be null");
-        checkNotNull(id, "AgentId must not be null");
+        checkNotNull(type, "AgentType must be given");
+        checkNotNull(id, "AgentId must be given");
 
         return new Agent(type, id);
     }

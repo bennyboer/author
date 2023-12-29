@@ -18,8 +18,8 @@ public class CreateCmd implements Command {
     Password password;
 
     public static CreateCmd of(UserName name, Password password) {
-        checkNotNull(name, "Name must not be null");
-        checkNotNull(password, "Password must not be null");
+        checkNotNull(name, "Name must be given");
+        checkNotNull(password, "Password must be given");
 
         return new CreateCmd(name, password);
     }

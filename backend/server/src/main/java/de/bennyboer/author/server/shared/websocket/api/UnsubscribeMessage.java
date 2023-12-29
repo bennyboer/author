@@ -32,8 +32,8 @@ public class UnsubscribeMessage {
             String aggregateId,
             @Nullable String eventName
     ) {
-        checkNotNull(aggregateType, "Aggregate type must not be null");
-        checkNotNull(aggregateId, "Aggregate id must not be null");
+        checkNotNull(aggregateType, "Aggregate type must be given");
+        checkNotNull(aggregateId, "Aggregate id must be given");
 
         return new UnsubscribeMessage(aggregateType, aggregateId, eventName);
     }

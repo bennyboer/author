@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -48,6 +48,12 @@ const COMPONENTS = [
     ThemeService,
     NavigationService,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    {
+      provide: APP_INITIALIZER,
+      deps: [ThemeService],
+      multi: true,
+      useFactory: (_themeService: ThemeService) => () => {},
+    },
   ],
   bootstrap: [AppComponent],
 })

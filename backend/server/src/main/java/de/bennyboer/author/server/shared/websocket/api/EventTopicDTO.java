@@ -20,10 +20,10 @@ public class EventTopicDTO {
 
     public static EventTopicDTO of(String aggregateType, String aggregateId, long version) {
         if (aggregateType == null) {
-            throw new IllegalArgumentException("aggregateType must not be null");
+            throw new IllegalArgumentException("aggregateType must be given");
         }
         if (aggregateId == null) {
-            throw new IllegalArgumentException("aggregateId must not be null");
+            throw new IllegalArgumentException("aggregateId must be given");
         }
 
         return new EventTopicDTO(aggregateType, aggregateId, version);

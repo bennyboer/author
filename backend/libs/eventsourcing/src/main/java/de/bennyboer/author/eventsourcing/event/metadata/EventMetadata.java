@@ -45,11 +45,11 @@ public class EventMetadata {
             Instant date,
             boolean isSnapshot
     ) {
-        checkNotNull(aggregateId, "AggregateId must not be null");
-        checkNotNull(aggregateType, "AggregateType must not be null");
-        checkNotNull(aggregateVersion, "Version must not be null");
-        checkNotNull(agent, "Agent must not be null");
-        checkNotNull(date, "Date must not be null");
+        checkNotNull(aggregateId, "AggregateId must be given");
+        checkNotNull(aggregateType, "AggregateType must be given");
+        checkNotNull(aggregateVersion, "Version must be given");
+        checkNotNull(agent, "Agent must be given");
+        checkNotNull(date, "Date must be given");
 
         return new EventMetadata(
                 aggregateId,

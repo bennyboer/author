@@ -18,14 +18,14 @@ public class TokenGeneratorTests {
         TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
 
         // when: generating a token
-        Token token = tokenGenerator.generate(TokenContent.of(UserId.of("TEST_USER_ID"))).block();
+        Token token = tokenGenerator.generate(TokenContent.user(UserId.of("TEST_USER_ID"))).block();
 
         // then: the token should not be null
         assertNotNull(token);
 
         // and: the token should contain the user ID
         TokenContent content = tokenVerifier.verify(token).block();
-        assertEquals(UserId.of("TEST_USER_ID"), content.getUserId());
+        assertEquals(UserId.of("TEST_USER_ID"), content.getUserId().orElseThrow());
     }
 
 }

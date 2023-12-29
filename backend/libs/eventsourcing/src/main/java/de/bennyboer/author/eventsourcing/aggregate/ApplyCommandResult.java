@@ -20,7 +20,7 @@ public class ApplyCommandResult {
     List<Event> events;
 
     public static ApplyCommandResult of(List<Event> events) {
-        checkNotNull(events, "Events must not be null");
+        checkNotNull(events, "Events must be given");
 
         return new ApplyCommandResult(events);
     }

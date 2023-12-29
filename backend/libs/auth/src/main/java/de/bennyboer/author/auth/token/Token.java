@@ -14,7 +14,7 @@ public class Token {
     String value;
 
     public static Token of(String value) {
-        checkNotNull(value, "Token value must not be null");
+        checkNotNull(value, "Token value must be given");
         checkArgument(!value.isBlank(), "Token value must not be blank");
 
         return new Token(value);

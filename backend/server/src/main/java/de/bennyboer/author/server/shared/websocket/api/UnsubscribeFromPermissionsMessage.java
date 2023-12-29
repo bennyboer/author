@@ -33,7 +33,7 @@ public class UnsubscribeFromPermissionsMessage {
             @Nullable String aggregateId,
             @Nullable String action
     ) {
-        checkNotNull(aggregateType, "Aggregate type must not be null");
+        checkNotNull(aggregateType, "Aggregate type must be given");
 
         return new UnsubscribeFromPermissionsMessage(aggregateType, aggregateId, action);
     }

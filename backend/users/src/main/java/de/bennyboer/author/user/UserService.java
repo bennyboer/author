@@ -3,18 +3,18 @@ package de.bennyboer.author.user;
 import de.bennyboer.author.auth.token.TokenContent;
 import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.user.create.CreateCmd;
-import de.bennyboer.author.user.login.LoginCmd;
-import de.bennyboer.author.user.remove.RemoveCmd;
-import de.bennyboer.author.user.rename.RenameCmd;
 import de.bennyboer.author.eventsourcing.EventPublisher;
 import de.bennyboer.author.eventsourcing.EventSourcingService;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateIdAndVersion;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.user.create.CreateCmd;
+import de.bennyboer.author.user.login.LoginCmd;
+import de.bennyboer.author.user.remove.RemoveCmd;
+import de.bennyboer.author.user.rename.RenameCmd;
 import reactor.core.publisher.Mono;
 
 import java.time.Clock;
@@ -81,7 +81,7 @@ public class UserService extends AggregateService<User, UserId> {
     }
 
     private Mono<AccessToken> generateAccessToken(UserId userId) {
-        TokenContent content = TokenContent.of(userId);
+        TokenContent content = TokenContent.user(userId);
 
         return tokenGenerator
                 .generate(content)

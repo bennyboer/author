@@ -32,7 +32,7 @@ public class EventSubscriptionTarget {
             AggregateId aggregateId,
             @Nullable EventName eventName
     ) {
-        checkNotNull(aggregateType, "Aggregate type must not be null");
+        checkNotNull(aggregateType, "Aggregate type must be given");
 
         return new EventSubscriptionTarget(aggregateType, aggregateId, eventName);
     }

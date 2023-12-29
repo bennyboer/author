@@ -15,7 +15,7 @@ public class UpdateTitleCmd implements Command {
     String title;
 
     public static UpdateTitleCmd of(String title) {
-        checkNotNull(title, "title must not be null");
+        checkNotNull(title, "title must be given");
         checkArgument(!title.isBlank(), "title must not be blank");
 
         return new UpdateTitleCmd(title);

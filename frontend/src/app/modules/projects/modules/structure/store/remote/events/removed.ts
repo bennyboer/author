@@ -1,9 +1,9 @@
-import { StructureTreeEvent } from './event';
-import { StructureTreeEventType } from './structure-tree-event-type';
-import { StructureTreeNodeId } from '../../state';
+import { StructureEvent } from './event';
+import { StructureEventType } from './structure-event-type';
+import { StructureNodeId } from '../../state';
 
-export class NodeRemovedEvent implements StructureTreeEvent {
-  readonly type = StructureTreeEventType.NODE_REMOVED;
+export class NodeRemovedEvent implements StructureEvent {
+  readonly type = StructureEventType.NODE_REMOVED;
 
-  constructor(public readonly id: StructureTreeNodeId) {}
+  constructor(public readonly id: StructureNodeId) {}
 }

@@ -19,7 +19,7 @@ public class AgentId {
     String value;
 
     public static AgentId of(String value) {
-        checkNotNull(value, "AgentId must not be null");
+        checkNotNull(value, "AgentId must be given");
         checkArgument(!value.isBlank(), "AgentId must not be blank");
 
         return new AgentId(value);

@@ -3,6 +3,7 @@ package de.bennyboer.author.auth.token;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import de.bennyboer.author.auth.keys.KeyPair;
+import de.bennyboer.author.common.UserId;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -25,7 +26,7 @@ public class JWTTokenGenerator implements TokenGenerator {
         Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
         String token = JWT.create()
                 .withIssuer("server")
-                .withSubject(content.getUserId().getValue())
+                .withSubject(content.getUserId().map(UserId::getValue).orElse("SYSTEM"))
                 .withExpiresAt(expiresAt)
                 .sign(algorithm);
 

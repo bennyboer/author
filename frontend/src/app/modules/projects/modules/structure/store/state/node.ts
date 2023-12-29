@@ -1,8 +1,8 @@
-export type StructureTreeNodeId = string;
+export type StructureNodeId = string;
 
-export interface StructureTreeNode {
-  id: StructureTreeNodeId;
+export interface StructureNode {
+  id: StructureNodeId;
   name: string;
-  children: StructureTreeNodeId[];
+  children: StructureNodeId[];
   expanded: boolean;
 }

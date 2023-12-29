@@ -26,9 +26,13 @@ public class JWTTokenVerifier implements TokenVerifier {
     }
 
     private TokenContent extractTokenContent(DecodedJWT jwt) {
-        UserId userId = UserId.of(jwt.getSubject());
+        boolean isSystem = jwt.getSubject().equals("SYSTEM");
+        if (isSystem) {
+            return TokenContent.system();
+        }
 
-        return TokenContent.of(userId);
+        UserId userId = UserId.of(jwt.getSubject());
+        return TokenContent.user(userId);
     }
 
 }

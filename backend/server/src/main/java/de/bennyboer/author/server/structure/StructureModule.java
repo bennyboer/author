@@ -11,19 +11,20 @@ import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregat
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
-import de.bennyboer.author.server.structure.facade.TreeCommandFacade;
-import de.bennyboer.author.server.structure.facade.TreePermissionsFacade;
-import de.bennyboer.author.server.structure.facade.TreeQueryFacade;
-import de.bennyboer.author.server.structure.facade.TreeSyncFacade;
+import de.bennyboer.author.server.structure.external.project.ProjectDetailsHttpService;
+import de.bennyboer.author.server.structure.facade.StructureCommandFacade;
+import de.bennyboer.author.server.structure.facade.StructurePermissionsFacade;
+import de.bennyboer.author.server.structure.facade.StructureQueryFacade;
+import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
 import de.bennyboer.author.server.structure.messaging.*;
-import de.bennyboer.author.server.structure.permissions.TreePermissionsService;
-import de.bennyboer.author.server.structure.persistence.lookup.InMemoryTreeLookupRepo;
+import de.bennyboer.author.server.structure.permissions.StructurePermissionsService;
+import de.bennyboer.author.server.structure.persistence.lookup.InMemoryStructureLookupRepo;
+import de.bennyboer.author.server.structure.rest.StructureRestHandler;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
-import de.bennyboer.author.server.structure.rest.TreeRestHandler;
-import de.bennyboer.author.server.structure.transformer.TreeEventTransformer;
-import de.bennyboer.author.structure.tree.Tree;
-import de.bennyboer.author.structure.tree.TreeId;
-import de.bennyboer.author.structure.tree.TreeService;
+import de.bennyboer.author.server.structure.transformer.StructureEventTransformer;
+import de.bennyboer.author.structure.Structure;
+import de.bennyboer.author.structure.StructureId;
+import de.bennyboer.author.structure.StructureService;
 import io.javalin.Javalin;
 import reactor.core.publisher.Mono;
 
@@ -34,53 +35,55 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class StructureModule extends Module {
 
-    private final TreeCommandFacade commandFacade;
+    private final StructureCommandFacade commandFacade;
 
-    private final TreeQueryFacade queryFacade;
+    private final StructureQueryFacade queryFacade;
 
-    private final TreeSyncFacade syncFacade;
+    private final StructureSyncFacade syncFacade;
 
-    private final TreePermissionsFacade permissionsFacade;
+    private final StructurePermissionsFacade permissionsFacade;
 
     public StructureModule(ModuleConfig config) {
         super(config);
 
         var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
-        var treeService = new TreeService(eventSourcingRepo, getEventPublisher());
+        var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
         var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
-        var treePermissionsService = new TreePermissionsService(permissionsRepo, permissionsEventPublisher);
+        var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = new InMemoryTreeLookupRepo();
+        var lookupRepo = new InMemoryStructureLookupRepo();
 
-        commandFacade = new TreeCommandFacade(treeService, treePermissionsService);
-        queryFacade = new TreeQueryFacade(treeService, treePermissionsService, lookupRepo);
-        syncFacade = new TreeSyncFacade(treeService, lookupRepo);
-        permissionsFacade = new TreePermissionsFacade(treePermissionsService);
+        var projectDetailsService = new ProjectDetailsHttpService(config.getHttpApi(), config.getJsonMapper());
+
+        commandFacade = new StructureCommandFacade(structureService, structurePermissionsService);
+        queryFacade = new StructureQueryFacade(structureService, structurePermissionsService, lookupRepo);
+        syncFacade = new StructureSyncFacade(structureService, lookupRepo, projectDetailsService);
+        permissionsFacade = new StructurePermissionsFacade(structurePermissionsService);
     }
 
     @Override
     public void apply(Javalin javalin) {
-        var restHandler = new TreeRestHandler(queryFacade, commandFacade);
+        var restHandler = new StructureRestHandler(queryFacade, commandFacade);
         var restRouting = new StructureRestRouting(restHandler);
 
-        javalin.routes(() -> path("/api/structure", restRouting));
+        javalin.routes(() -> path("/api/structures", restRouting));
     }
 
     @Override
     protected List<AggregateEventMessageListener> createMessageListeners() {
         return List.of(
-                new ProjectCreatedCreateTreeMsgListener(syncFacade),
-                new ProjectRemovedRemoveTreeMsgListener(syncFacade),
-                new TreeCreatedAddPermissionsMsgListener(permissionsFacade),
-                new TreeRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new ProjectCreatedCreateStructureMsgListener(syncFacade),
+                new ProjectRemovedRemoveStructureMsgListener(syncFacade),
+                new StructureCreatedAddPermissionsMsgListener(permissionsFacade),
+                new StructureRemovedRemovePermissionsMsgListener(permissionsFacade),
                 new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
-                new TreeCreatedAddToLookupMsgListener(syncFacade),
-                new TreeRemovedRemoveFromLookupMsgListener(syncFacade)
+                new StructureCreatedAddToLookupMsgListener(syncFacade),
+                new StructureRemovedRemoveFromLookupMsgListener(syncFacade)
         );
     }
 
@@ -90,12 +93,15 @@ public class StructureModule extends Module {
                 new AggregateEventPermissionChecker() {
                     @Override
                     public AggregateType getAggregateType() {
-                        return Tree.TYPE;
+                        return Structure.TYPE;
                     }
 
                     @Override
                     public Mono<Boolean> hasPermissionToReceiveEvents(Agent agent, AggregateId aggregateId) {
-                        return permissionsFacade.hasPermissionToReceiveEvents(agent, TreeId.of(aggregateId.getValue()));
+                        return permissionsFacade.hasPermissionToReceiveEvents(
+                                agent,
+                                StructureId.of(aggregateId.getValue())
+                        );
                     }
                 }
         );
@@ -103,12 +109,12 @@ public class StructureModule extends Module {
 
     @Override
     protected List<AggregateType> getAggregateTypes() {
-        return List.of(Tree.TYPE);
+        return List.of(Structure.TYPE);
     }
 
     @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
-        return Map.of(Tree.TYPE, TreeEventTransformer::toApi);
+        return Map.of(Structure.TYPE, StructureEventTransformer::toApi);
     }
 
 }

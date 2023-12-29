@@ -28,9 +28,9 @@ public class EventMessage {
             long eventVersion,
             Object payload
     ) {
-        checkNotNull(topic, "topic must not be null");
-        checkNotNull(eventName, "eventName must not be null");
-        checkNotNull(payload, "payload must not be null");
+        checkNotNull(topic, "topic must be given");
+        checkNotNull(eventName, "eventName must be given");
+        checkNotNull(payload, "payload must be given");
 
         return new EventMessage(topic, eventName, eventVersion, payload);
     }

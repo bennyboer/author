@@ -13,7 +13,7 @@ public class AccessToken {
     String value;
 
     public static AccessToken of(String value) {
-        checkNotNull(value, "Access token value must not be null");
+        checkNotNull(value, "Access token value must be given");
 
         return new AccessToken(value);
     }
