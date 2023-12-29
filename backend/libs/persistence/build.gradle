@@ -1,0 +1,10 @@
+plugins {
+    id 'de.bennyboer.author.java-library-conventions'
+}
+
+dependencies {
+    implementation project(':libs:common')
+
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
+    implementation 'org.xerial:sqlite-jdbc:3.44.1.0'
+}
