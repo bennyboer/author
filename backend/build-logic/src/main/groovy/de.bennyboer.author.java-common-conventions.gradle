@@ -15,6 +15,11 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.6.0'
     testImplementation 'io.projectreactor:reactor-test:3.6.0'
 
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    testImplementation 'com.fasterxml.jackson.core:jackson-annotations:2.16.1'
+
     constraints {
         // Define dependency versions as constraints
     }

@@ -1,28 +1,28 @@
 package de.bennyboer.author.persistence.sqlite;
 
-import de.bennyboer.author.persistence.Repository;
 import de.bennyboer.author.persistence.RepositoryVersion;
-import jakarta.annotation.Nullable;
+import de.bennyboer.author.persistence.jdbc.JDBCRepository;
 import org.apache.commons.lang3.SystemUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
-public class SQLiteRepository implements Repository {
+public class SQLiteRepository extends JDBCRepository {
 
     private static final String FILE_EXTENSION = "sqlite3";
-    private static final String META_DATA_TABLE_NAME = "meta_data";
 
     private final String name;
+    private final boolean isTemporary;
 
-    @Nullable
-    private Connection connection;
+    public SQLiteRepository(String name, boolean isTemporary) {
+        super();
 
-    public SQLiteRepository(String name) {
         this.name = name;
+        this.isTemporary = isTemporary;
 
         try {
             initializeOrPatch();
@@ -31,33 +31,23 @@ public class SQLiteRepository implements Repository {
         }
     }
 
-    @Override
-    public Mono<RepositoryVersion> getVersion() {
-        return Mono.fromCallable(this::getVersionSync);
+    public SQLiteRepository(String name) {
+        this(name, false);
     }
 
     @Override
-    public void close() throws Exception {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-        }
+    protected void initialize(Connection connection) throws SQLException {
     }
 
-    private void initializeOrPatch() throws SQLException {
-        Connection connection = getConnection();
+    @Override
+    protected Connection createConnection() throws SQLException {
+        String url = String.format("jdbc:sqlite:%s", getFilePath().toAbsolutePath());
 
-        if (isMetaDataTableMissing(connection)) {
-            createMetaDataTable(connection);
-        } else {
-            patchIfNeeded(connection);
-        }
+        return DriverManager.getConnection(url);
     }
 
-    private boolean isMetaDataTableMissing(Connection connection) {
-        return !tableExists(connection, META_DATA_TABLE_NAME);
-    }
-
-    private boolean tableExists(Connection connection, String tableName) {
+    @Override
+    protected boolean tableExists(Connection connection, String tableName) throws SQLException {
         try (var statement = connection.createStatement()) {
             statement.execute(String.format(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='%s'",
@@ -65,17 +55,11 @@ public class SQLiteRepository implements Repository {
             ));
 
             return statement.getResultSet().next();
-        } catch (SQLException e) {
-            return false;
         }
     }
 
-    private void patchIfNeeded(Connection connection) {
-        // TODO Implement patching
-        // TODO Get Version of repository and compare with needed version - if mismatch, patch!
-    }
-
-    private void createMetaDataTable(Connection connection) {
+    @Override
+    protected void initializeMetaDataTable(Connection connection, String tableName) throws SQLException {
         try (var statement = connection.createStatement()) {
             statement.execute(String.format(
                     """
@@ -84,46 +68,33 @@ public class SQLiteRepository implements Repository {
                                 value text NOT NULL
                             )
                             """,
-                    META_DATA_TABLE_NAME
+                    tableName
             ));
 
             statement.execute(String.format(
                     """
                             INSERT INTO %s (key, value) VALUES ('version', '0')
                             """,
-                    META_DATA_TABLE_NAME
+                    tableName
             ));
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    private Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            createConnection();
-        }
-
-        return connection;
+    @Override
+    protected void patchIfNeeded(Connection connection) throws SQLException {
+        // TODO Implement patching
+        // TODO Get Version of repository and compare with needed version - if mismatch, patch!
     }
 
-    private void createConnection() throws SQLException {
-        Path userHomePath = SystemUtils.getUserHome().toPath();
-        Path authorPath = userHomePath.resolve("author");
-        Path dbPath = authorPath.resolve("db");
-        Path dbFile = dbPath.resolve(String.format("%s.%s", name, FILE_EXTENSION));
-
-        String url = String.format("jdbc:sqlite:%s", dbFile.toAbsolutePath());
-
-        this.connection = DriverManager.getConnection(url);
-    }
-
-    private RepositoryVersion getVersionSync() {
-        try (var statement = getConnection().createStatement()) {
+    @Override
+    protected RepositoryVersion readVersionFromMetaDataTable(Connection connection, String metaDataTableName)
+            throws SQLException {
+        try (var statement = connection.createStatement()) {
             var resultSet = statement.executeQuery(String.format(
                     """
                             SELECT value FROM %s WHERE key='version'
                             """,
-                    META_DATA_TABLE_NAME
+                    metaDataTableName
             ));
 
             if (!resultSet.next()) {
@@ -132,9 +103,87 @@ public class SQLiteRepository implements Repository {
 
             long version = resultSet.getLong("value");
             return RepositoryVersion.of(version);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
+    }
+
+    protected <T> Mono<T> executeSqlQueryWithOneResult(
+            String sql,
+            PreparedStatementConfig statementConfig,
+            ResultSetRowMapper<T> resultRowMapper
+    ) {
+        return executeSqlQuery(sql, statementConfig, resultRowMapper).next();
+    }
+
+    protected <T> Flux<T> executeSqlQuery(
+            String sql,
+            PreparedStatementConfig statementConfig,
+            ResultSetRowMapper<T> resultRowMapper
+    ) {
+        return getConnectionMono()
+                .flatMapMany(connection -> Flux.usingWhen(
+                        Mono.fromCallable(() -> connection.prepareStatement(sql)),
+                        statement -> {
+                            try {
+                                statementConfig.accept(statement);
+                            } catch (SQLException e) {
+                                return Mono.error(e);
+                            }
+
+                            return Mono.fromCallable(statement::executeQuery)
+                                    .flatMapMany(resultSet -> toFlux(resultSet, resultRowMapper));
+                        },
+                        statement -> Mono.fromCallable(() -> {
+                            try {
+                                statement.close();
+                                return Mono.empty();
+                            } catch (SQLException e) {
+                                return Mono.error(e);
+                            }
+                        })
+                ));
+    }
+
+    private <T> Flux<T> toFlux(ResultSet resultSet, ResultSetRowMapper<T> rowMapper) {
+        return Flux.create(sink -> {
+            try {
+                while (resultSet.next()) {
+                    sink.next(rowMapper.map(resultSet));
+                }
+
+                sink.complete();
+            } catch (SQLException e) {
+                sink.error(e);
+            }
+        });
+    }
+
+    private Path getFilePath() {
+        if (isTemporary) {
+            try {
+                Path tempDir = Files.createTempDirectory(".author");
+                return tempDir.resolve(String.format("%s.%s", name, FILE_EXTENSION));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            Path userHomePath = SystemUtils.getUserHome().toPath();
+            Path authorPath = userHomePath.resolve(".author");
+            Path dbPath = authorPath.resolve("db");
+
+            return dbPath.resolve(String.format("%s.%s", name, FILE_EXTENSION));
+        }
+    }
+
+    public interface PreparedStatementConfig {
+
+        void accept(PreparedStatement statement) throws SQLException;
+
+    }
+
+    public interface ResultSetRowMapper<T> {
+
+        T map(ResultSet resultSet) throws SQLException;
+
     }
 
 }

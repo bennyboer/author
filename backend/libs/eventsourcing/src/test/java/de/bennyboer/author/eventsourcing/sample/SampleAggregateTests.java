@@ -3,12 +3,11 @@ package de.bennyboer.author.eventsourcing.sample;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.author.eventsourcing.event.EventWithMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.AgentType;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.eventsourcing.sample.commands.CreateCmd;
 import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent;
 import de.bennyboer.author.eventsourcing.sample.events.CreatedEvent2;
@@ -21,9 +20,9 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SampleAggregateTests {
+public abstract class SampleAggregateTests {
 
-    private final EventSourcingRepo repo = new InMemoryEventSourcingRepo();
+    private final EventSourcingRepo repo = createRepo();
 
     private final TestEventPublisher eventPublisher = new TestEventPublisher();
 
@@ -33,6 +32,8 @@ public class SampleAggregateTests {
     );
 
     Agent testAgent = Agent.user(UserId.of("USER_ID"));
+
+    protected abstract EventSourcingRepo createRepo();
 
     @Test
     void shouldCreate() {

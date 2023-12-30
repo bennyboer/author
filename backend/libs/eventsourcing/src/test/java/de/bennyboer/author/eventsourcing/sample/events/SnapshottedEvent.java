@@ -1,18 +1,21 @@
 package de.bennyboer.author.eventsourcing.sample.events;
 
-import de.bennyboer.author.eventsourcing.event.AbstractEvent;
-import de.bennyboer.author.eventsourcing.event.EventName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.event.SnapshotEvent;
 import de.bennyboer.author.eventsourcing.sample.SampleAggregate;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
-public class SnapshottedEvent extends AbstractEvent implements SnapshotEvent {
+@Builder
+@Jacksonized
+public class SnapshottedEvent implements Event, SnapshotEvent {
 
     private static final EventName NAME = EventName.of("SNAPSHOTTED");
 
@@ -25,8 +28,6 @@ public class SnapshottedEvent extends AbstractEvent implements SnapshotEvent {
     Instant deletedAt;
 
     private SnapshottedEvent(String title, String description, Instant deletedAt) {
-        super(NAME, VERSION);
-
         this.title = title;
         this.description = description;
         this.deletedAt = deletedAt;
@@ -34,6 +35,18 @@ public class SnapshottedEvent extends AbstractEvent implements SnapshotEvent {
 
     public static SnapshottedEvent of(SampleAggregate aggregate) {
         return new SnapshottedEvent(aggregate.getTitle(), aggregate.getDescription(), aggregate.getDeletedAt());
+    }
+
+    @Override
+    @JsonIgnore
+    public EventName getEventName() {
+        return NAME;
+    }
+
+    @Override
+    @JsonIgnore
+    public Version getVersion() {
+        return VERSION;
     }
 
 }

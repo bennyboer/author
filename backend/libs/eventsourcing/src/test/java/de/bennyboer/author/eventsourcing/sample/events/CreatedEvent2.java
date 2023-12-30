@@ -1,16 +1,22 @@
 package de.bennyboer.author.eventsourcing.sample.events;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.event.AbstractEvent;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.sample.commands.CreateCmd;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
 
+import static de.bennyboer.author.eventsourcing.sample.events.CreatedEvent.NAME;
+
 @Value
-@EqualsAndHashCode(callSuper = true)
-public class CreatedEvent2 extends AbstractEvent {
+@Builder
+@Jacksonized
+public class CreatedEvent2 implements Event {
 
     public static final Version VERSION = Version.of(1);
 
@@ -25,8 +31,6 @@ public class CreatedEvent2 extends AbstractEvent {
     Instant deletedAt;
 
     private CreatedEvent2(String title, String description, Instant deletedAt) {
-        super(CreatedEvent.NAME, VERSION);
-
         this.title = title;
         this.description = description;
         this.deletedAt = deletedAt;
@@ -38,6 +42,18 @@ public class CreatedEvent2 extends AbstractEvent {
 
     public static CreatedEvent2 from(CreatedEvent e) {
         return new CreatedEvent2(e.getTitle(), e.getDescription(), null);
+    }
+
+    @Override
+    @JsonIgnore
+    public EventName getEventName() {
+        return NAME;
+    }
+
+    @Override
+    @JsonIgnore
+    public Version getVersion() {
+        return VERSION;
     }
 
 }

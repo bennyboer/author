@@ -1,15 +1,18 @@
 package de.bennyboer.author.eventsourcing.sample.events;
 
-import de.bennyboer.author.eventsourcing.event.AbstractEvent;
-import de.bennyboer.author.eventsourcing.event.EventName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.event.Event;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.sample.commands.UpdateTitleCmd;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
-public class TitleUpdatedEvent extends AbstractEvent {
+@Builder
+@Jacksonized
+public class TitleUpdatedEvent implements Event {
 
     private static final EventName NAME = EventName.of("TITLE_UPDATED");
 
@@ -18,13 +21,23 @@ public class TitleUpdatedEvent extends AbstractEvent {
     String title;
 
     private TitleUpdatedEvent(String title) {
-        super(NAME, VERSION);
-
         this.title = title;
     }
 
     public static TitleUpdatedEvent of(UpdateTitleCmd cmd) {
         return new TitleUpdatedEvent(cmd.getTitle());
+    }
+
+    @Override
+    @JsonIgnore
+    public EventName getEventName() {
+        return NAME;
+    }
+
+    @Override
+    @JsonIgnore
+    public Version getVersion() {
+        return VERSION;
     }
 
 }
