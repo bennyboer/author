@@ -61,7 +61,7 @@ public class StructureModule extends Module {
         );
         var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = new InMemoryStructureLookupRepo();
+        var lookupRepo = new InMemoryStructureLookupRepo(); // TODO Use persistent repo
 
         var projectDetailsService = new ProjectDetailsHttpService(config.getHttpApi(), config.getJsonMapper());
 
