@@ -3,7 +3,6 @@ package de.bennyboer.author.server.projects;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
@@ -23,6 +22,8 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadT
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
+import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
 import reactor.core.publisher.Mono;
@@ -45,7 +46,12 @@ public class ProjectsModule extends Module {
     public ProjectsModule(ModuleConfig config) {
         super(config);
 
-        var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
+        var eventSerializer = new JsonMapperEventSerializer(
+                config.getJsonMapper(),
+                ProjectEventTransformer::toSerialized,
+                ProjectEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
         var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
 
         var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo

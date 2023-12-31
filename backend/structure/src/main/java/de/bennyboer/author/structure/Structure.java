@@ -87,23 +87,33 @@ public class Structure implements Aggregate {
         }
 
         return switch (cmd) {
-            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
-            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
+            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
+                    getProjectId(),
+                    getRootNodeId(),
+                    getNodes(),
+                    getCreatedAt(),
+                    getRemovedAt().orElse(null)
+            ));
+            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c.getProjectId(), c.getRootNode()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case AddNodeCmd c -> {
                 assertNodeExists(c.getParentNodeId());
-                yield ApplyCommandResult.of(NodeAddedEvent.of(c));
+                yield ApplyCommandResult.of(NodeAddedEvent.of(
+                        c.getParentNodeId(),
+                        c.getNewNodeId(),
+                        c.getNewNodeName()
+                ));
             }
             case ToggleNodeCmd c -> {
                 assertNodeExists(c.getNodeId());
-                yield ApplyCommandResult.of(NodeToggledEvent.of(c));
+                yield ApplyCommandResult.of(NodeToggledEvent.of(c.getNodeId()));
             }
             case RemoveNodeCmd c -> {
                 assertNodeExists(c.getNodeId());
                 assertNodeIsNotRoot(c.getNodeId(), "Cannot remove root node");
                 var parentNodeId = getNodeById(c.getNodeId()).orElseThrow().getParentId().orElseThrow();
                 assertNodeExists(parentNodeId);
-                yield ApplyCommandResult.of(NodeRemovedEvent.of(c));
+                yield ApplyCommandResult.of(NodeRemovedEvent.of(c.getNodeId()));
             }
             case SwapNodesCmd c -> {
                 assertNodeExists(c.getNodeId1());
@@ -111,11 +121,11 @@ public class Structure implements Aggregate {
                 assertNodesAreNotDirectlyRelated(c.getNodeId1(), c.getNodeId2());
                 assertNodeIsNotRoot(c.getNodeId1(), "Cannot swap root node");
                 assertNodeIsNotRoot(c.getNodeId2(), "Cannot swap root node");
-                yield ApplyCommandResult.of(NodesSwappedEvent.of(c));
+                yield ApplyCommandResult.of(NodesSwappedEvent.of(c.getNodeId1(), c.getNodeId2()));
             }
             case RenameNodeCmd c -> {
                 assertNodeExists(c.getNodeId());
-                yield ApplyCommandResult.of(NodeRenamedEvent.of(c));
+                yield ApplyCommandResult.of(NodeRenamedEvent.of(c.getNodeId(), c.getNewNodeName()));
             }
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
         };

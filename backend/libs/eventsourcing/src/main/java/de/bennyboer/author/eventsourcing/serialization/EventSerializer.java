@@ -4,7 +4,7 @@ import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
 
-public interface EventSerialization {
+public interface EventSerializer {
 
     String serialize(Event event);
 

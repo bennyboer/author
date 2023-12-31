@@ -8,7 +8,7 @@ import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.eventsourcing.persistence.SQLiteEventSourcingRepo;
 import de.bennyboer.author.eventsourcing.sample.events.*;
-import de.bennyboer.author.eventsourcing.serialization.EventSerialization;
+import de.bennyboer.author.eventsourcing.serialization.EventSerializer;
 
 public class SQLiteRepoSampleAggregateTests extends SampleAggregateTests {
 
@@ -19,7 +19,7 @@ public class SQLiteRepoSampleAggregateTests extends SampleAggregateTests {
         return new SQLiteEventSourcingRepo(
                 "test",
                 true,
-                new EventSerialization() {
+                new EventSerializer() {
                     @Override
                     public String serialize(Event event) {
                         try {

@@ -10,7 +10,7 @@ import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.AgentId;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.AgentType;
-import de.bennyboer.author.eventsourcing.serialization.EventSerialization;
+import de.bennyboer.author.eventsourcing.serialization.EventSerializer;
 import de.bennyboer.author.persistence.sqlite.SQLiteRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,38 +19,39 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Locale;
 
 public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSourcingRepo {
 
-    private final EventSerialization eventSerialization;
+    private final EventSerializer eventSerializer;
 
     public SQLiteEventSourcingRepo(
             String name,
             boolean isTemporary,
-            EventSerialization eventSerialization
+            EventSerializer eventSerializer
     ) {
         super(name, isTemporary);
 
-        this.eventSerialization = eventSerialization;
+        this.eventSerializer = eventSerializer;
     }
 
-    public SQLiteEventSourcingRepo(String name, EventSerialization eventSerialization) {
-        this(name, false, eventSerialization);
+    public SQLiteEventSourcingRepo(String name, EventSerializer eventSerializer) {
+        this(name, false, eventSerializer);
     }
 
     public SQLiteEventSourcingRepo(
             AggregateType type,
             boolean isTemporary,
-            EventSerialization eventSerialization
+            EventSerializer eventSerializer
     ) {
-        this(type.toString(), isTemporary, eventSerialization);
+        this(type.getValue().toLowerCase(Locale.ROOT), isTemporary, eventSerializer);
     }
 
     public SQLiteEventSourcingRepo(
             AggregateType type,
-            EventSerialization eventSerialization
+            EventSerializer eventSerializer
     ) {
-        this(type.toString(), false, eventSerialization);
+        this(type, false, eventSerializer);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """;
 
-                    String serializedEvent = eventSerialization.serialize(ev);
+                    String serializedEvent = eventSerializer.serialize(ev);
 
                     try (var statement = connection.prepareStatement(sql)) {
                         statement.setString(1, metadata.getAggregateId().getValue());
@@ -238,7 +239,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
 
         EventName eventName = EventName.of(resultSet.getString("event_name"));
         Version eventVersion = Version.of(resultSet.getLong("event_version"));
-        Event event = eventSerialization.deserialize(resultSet.getString("event_payload"), eventName, eventVersion);
+        Event event = eventSerializer.deserialize(resultSet.getString("event_payload"), eventName, eventVersion);
 
         return EventWithMetadata.of(event, metadata);
     }

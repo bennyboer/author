@@ -7,6 +7,7 @@ dependencies {
     implementation project(':libs:common')
     implementation project(':libs:eventsourcing')
     implementation project(':libs:permissions')
+    implementation project(':libs:persistence')
     implementation project(':projects')
     implementation project(':structure')
     implementation project(':users')

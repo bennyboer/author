@@ -7,8 +7,8 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.structure.facade.StructurePermissionsFacade;
 import de.bennyboer.author.structure.Structure;
+import de.bennyboer.author.structure.StructureEvent;
 import de.bennyboer.author.structure.StructureId;
-import de.bennyboer.author.structure.create.CreatedEvent;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +26,7 @@ public class StructureCreatedAddPermissionsMsgListener implements AggregateEvent
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(CreatedEvent.NAME);
+        return Optional.of(StructureEvent.CREATED.getName());
     }
 
     @Override

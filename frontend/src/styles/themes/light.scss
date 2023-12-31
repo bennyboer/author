@@ -43,6 +43,7 @@ $core-theme: mat.define-light-theme((
 @include mat.all-component-themes($core-theme);
 
 :root {
+  --text-color: black;
   --accent-color: #33FFCC;
   --low-contrast-color-1: #F5F5F5;
   --low-contrast-color-2: #EAEAEA;

@@ -3,9 +3,14 @@ package de.bennyboer.author.user;
 import de.bennyboer.author.auth.password.EncodedPassword;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.Aggregate;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.aggregate.ApplyCommandResult;
+import de.bennyboer.author.eventsourcing.command.Command;
+import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
+import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
@@ -17,11 +22,6 @@ import de.bennyboer.author.user.remove.RemovedEvent;
 import de.bennyboer.author.user.rename.RenameCmd;
 import de.bennyboer.author.user.rename.RenamedEvent;
 import de.bennyboer.author.user.snapshot.SnapshottedEvent;
-import de.bennyboer.author.eventsourcing.aggregate.Aggregate;
-import de.bennyboer.author.eventsourcing.aggregate.ApplyCommandResult;
-import de.bennyboer.author.eventsourcing.command.Command;
-import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
-import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -93,9 +93,13 @@ public class User implements Aggregate {
         }
 
         return switch (cmd) {
-            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(this));
-            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c));
-            case RenameCmd c -> ApplyCommandResult.of(RenamedEvent.of(c));
+            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
+                    getName(),
+                    getPassword(),
+                    getCreatedAt()
+            ));
+            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c.getName(), c.getPassword()));
+            case RenameCmd c -> ApplyCommandResult.of(RenamedEvent.of(c.getNewName()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());

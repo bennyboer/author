@@ -3,13 +3,13 @@ package de.bennyboer.author.persistence.sqlite;
 import de.bennyboer.author.persistence.RepositoryVersion;
 import de.bennyboer.author.persistence.jdbc.JDBCRepository;
 import org.apache.commons.lang3.SystemUtils;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class SQLiteRepository extends JDBCRepository {
 
@@ -26,7 +26,7 @@ public class SQLiteRepository extends JDBCRepository {
 
         try {
             initializeOrPatch();
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -40,7 +40,7 @@ public class SQLiteRepository extends JDBCRepository {
     }
 
     @Override
-    protected Connection createConnection() throws SQLException {
+    protected Connection createConnection() throws SQLException, IOException {
         String url = String.format("jdbc:sqlite:%s", getFilePath().toAbsolutePath());
 
         return DriverManager.getConnection(url);
@@ -106,58 +106,7 @@ public class SQLiteRepository extends JDBCRepository {
         }
     }
 
-    protected <T> Mono<T> executeSqlQueryWithOneResult(
-            String sql,
-            PreparedStatementConfig statementConfig,
-            ResultSetRowMapper<T> resultRowMapper
-    ) {
-        return executeSqlQuery(sql, statementConfig, resultRowMapper).next();
-    }
-
-    protected <T> Flux<T> executeSqlQuery(
-            String sql,
-            PreparedStatementConfig statementConfig,
-            ResultSetRowMapper<T> resultRowMapper
-    ) {
-        return getConnectionMono()
-                .flatMapMany(connection -> Flux.usingWhen(
-                        Mono.fromCallable(() -> connection.prepareStatement(sql)),
-                        statement -> {
-                            try {
-                                statementConfig.accept(statement);
-                            } catch (SQLException e) {
-                                return Mono.error(e);
-                            }
-
-                            return Mono.fromCallable(statement::executeQuery)
-                                    .flatMapMany(resultSet -> toFlux(resultSet, resultRowMapper));
-                        },
-                        statement -> Mono.fromCallable(() -> {
-                            try {
-                                statement.close();
-                                return Mono.empty();
-                            } catch (SQLException e) {
-                                return Mono.error(e);
-                            }
-                        })
-                ));
-    }
-
-    private <T> Flux<T> toFlux(ResultSet resultSet, ResultSetRowMapper<T> rowMapper) {
-        return Flux.create(sink -> {
-            try {
-                while (resultSet.next()) {
-                    sink.next(rowMapper.map(resultSet));
-                }
-
-                sink.complete();
-            } catch (SQLException e) {
-                sink.error(e);
-            }
-        });
-    }
-
-    private Path getFilePath() {
+    private Path getFilePath() throws IOException {
         if (isTemporary) {
             try {
                 Path tempDir = Files.createTempDirectory(".author");
@@ -170,20 +119,10 @@ public class SQLiteRepository extends JDBCRepository {
             Path authorPath = userHomePath.resolve(".author");
             Path dbPath = authorPath.resolve("db");
 
+            Files.createDirectories(dbPath);
+
             return dbPath.resolve(String.format("%s.%s", name, FILE_EXTENSION));
         }
-    }
-
-    public interface PreparedStatementConfig {
-
-        void accept(PreparedStatement statement) throws SQLException;
-
-    }
-
-    public interface ResultSetRowMapper<T> {
-
-        T map(ResultSet resultSet) throws SQLException;
-
     }
 
 }

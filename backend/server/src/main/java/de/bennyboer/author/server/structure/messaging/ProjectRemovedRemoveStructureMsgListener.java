@@ -5,7 +5,7 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.Project;
-import de.bennyboer.author.project.remove.RemovedEvent;
+import de.bennyboer.author.project.ProjectEvent;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
@@ -26,7 +26,7 @@ public class ProjectRemovedRemoveStructureMsgListener implements AggregateEventM
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(RemovedEvent.NAME);
+        return Optional.of(ProjectEvent.REMOVED.getName());
     }
 
     @Override

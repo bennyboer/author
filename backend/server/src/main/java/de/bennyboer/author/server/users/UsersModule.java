@@ -5,13 +5,14 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
+import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
 import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
@@ -48,7 +49,12 @@ public class UsersModule extends Module {
     public UsersModule(ModuleConfig config, TokenGenerator tokenGenerator) {
         super(config);
 
-        var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
+        var eventSerializer = new JsonMapperEventSerializer(
+                config.getJsonMapper(),
+                UserEventTransformer::toSerialized,
+                UserEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
         var userService = new UserService(eventSourcingRepo, getEventPublisher(), tokenGenerator);
 
         var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo

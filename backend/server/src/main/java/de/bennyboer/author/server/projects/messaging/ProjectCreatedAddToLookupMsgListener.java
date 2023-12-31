@@ -3,8 +3,8 @@ package de.bennyboer.author.server.projects.messaging;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.project.Project;
+import de.bennyboer.author.project.ProjectEvent;
 import de.bennyboer.author.project.ProjectId;
-import de.bennyboer.author.project.create.CreatedEvent;
 import de.bennyboer.author.server.projects.facade.ProjectsSyncFacade;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
@@ -25,7 +25,7 @@ public class ProjectCreatedAddToLookupMsgListener implements AggregateEventMessa
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(CreatedEvent.NAME);
+        return Optional.of(ProjectEvent.CREATED.getName());
     }
 
     @Override

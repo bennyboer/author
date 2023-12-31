@@ -45,6 +45,7 @@ $dark-theme: mat.define-dark-theme((
 @include mat.all-component-themes($dark-theme);
 
 :root {
+  --text-color: white;
   --accent-color: #33FFCC;
   --low-contrast-color-1: #333;
   --low-contrast-color-2: #666;

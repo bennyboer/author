@@ -7,7 +7,7 @@ import de.bennyboer.author.server.projects.facade.ProjectsPermissionsFacade;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.user.User;
-import de.bennyboer.author.user.create.CreatedEvent;
+import de.bennyboer.author.user.UserEvent;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +25,7 @@ public class UserCreatedAddPermissionToCreateProjectsMsgListener implements Aggr
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(CreatedEvent.NAME);
+        return Optional.of(UserEvent.CREATED.getName());
     }
 
     @Override

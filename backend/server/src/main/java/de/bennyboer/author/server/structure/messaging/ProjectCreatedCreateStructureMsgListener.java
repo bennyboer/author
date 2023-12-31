@@ -4,7 +4,7 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.project.Project;
-import de.bennyboer.author.project.create.CreatedEvent;
+import de.bennyboer.author.project.ProjectEvent;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
@@ -25,7 +25,7 @@ public class ProjectCreatedCreateStructureMsgListener implements AggregateEventM
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(CreatedEvent.NAME);
+        return Optional.of(ProjectEvent.CREATED.getName());
     }
 
     @Override

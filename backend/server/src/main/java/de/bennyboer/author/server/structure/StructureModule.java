@@ -3,13 +3,14 @@ package de.bennyboer.author.server.structure;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
+import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.structure.external.project.ProjectDetailsHttpService;
 import de.bennyboer.author.server.structure.facade.StructureCommandFacade;
@@ -46,7 +47,12 @@ public class StructureModule extends Module {
     public StructureModule(ModuleConfig config) {
         super(config);
 
-        var eventSourcingRepo = new InMemoryEventSourcingRepo(); // TODO Use persistent repo
+        var eventSerializer = new JsonMapperEventSerializer(
+                config.getJsonMapper(),
+                StructureEventTransformer::toSerialized,
+                StructureEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
         var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
         var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo

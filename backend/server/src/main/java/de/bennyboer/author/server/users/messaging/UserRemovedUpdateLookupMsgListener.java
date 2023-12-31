@@ -7,7 +7,7 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.users.facade.UsersSyncFacade;
 import de.bennyboer.author.user.User;
-import de.bennyboer.author.user.remove.RemovedEvent;
+import de.bennyboer.author.user.UserEvent;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +25,7 @@ public class UserRemovedUpdateLookupMsgListener implements AggregateEventMessage
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(RemovedEvent.NAME);
+        return Optional.of(UserEvent.REMOVED.getName());
     }
 
     @Override
