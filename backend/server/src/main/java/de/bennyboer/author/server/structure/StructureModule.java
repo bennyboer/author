@@ -3,7 +3,6 @@ package de.bennyboer.author.server.structure;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
@@ -55,7 +54,7 @@ public class StructureModule extends Module {
         var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
         var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo
+        var permissionsRepo = RepoFactory.createPermissionsRepo("structure");
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()

@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
     implementation project(':libs:common')
+    implementation project(':libs:persistence')
+    implementation 'org.xerial:sqlite-jdbc:3.44.1.0' // Needed to access SQLiteException of :libs:persistence
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 }

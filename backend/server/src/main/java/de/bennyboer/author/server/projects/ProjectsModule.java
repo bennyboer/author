@@ -3,7 +3,6 @@ package de.bennyboer.author.server.projects;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.project.ProjectsService;
@@ -54,7 +53,7 @@ public class ProjectsModule extends Module {
         var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
         var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = new InMemoryPermissionsRepo(); // TODO Use persistent repo
+        var permissionsRepo = RepoFactory.createPermissionsRepo("projects");
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()

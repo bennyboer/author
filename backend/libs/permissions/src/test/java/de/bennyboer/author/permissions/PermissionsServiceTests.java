@@ -2,7 +2,6 @@ package de.bennyboer.author.permissions;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.permissions.event.PermissionEvent;
-import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -13,10 +12,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PermissionsServiceTests {
+public abstract class PermissionsServiceTests {
 
     Set<PermissionEvent> seenEvents = new HashSet<>();
-    PermissionsRepo permissionsRepo = new InMemoryPermissionsRepo();
+    PermissionsRepo permissionsRepo = createRepo();
 
     PermissionsService service = new PermissionsService(permissionsRepo, event -> {
         seenEvents.add(event);
@@ -28,6 +27,8 @@ public class PermissionsServiceTests {
     ResourceId resourceId = ResourceId.of("RESOURCE_ID");
     Resource resource = Resource.of(resourceType, resourceId);
     Action testAction = Action.of("TEST_ACTION");
+
+    protected abstract PermissionsRepo createRepo();
 
     @Test
     void shouldAddPermission() {

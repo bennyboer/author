@@ -7,6 +7,7 @@ import de.bennyboer.author.eventsourcing.persistence.SQLiteEventSourcingRepo;
 import de.bennyboer.author.eventsourcing.serialization.EventSerializer;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
+import de.bennyboer.author.permissions.repo.SQLitePermissionsRepo;
 
 public class RepoFactory {
 
@@ -27,11 +28,11 @@ public class RepoFactory {
         }
     }
 
-    public static PermissionsRepo createPermissionsRepo() {
+    public static PermissionsRepo createPermissionsRepo(String name) {
         if (isTestingProfile) {
             return new InMemoryPermissionsRepo();
         } else {
-            return new InMemoryPermissionsRepo(); // TODO To be replaced by an SQLite implementation
+            return new SQLitePermissionsRepo(String.format("%s_permissions", name));
         }
     }
 
