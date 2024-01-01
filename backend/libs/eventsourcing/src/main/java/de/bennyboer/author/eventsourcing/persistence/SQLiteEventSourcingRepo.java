@@ -74,7 +74,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        return executeSqlUpdate(sql, statement -> {
+        return update(sql, statement -> {
             String serializedEvent = eventSerializer.serialize(ev);
 
             statement.setString(1, metadata.getAggregateId().getValue());
@@ -106,7 +106,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                 LIMIT 1
                 """;
 
-        return executeSqlQueryWithOneResult(sql, statement -> {
+        return queryOne(sql, statement -> {
             statement.setString(1, aggregateId.getValue());
             statement.setString(2, type.getValue());
             statement.setLong(3, version.getValue());
@@ -127,7 +127,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                 LIMIT 1
                 """;
 
-        return executeSqlQueryWithOneResult(sql, statement -> {
+        return queryOne(sql, statement -> {
             statement.setString(1, aggregateId.getValue());
             statement.setString(2, type.getValue());
         }, this::readEventWithMetadata);
@@ -147,7 +147,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                 ORDER BY aggregate_version ASC
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, aggregateId.getValue());
             statement.setString(2, type.getValue());
             statement.setLong(3, fromVersion.getValue());
@@ -170,7 +170,7 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
                 ORDER BY aggregate_version ASC
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, aggregateId.getValue());
             statement.setString(2, type.getValue());
             statement.setLong(3, fromVersion.getValue());

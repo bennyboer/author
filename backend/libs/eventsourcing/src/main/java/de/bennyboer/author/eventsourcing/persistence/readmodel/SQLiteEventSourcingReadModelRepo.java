@@ -34,7 +34,7 @@ public abstract class SQLiteEventSourcingReadModelRepo<ID, T> extends SQLiteRepo
                 WHERE id = ?
                 """.formatted(getTableName());
 
-        return executeSqlUpdate(sql, statement -> statement.setString(1, stringifyId(id))).then();
+        return update(sql, statement -> statement.setString(1, stringifyId(id))).then();
     }
 
 }

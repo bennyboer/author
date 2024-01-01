@@ -3,7 +3,9 @@ package de.bennyboer.author.server.structure.facade;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.structure.external.project.ProjectDetailsService;
+import de.bennyboer.author.server.structure.persistence.lookup.LookupStructure;
 import de.bennyboer.author.server.structure.persistence.lookup.StructureLookupRepo;
+import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.structure.StructureId;
 import de.bennyboer.author.structure.StructureService;
 import de.bennyboer.author.structure.nodes.NodeName;
@@ -36,12 +38,17 @@ public class StructureSyncFacade {
 
     public Mono<Void> addToLookup(StructureId structureId) {
         return structureService.get(structureId)
+                .map(this::toLookupStructure)
                 .flatMap(lookupRepo::update)
                 .then();
     }
 
     public Mono<Void> removeFromLookup(StructureId structureId) {
         return lookupRepo.remove(structureId);
+    }
+
+    private LookupStructure toLookupStructure(Structure structure) {
+        return LookupStructure.of(structure.getId(), structure.getProjectId());
     }
 
 }

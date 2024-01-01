@@ -31,7 +31,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 VALUES (?, ?, ?, ?)
                 """;
 
-        return executeSqlUpdate(sql, statement -> {
+        return update(sql, statement -> {
             statement.setString(1, permission.getUserId().getValue());
             statement.setString(2, permission.getAction().getName());
             statement.setString(3, permission.getResource().getType().getName());
@@ -63,7 +63,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 VALUES (?, ?, ?, ?)
                 """;
 
-        return executeSqlBatchUpdate(sql, permissions, (statement, permission) -> {
+        return batchUpdate(sql, permissions, (statement, permission) -> {
             statement.setString(1, permission.getUserId().getValue());
             statement.setString(2, permission.getAction().getName());
             statement.setString(3, permission.getResource().getType().getName());
@@ -88,7 +88,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 LIMIT 1
                 """;
 
-        return executeSqlQueryWithOneResult(sql, statement -> {
+        return queryOne(sql, statement -> {
             statement.setString(1, permission.getUserId().getValue());
             statement.setString(2, permission.getAction().getName());
             statement.setString(3, permission.getResource().getType().getName());
@@ -106,7 +106,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 WHERE user_id = ?
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, userId.getValue());
         }, this::readPermissionFromResultSet);
     }
@@ -119,7 +119,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 AND resource_type = ?
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, userId.getValue());
             statement.setString(2, resourceType.getName());
         }, this::readPermissionFromResultSet);
@@ -138,7 +138,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 AND action = ?
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, userId.getValue());
             statement.setString(2, resourceType.getName());
             statement.setString(3, action.getName());
@@ -154,7 +154,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 AND resource_id = ?
                 """;
 
-        return executeSqlQuery(sql, statement -> {
+        return query(sql, statement -> {
             statement.setString(1, userId.getValue());
             statement.setString(2, resource.getType().getName());
             statement.setString(3, resource.getId().map(ResourceId::getValue).orElse(NULL_VALUE_PLACEHOLDER));
@@ -169,7 +169,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 RETURNING *
                 """;
 
-        return executeSqlQuery(deleteSql, statement -> {
+        return query(deleteSql, statement -> {
             statement.setString(1, userId.getValue());
         }, this::readPermissionFromResultSet);
     }
@@ -183,7 +183,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 RETURNING *
                 """;
 
-        return executeSqlQuery(deleteSql, statement -> {
+        return query(deleteSql, statement -> {
             statement.setString(1, resource.getType().getName());
             statement.setString(2, resource.getId().map(ResourceId::getValue).orElse(NULL_VALUE_PLACEHOLDER));
         }, this::readPermissionFromResultSet);
@@ -199,7 +199,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 RETURNING *
                 """;
 
-        return executeSqlQuery(deleteSql, statement -> {
+        return query(deleteSql, statement -> {
             statement.setString(1, userId.getValue());
             statement.setString(2, resource.getType().getName());
             statement.setString(3, resource.getId().map(ResourceId::getValue).orElse(NULL_VALUE_PLACEHOLDER));
@@ -217,7 +217,7 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
                 RETURNING *
                 """;
 
-        return executeSqlQueryWithOneResult(deleteSql, statement -> {
+        return queryOne(deleteSql, statement -> {
             statement.setString(1, permission.getUserId().getValue());
             statement.setString(2, permission.getAction().getName());
             statement.setString(3, permission.getResource().getType().getName());

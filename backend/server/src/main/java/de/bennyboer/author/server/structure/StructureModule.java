@@ -19,6 +19,7 @@ import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
 import de.bennyboer.author.server.structure.messaging.*;
 import de.bennyboer.author.server.structure.permissions.StructurePermissionsService;
 import de.bennyboer.author.server.structure.persistence.lookup.InMemoryStructureLookupRepo;
+import de.bennyboer.author.server.structure.persistence.lookup.SQLiteStructureLookupRepo;
 import de.bennyboer.author.server.structure.rest.StructureRestHandler;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.transformer.StructureEventTransformer;
@@ -61,7 +62,10 @@ public class StructureModule extends Module {
         );
         var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = new InMemoryStructureLookupRepo(); // TODO Use persistent repo
+        var lookupRepo = RepoFactory.createReadModelRepo(
+                InMemoryStructureLookupRepo::new,
+                SQLiteStructureLookupRepo::new
+        );
 
         var projectDetailsService = new ProjectDetailsHttpService(config.getHttpApi(), config.getJsonMapper());
 

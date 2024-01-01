@@ -17,12 +17,6 @@ public class ProjectsSyncFacade {
 
     ProjectLookupRepo lookupRepo;
 
-    public Mono<Void> addToLookup(ProjectId projectId) {
-        return projectsService.get(projectId)
-                .map(this::toLookupProject)
-                .flatMap(lookupRepo::update);
-    }
-
     public Mono<Void> updateInLookup(ProjectId projectId) {
         return projectsService.get(projectId)
                 .map(this::toLookupProject)

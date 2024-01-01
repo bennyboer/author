@@ -54,7 +54,7 @@ public class SQLiteEventSourcingReadModelTests extends EventSourcingReadModelTes
                     ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description
                     """.formatted(getTableName());
 
-            return executeSqlUpdate(
+            return update(
                     sql,
                     statement -> {
                         statement.setString(1, readModel.getId());
@@ -71,7 +71,7 @@ public class SQLiteEventSourcingReadModelTests extends EventSourcingReadModelTes
                     WHERE id = ?
                     """.formatted(getTableName());
 
-            return executeSqlQueryWithOneResult(sql, statement -> {
+            return queryOne(sql, statement -> {
                 statement.setString(1, id);
             }, this::readSampleAggregate);
         }

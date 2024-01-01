@@ -71,15 +71,15 @@ public abstract class JDBCRepository implements Repository {
         return connection;
     }
 
-    protected <T> Mono<T> executeSqlQueryWithOneResult(
+    protected <T> Mono<T> queryOne(
             String sql,
             SQLiteRepository.PreparedStatementConfig statementConfig,
             SQLiteRepository.ResultSetRowMapper<T> resultRowMapper
     ) {
-        return executeSqlQuery(sql, statementConfig, resultRowMapper).next();
+        return query(sql, statementConfig, resultRowMapper).next();
     }
 
-    protected <T> Flux<T> executeSqlQuery(
+    protected <T> Flux<T> query(
             String sql,
             SQLiteRepository.PreparedStatementConfig statementConfig,
             SQLiteRepository.ResultSetRowMapper<T> resultRowMapper
@@ -108,7 +108,7 @@ public abstract class JDBCRepository implements Repository {
                 ));
     }
 
-    protected Mono<Integer> executeSqlUpdate(String sql, PreparedStatementConfig statementConfig) {
+    protected Mono<Integer> update(String sql, PreparedStatementConfig statementConfig) {
         return getConnectionMono()
                 .flatMap(connection -> {
                     try (var statement = connection.prepareStatement(sql)) {
@@ -120,15 +120,15 @@ public abstract class JDBCRepository implements Repository {
                 });
     }
 
-    protected <T> Mono<Void> executeSqlBatchUpdate(
+    protected <T> Mono<Void> batchUpdate(
             String sql,
             Collection<T> objects,
             PreparedStatementObjectConfig<T> statementConfig
     ) {
-        return executeSqlBatchUpdate(sql, objects, statementConfig, 1000);
+        return batchUpdate(sql, objects, statementConfig, 1000);
     }
 
-    protected <T> Mono<Void> executeSqlBatchUpdate(
+    protected <T> Mono<Void> batchUpdate(
             String sql,
             Collection<T> objects,
             PreparedStatementObjectConfig<T> statementConfig,
@@ -156,7 +156,7 @@ public abstract class JDBCRepository implements Repository {
                     }
                 });
     }
-    
+
     private <T> Flux<T> toFlux(ResultSet resultSet, SQLiteRepository.ResultSetRowMapper<T> rowMapper) {
         return Flux.create(sink -> {
             try {

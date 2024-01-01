@@ -60,7 +60,7 @@ public class SQLiteProjectLookupRepo extends SQLiteEventSourcingReadModelRepo<Pr
                     created_at = excluded.created_at
                 """.formatted(getTableName());
 
-        return executeSqlUpdate(sql, statement -> {
+        return update(sql, statement -> {
             statement.setString(1, readModel.getId().getValue());
             statement.setLong(2, readModel.getVersion().getValue());
             statement.setString(3, readModel.getName().getValue());
@@ -81,7 +81,7 @@ public class SQLiteProjectLookupRepo extends SQLiteEventSourcingReadModelRepo<Pr
                 WHERE id IN (%s)
                 """.formatted(getTableName(), joinedIds);
 
-        return executeSqlQuery(
+        return query(
                 sql,
                 statement -> {
                 },

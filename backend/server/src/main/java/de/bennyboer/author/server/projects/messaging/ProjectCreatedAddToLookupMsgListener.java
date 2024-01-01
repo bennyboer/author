@@ -32,7 +32,7 @@ public class ProjectCreatedAddToLookupMsgListener implements AggregateEventMessa
     public Mono<Void> onMessage(AggregateEventMessage message) {
         ProjectId projectId = ProjectId.of(message.getAggregateId());
 
-        return syncFacade.addToLookup(projectId);
+        return syncFacade.updateInLookup(projectId);
     }
 
 }
