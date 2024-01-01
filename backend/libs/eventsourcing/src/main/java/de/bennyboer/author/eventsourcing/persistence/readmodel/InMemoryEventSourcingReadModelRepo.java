@@ -9,16 +9,16 @@ public abstract class InMemoryEventSourcingReadModelRepo<ID, T> implements Event
 
     protected final Map<ID, T> lookup = new ConcurrentHashMap<>();
 
-    protected abstract ID getId(T aggregate);
+    protected abstract ID getId(T readModel);
 
     public Mono<T> get(ID id) {
         return Mono.justOrEmpty(lookup.get(id));
     }
 
     @Override
-    public Mono<Void> update(T aggregate) {
+    public Mono<Void> update(T readModel) {
         return Mono.fromRunnable(() -> {
-            lookup.put(getId(aggregate), aggregate);
+            lookup.put(getId(readModel), readModel);
         });
     }
 

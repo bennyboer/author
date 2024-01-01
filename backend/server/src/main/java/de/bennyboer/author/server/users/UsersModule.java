@@ -19,7 +19,8 @@ import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgList
 import de.bennyboer.author.server.users.messaging.UserRemovedRemovePermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserRemovedUpdateLookupMsgListener;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
-import de.bennyboer.author.server.users.persistence.lookup.UserLookupInMemoryRepo;
+import de.bennyboer.author.server.users.persistence.lookup.InMemoryUserLookupRepo;
+import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import de.bennyboer.author.server.users.rest.UsersRestHandler;
 import de.bennyboer.author.server.users.rest.UsersRestRouting;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
@@ -63,7 +64,7 @@ public class UsersModule extends Module {
         );
         var userPermissionsService = new UserPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var userLookupRepo = new UserLookupInMemoryRepo(); // TODO Use persistent repo
+        var userLookupRepo = RepoFactory.createReadModelRepo(InMemoryUserLookupRepo::new, SQLiteUserLookupRepo::new);
 
         commandFacade = new UsersCommandFacade(userService, userPermissionsService, userLookupRepo);
         queryFacade = new UsersQueryFacade(userService, userPermissionsService);

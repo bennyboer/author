@@ -19,8 +19,8 @@ public class InMemoryStructureLookupRepo extends InMemoryEventSourcingReadModelR
     }
 
     @Override
-    protected StructureId getId(LookupStructure aggregate) {
-        return aggregate.getId();
+    protected StructureId getId(LookupStructure readModel) {
+        return readModel.getId();
     }
 
 }
