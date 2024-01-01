@@ -13,6 +13,8 @@ import de.bennyboer.author.server.projects.facade.ProjectsSyncFacade;
 import de.bennyboer.author.server.projects.messaging.*;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
 import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
+import de.bennyboer.author.server.projects.persistence.lookup.ProjectLookupRepo;
+import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
 import de.bennyboer.author.server.projects.rest.ProjectsRestHandler;
 import de.bennyboer.author.server.projects.rest.ProjectsRestRouting;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
@@ -60,7 +62,10 @@ public class ProjectsModule extends Module {
         );
         var projectPermissionsService = new ProjectPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = new InMemoryProjectLookupRepo(); // TODO Use persistent repo
+        ProjectLookupRepo lookupRepo = RepoFactory.createReadModelRepo(
+                InMemoryProjectLookupRepo::new,
+                SQLiteProjectLookupRepo::new
+        );
 
         queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService, lookupRepo);
         commandFacade = new ProjectsCommandFacade(projectsService, projectPermissionsService);

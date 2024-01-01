@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 
 public abstract class JDBCRepository implements Repository {
 
@@ -107,6 +108,55 @@ public abstract class JDBCRepository implements Repository {
                 ));
     }
 
+    protected Mono<Integer> executeSqlUpdate(String sql, PreparedStatementConfig statementConfig) {
+        return getConnectionMono()
+                .flatMap(connection -> {
+                    try (var statement = connection.prepareStatement(sql)) {
+                        statementConfig.accept(statement);
+                        return Mono.just(statement.executeUpdate());
+                    } catch (SQLException e) {
+                        return Mono.error(e);
+                    }
+                });
+    }
+
+    protected <T> Mono<Void> executeSqlBatchUpdate(
+            String sql,
+            Collection<T> objects,
+            PreparedStatementObjectConfig<T> statementConfig
+    ) {
+        return executeSqlBatchUpdate(sql, objects, statementConfig, 1000);
+    }
+
+    protected <T> Mono<Void> executeSqlBatchUpdate(
+            String sql,
+            Collection<T> objects,
+            PreparedStatementObjectConfig<T> statementConfig,
+            int batchSize
+    ) {
+        return getConnectionMono()
+                .flatMap(connection -> {
+                    try (var statement = connection.prepareStatement(sql)) {
+                        int counter = 0;
+
+                        for (T object : objects) {
+                            statementConfig.accept(statement, object);
+                            statement.addBatch();
+
+                            counter += 1;
+
+                            if (counter % batchSize == 0 || counter == objects.size()) {
+                                statement.executeBatch();
+                            }
+                        }
+
+                        return Mono.empty();
+                    } catch (SQLException e) {
+                        return Mono.error(e);
+                    }
+                });
+    }
+    
     private <T> Flux<T> toFlux(ResultSet resultSet, SQLiteRepository.ResultSetRowMapper<T> rowMapper) {
         return Flux.create(sink -> {
             try {
@@ -128,6 +178,12 @@ public abstract class JDBCRepository implements Repository {
     public interface PreparedStatementConfig {
 
         void accept(PreparedStatement statement) throws SQLException;
+
+    }
+
+    public interface PreparedStatementObjectConfig<T> {
+
+        void accept(PreparedStatement statement, T object) throws SQLException;
 
     }
 

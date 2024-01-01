@@ -26,32 +26,24 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
 
     @Override
     public Mono<Permission> insert(Permission permission) {
-        return getConnectionMono()
-                .flatMap(connection -> {
-                    String sql = """
-                            INSERT INTO permissions (user_id, action, resource_type, resource_id)
-                            VALUES (?, ?, ?, ?)
-                            """;
+        String sql = """
+                INSERT INTO permissions (user_id, action, resource_type, resource_id)
+                VALUES (?, ?, ?, ?)
+                """;
 
-                    try (var statement = connection.prepareStatement(sql)) {
-                        statement.setString(1, permission.getUserId().getValue());
-                        statement.setString(2, permission.getAction().getName());
-                        statement.setString(3, permission.getResource().getType().getName());
-                        statement.setString(
-                                4,
-                                permission.getResource()
-                                        .getId()
-                                        .map(ResourceId::getValue)
-                                        .orElse(NULL_VALUE_PLACEHOLDER)
-                        );
-
-                        statement.execute();
-
-                        return Mono.just(permission);
-                    } catch (SQLException e) {
-                        return Mono.error(e);
-                    }
-                })
+        return executeSqlUpdate(sql, statement -> {
+            statement.setString(1, permission.getUserId().getValue());
+            statement.setString(2, permission.getAction().getName());
+            statement.setString(3, permission.getResource().getType().getName());
+            statement.setString(
+                    4,
+                    permission.getResource()
+                            .getId()
+                            .map(ResourceId::getValue)
+                            .orElse(NULL_VALUE_PLACEHOLDER)
+            );
+        })
+                .thenReturn(permission)
                 .onErrorResume(e -> {
                     if (e instanceof SQLiteException sqLiteException) {
                         boolean isUniqueConstraintViolation = sqLiteException.getErrorCode() == 19;
@@ -66,41 +58,23 @@ public class SQLitePermissionsRepo extends SQLiteRepository implements Permissio
 
     @Override
     public Flux<Permission> insertAll(Collection<Permission> permissions) {
-        return getConnectionMono()
-                .flatMapMany(connection -> {
-                    String sql = """
-                            INSERT INTO permissions (user_id, action, resource_type, resource_id)
-                            VALUES (?, ?, ?, ?)
-                            """;
+        String sql = """
+                INSERT INTO permissions (user_id, action, resource_type, resource_id)
+                VALUES (?, ?, ?, ?)
+                """;
 
-                    try (var statement = connection.prepareStatement(sql)) {
-                        int count = 0;
-
-                        for (Permission permission : permissions) {
-                            statement.setString(1, permission.getUserId().getValue());
-                            statement.setString(2, permission.getAction().getName());
-                            statement.setString(3, permission.getResource().getType().getName());
-                            statement.setString(
-                                    4,
-                                    permission.getResource()
-                                            .getId()
-                                            .map(ResourceId::getValue)
-                                            .orElse(NULL_VALUE_PLACEHOLDER)
-                            );
-
-                            statement.addBatch();
-                            count++;
-
-                            if (count % 1000 == 0 || count == permissions.size()) {
-                                statement.executeBatch();
-                            }
-                        }
-
-                        return Flux.fromIterable(permissions);
-                    } catch (SQLException e) {
-                        return Mono.error(e);
-                    }
-                });
+        return executeSqlBatchUpdate(sql, permissions, (statement, permission) -> {
+            statement.setString(1, permission.getUserId().getValue());
+            statement.setString(2, permission.getAction().getName());
+            statement.setString(3, permission.getResource().getType().getName());
+            statement.setString(
+                    4,
+                    permission.getResource()
+                            .getId()
+                            .map(ResourceId::getValue)
+                            .orElse(NULL_VALUE_PLACEHOLDER)
+            );
+        }).thenMany(Flux.fromIterable(permissions));
     }
 
     @Override

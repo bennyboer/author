@@ -59,44 +59,35 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
         EventMetadata metadata = event.getMetadata();
         Event ev = event.getEvent();
 
-        return getConnectionMono()
-                .flatMap(connection -> {
-                    String sql = """
-                            INSERT INTO events (
-                                aggregate_id,
-                                aggregate_type,
-                                aggregate_version,
-                                agent_type,
-                                agent_id,
-                                date,
-                                is_snapshot,
-                                event_name,
-                                event_version,
-                                event_payload
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            """;
+        String sql = """
+                INSERT INTO events (
+                    aggregate_id,
+                    aggregate_type,
+                    aggregate_version,
+                    agent_type,
+                    agent_id,
+                    date,
+                    is_snapshot,
+                    event_name,
+                    event_version,
+                    event_payload
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
-                    String serializedEvent = eventSerializer.serialize(ev);
+        return executeSqlUpdate(sql, statement -> {
+            String serializedEvent = eventSerializer.serialize(ev);
 
-                    try (var statement = connection.prepareStatement(sql)) {
-                        statement.setString(1, metadata.getAggregateId().getValue());
-                        statement.setString(2, metadata.getAggregateType().getValue());
-                        statement.setLong(3, metadata.getAggregateVersion().getValue());
-                        statement.setString(4, metadata.getAgent().getType().name());
-                        statement.setString(5, metadata.getAgent().getId().getValue());
-                        statement.setString(6, metadata.getDate().toString());
-                        statement.setBoolean(7, metadata.isSnapshot());
-                        statement.setString(8, ev.getEventName().getValue());
-                        statement.setLong(9, ev.getVersion().getValue());
-                        statement.setString(10, serializedEvent);
-
-                        statement.execute();
-
-                        return Mono.just(event);
-                    } catch (SQLException e) {
-                        return Mono.error(e);
-                    }
-                });
+            statement.setString(1, metadata.getAggregateId().getValue());
+            statement.setString(2, metadata.getAggregateType().getValue());
+            statement.setLong(3, metadata.getAggregateVersion().getValue());
+            statement.setString(4, metadata.getAgent().getType().name());
+            statement.setString(5, metadata.getAgent().getId().getValue());
+            statement.setString(6, metadata.getDate().toString());
+            statement.setBoolean(7, metadata.isSnapshot());
+            statement.setString(8, ev.getEventName().getValue());
+            statement.setLong(9, ev.getVersion().getValue());
+            statement.setString(10, serializedEvent);
+        }).thenReturn(event);
     }
 
     @Override

@@ -4,10 +4,13 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.eventsourcing.persistence.SQLiteEventSourcingRepo;
+import de.bennyboer.author.eventsourcing.persistence.readmodel.EventSourcingReadModelRepo;
 import de.bennyboer.author.eventsourcing.serialization.EventSerializer;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.permissions.repo.SQLitePermissionsRepo;
+
+import java.util.function.Supplier;
 
 public class RepoFactory {
 
@@ -36,4 +39,15 @@ public class RepoFactory {
         }
     }
 
+    public static <ID, T, R extends EventSourcingReadModelRepo<ID, T>> R createReadModelRepo(
+            Supplier<R> testingRepoSupplier,
+            Supplier<R> persistentRepoSupplier
+    ) {
+        if (isTestingProfile) {
+            return testingRepoSupplier.get();
+        } else {
+            return persistentRepoSupplier.get();
+        }
+
+    }
 }
