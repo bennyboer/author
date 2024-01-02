@@ -2,7 +2,7 @@ package de.bennyboer.author.persistence;
 
 import reactor.core.publisher.Mono;
 
-public interface Repository extends AutoCloseable {
+public interface Repository {
 
     Mono<RepositoryVersion> getVersion();
 

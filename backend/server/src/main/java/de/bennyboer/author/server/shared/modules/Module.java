@@ -28,10 +28,17 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
     @Override
     public void init(Javalin javalin) {
         this.initializeModule();
-        javalin.events(event -> event.serverStarted(() -> onServerStarted().block()));
+        javalin.events(event -> {
+            event.serverStarted(() -> onServerStarted().block());
+            event.serverStopped(() -> onServerStopped().block());
+        });
     }
 
     protected Mono<Void> onServerStarted() {
+        return Mono.empty();
+    }
+
+    protected Mono<Void> onServerStopped() {
         return Mono.empty();
     }
 

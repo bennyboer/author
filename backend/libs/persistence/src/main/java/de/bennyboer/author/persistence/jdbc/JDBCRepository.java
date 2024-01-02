@@ -3,7 +3,7 @@ package de.bennyboer.author.persistence.jdbc;
 import de.bennyboer.author.persistence.Repository;
 import de.bennyboer.author.persistence.RepositoryVersion;
 import de.bennyboer.author.persistence.patches.JDBCRepositoryPatch;
-import de.bennyboer.author.persistence.patches.PatchManager;
+import de.bennyboer.author.persistence.patches.RepositoryPatch;
 import de.bennyboer.author.persistence.sqlite.SQLiteRepository;
 import jakarta.annotation.Nullable;
 import reactor.core.publisher.Flux;
@@ -15,19 +15,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
-public abstract class JDBCRepository implements Repository {
+public abstract class JDBCRepository implements Repository, AutoCloseable {
 
     private static final String META_DATA_TABLE_NAME = "meta_data";
 
     @Nullable
     private Connection connection;
 
-    private final PatchManager<JDBCRepositoryPatch> patchManager;
+    private final List<JDBCRepositoryPatch> patches;
 
-    protected JDBCRepository(PatchManager<JDBCRepositoryPatch> patchManager) {
-        this.patchManager = patchManager;
+    protected JDBCRepository(List<JDBCRepositoryPatch> patches) {
+        this.patches = patches;
     }
 
     protected abstract Connection createConnection() throws SQLException, IOException;
@@ -49,7 +50,7 @@ public abstract class JDBCRepository implements Repository {
 
     @Override
     public Mono<RepositoryVersion> getVersion() {
-        return Mono.fromCallable(() -> readVersionFromMetaDataTable(getConnection(), META_DATA_TABLE_NAME));
+        return Mono.fromCallable(this::getVersionSync);
     }
 
     @Override
@@ -182,12 +183,21 @@ public abstract class JDBCRepository implements Repository {
         return !tableExists(connection, META_DATA_TABLE_NAME);
     }
 
-    private void patchIfNecessary(Connection connection) throws SQLException {
-        List<JDBCRepositoryPatch> patches = patchManager.findUnappliedPatches(this).block();
+    private void patchIfNecessary(Connection connection) throws SQLException, IOException {
+        List<JDBCRepositoryPatch> patches = findUnappliedPatches();
 
         for (JDBCRepositoryPatch patch : patches) {
             patchInTransaction(connection, patch);
         }
+    }
+
+    private List<JDBCRepositoryPatch> findUnappliedPatches() throws SQLException, IOException {
+        RepositoryVersion currentVersion = getVersionSync();
+
+        return patches.stream()
+                .filter(patch -> patch.appliesTo().isGreaterThanOrEqualTo(currentVersion))
+                .sorted(Comparator.comparing(RepositoryPatch::appliesTo))
+                .toList();
     }
 
     private void patchInTransaction(Connection connection, JDBCRepositoryPatch patch) throws SQLException {
@@ -216,6 +226,10 @@ public abstract class JDBCRepository implements Repository {
             statement.setLong(1, version.getValue());
             statement.executeUpdate();
         }
+    }
+
+    private RepositoryVersion getVersionSync() throws SQLException, IOException {
+        return readVersionFromMetaDataTable(getConnection(), META_DATA_TABLE_NAME);
     }
 
     public interface PreparedStatementConfig {

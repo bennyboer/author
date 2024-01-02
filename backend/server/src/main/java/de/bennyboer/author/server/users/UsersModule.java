@@ -27,8 +27,10 @@ import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserService;
 import io.javalin.Javalin;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +48,8 @@ public class UsersModule extends Module {
 
     private final UsersPermissionsFacade permissionsFacade;
 
+    private final List<AutoCloseable> closeables = new ArrayList<>();
+
     public UsersModule(ModuleConfig config, TokenGenerator tokenGenerator) {
         super(config);
 
@@ -54,17 +58,21 @@ public class UsersModule extends Module {
                 UserEventTransformer::toSerialized,
                 UserEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer, closeables::add);
         var userService = new UserService(eventSourcingRepo, getEventPublisher(), tokenGenerator);
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("users");
+        var permissionsRepo = RepoFactory.createPermissionsRepo("users", closeables::add);
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var userPermissionsService = new UserPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var userLookupRepo = RepoFactory.createReadModelRepo(InMemoryUserLookupRepo::new, SQLiteUserLookupRepo::new);
+        var userLookupRepo = RepoFactory.createReadModelRepo(
+                InMemoryUserLookupRepo::new,
+                SQLiteUserLookupRepo::new,
+                closeables::add
+        );
 
         commandFacade = new UsersCommandFacade(userService, userPermissionsService, userLookupRepo);
         queryFacade = new UsersQueryFacade(userService, userPermissionsService);
@@ -121,6 +129,20 @@ public class UsersModule extends Module {
     @Override
     protected Mono<Void> onServerStarted() {
         return startupFacade.initDefaultUserIfNecessary();
+    }
+
+    @Override
+    protected Mono<Void> onServerStopped() {
+        return Flux.fromIterable(closeables)
+                .flatMap(closeable -> {
+                    try {
+                        closeable.close();
+                        return Mono.empty();
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
+                })
+                .then();
     }
 
 }

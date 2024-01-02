@@ -27,8 +27,10 @@ import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,8 @@ public class ProjectsModule extends Module {
 
     private final ProjectsSyncFacade syncFacade;
 
+    private final List<AutoCloseable> closeables = new ArrayList<>();
+
     public ProjectsModule(ModuleConfig config) {
         super(config);
 
@@ -52,10 +56,10 @@ public class ProjectsModule extends Module {
                 ProjectEventTransformer::toSerialized,
                 ProjectEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer, closeables::add);
         var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("projects");
+        var permissionsRepo = RepoFactory.createPermissionsRepo("projects", closeables::add);
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
@@ -64,7 +68,8 @@ public class ProjectsModule extends Module {
 
         ProjectLookupRepo lookupRepo = RepoFactory.createReadModelRepo(
                 InMemoryProjectLookupRepo::new,
-                SQLiteProjectLookupRepo::new
+                SQLiteProjectLookupRepo::new,
+                closeables::add
         );
 
         queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService, lookupRepo);
@@ -122,6 +127,20 @@ public class ProjectsModule extends Module {
     @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Project.TYPE, ProjectEventTransformer::toApi);
+    }
+
+    @Override
+    protected Mono<Void> onServerStopped() {
+        return Flux.fromIterable(closeables)
+                .flatMap(closeable -> {
+                    try {
+                        closeable.close();
+                        return Mono.empty();
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
+                })
+                .then();
     }
 
 }

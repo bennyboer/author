@@ -27,8 +27,10 @@ import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.structure.StructureId;
 import de.bennyboer.author.structure.StructureService;
 import io.javalin.Javalin;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,8 @@ public class StructureModule extends Module {
 
     private final StructurePermissionsFacade permissionsFacade;
 
+    private final List<AutoCloseable> closeables = new ArrayList<>();
+
     public StructureModule(ModuleConfig config) {
         super(config);
 
@@ -52,10 +56,10 @@ public class StructureModule extends Module {
                 StructureEventTransformer::toSerialized,
                 StructureEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer, closeables::add);
         var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("structure");
+        var permissionsRepo = RepoFactory.createPermissionsRepo("structure", closeables::add);
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
@@ -64,7 +68,8 @@ public class StructureModule extends Module {
 
         var lookupRepo = RepoFactory.createReadModelRepo(
                 InMemoryStructureLookupRepo::new,
-                SQLiteStructureLookupRepo::new
+                SQLiteStructureLookupRepo::new,
+                closeables::add
         );
 
         var projectDetailsService = new ProjectDetailsHttpService(config.getHttpApi(), config.getJsonMapper());
@@ -124,6 +129,20 @@ public class StructureModule extends Module {
     @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Structure.TYPE, StructureEventTransformer::toApi);
+    }
+
+    @Override
+    protected Mono<Void> onServerStopped() {
+        return Flux.fromIterable(closeables)
+                .flatMap(closeable -> {
+                    try {
+                        closeable.close();
+                        return Mono.empty();
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
+                })
+                .then();
     }
 
 }

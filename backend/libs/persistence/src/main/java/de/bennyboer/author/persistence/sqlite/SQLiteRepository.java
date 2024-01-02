@@ -3,7 +3,6 @@ package de.bennyboer.author.persistence.sqlite;
 import de.bennyboer.author.persistence.RepositoryVersion;
 import de.bennyboer.author.persistence.jdbc.JDBCRepository;
 import de.bennyboer.author.persistence.patches.JDBCRepositoryPatch;
-import de.bennyboer.author.persistence.patches.PatchManager;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.IOException;
@@ -12,6 +11,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 
 public class SQLiteRepository extends JDBCRepository {
 
@@ -20,8 +20,8 @@ public class SQLiteRepository extends JDBCRepository {
     private final String name;
     private final boolean isTemporary;
 
-    public SQLiteRepository(String name, PatchManager<JDBCRepositoryPatch> patchManager, boolean isTemporary) {
-        super(patchManager);
+    public SQLiteRepository(String name, List<JDBCRepositoryPatch> patches, boolean isTemporary) {
+        super(patches);
 
         this.name = name;
         this.isTemporary = isTemporary;
@@ -34,7 +34,7 @@ public class SQLiteRepository extends JDBCRepository {
     }
 
     public SQLiteRepository(String name, boolean isTemporary) {
-        this(name, new PatchManager<>(), isTemporary);
+        this(name, List.of(), isTemporary);
     }
 
     public SQLiteRepository(String name) {
@@ -106,7 +106,7 @@ public class SQLiteRepository extends JDBCRepository {
         }
     }
 
-    private Path getFilePath() throws IOException {
+    protected Path getFilePath() throws IOException {
         if (isTemporary) {
             try {
                 Path tempDir = Files.createTempDirectory(".author");

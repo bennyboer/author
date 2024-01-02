@@ -10,6 +10,7 @@ import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.permissions.repo.SQLitePermissionsRepo;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class RepoFactory {
@@ -22,32 +23,43 @@ public class RepoFactory {
 
     public static EventSourcingRepo createEventSourcingRepo(
             AggregateType aggregateType,
-            EventSerializer eventSerializer
+            EventSerializer eventSerializer,
+            Consumer<AutoCloseable> closeableConsumer
     ) {
         if (isTestingProfile) {
             return new InMemoryEventSourcingRepo();
-        } else {
-            return new SQLiteEventSourcingRepo(aggregateType, eventSerializer);
         }
+
+        var repo = new SQLiteEventSourcingRepo(aggregateType, eventSerializer);
+        closeableConsumer.accept(repo);
+        return repo;
     }
 
-    public static PermissionsRepo createPermissionsRepo(String name) {
+    public static PermissionsRepo createPermissionsRepo(String name, Consumer<AutoCloseable> closeableConsumer) {
         if (isTestingProfile) {
             return new InMemoryPermissionsRepo();
-        } else {
-            return new SQLitePermissionsRepo(String.format("%s_permissions", name));
         }
+
+        var repo = new SQLitePermissionsRepo(String.format("%s_permissions", name));
+        closeableConsumer.accept(repo);
+        return repo;
     }
 
     public static <ID, T, R extends EventSourcingReadModelRepo<ID, T>> R createReadModelRepo(
             Supplier<R> testingRepoSupplier,
-            Supplier<R> persistentRepoSupplier
+            Supplier<R> persistentRepoSupplier,
+            Consumer<AutoCloseable> closeableConsumer
     ) {
         if (isTestingProfile) {
             return testingRepoSupplier.get();
-        } else {
-            return persistentRepoSupplier.get();
         }
 
+        var repo = persistentRepoSupplier.get();
+        if (repo instanceof AutoCloseable) {
+            closeableConsumer.accept((AutoCloseable) repo);
+        }
+
+        return repo;
     }
+
 }
