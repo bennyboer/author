@@ -2,6 +2,8 @@ package de.bennyboer.author.persistence.jdbc;
 
 import de.bennyboer.author.persistence.Repository;
 import de.bennyboer.author.persistence.RepositoryVersion;
+import de.bennyboer.author.persistence.patches.JDBCRepositoryPatch;
+import de.bennyboer.author.persistence.patches.PatchManager;
 import de.bennyboer.author.persistence.sqlite.SQLiteRepository;
 import jakarta.annotation.Nullable;
 import reactor.core.publisher.Flux;
@@ -13,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
 
 public abstract class JDBCRepository implements Repository {
 
@@ -21,13 +24,17 @@ public abstract class JDBCRepository implements Repository {
     @Nullable
     private Connection connection;
 
+    private final PatchManager<JDBCRepositoryPatch> patchManager;
+
+    protected JDBCRepository(PatchManager<JDBCRepositoryPatch> patchManager) {
+        this.patchManager = patchManager;
+    }
+
     protected abstract Connection createConnection() throws SQLException, IOException;
 
     protected abstract boolean tableExists(Connection connection, String tableName) throws SQLException;
 
     protected abstract void initializeMetaDataTable(Connection connection, String tableName) throws SQLException;
-
-    protected abstract void patchIfNeeded(Connection connection) throws SQLException;
 
     protected abstract RepositoryVersion readVersionFromMetaDataTable(
             Connection connection,
@@ -59,7 +66,7 @@ public abstract class JDBCRepository implements Repository {
             initializeMetaDataTable(connection, META_DATA_TABLE_NAME);
             initialize(connection);
         } else {
-            patchIfNeeded(connection);
+            patchIfNecessary(connection);
         }
     }
 
@@ -173,6 +180,42 @@ public abstract class JDBCRepository implements Repository {
 
     private boolean isMetaDataTableMissing(Connection connection) throws SQLException {
         return !tableExists(connection, META_DATA_TABLE_NAME);
+    }
+
+    private void patchIfNecessary(Connection connection) throws SQLException {
+        List<JDBCRepositoryPatch> patches = patchManager.findUnappliedPatches(this).block();
+
+        for (JDBCRepositoryPatch patch : patches) {
+            patchInTransaction(connection, patch);
+        }
+    }
+
+    private void patchInTransaction(Connection connection, JDBCRepositoryPatch patch) throws SQLException {
+        boolean wasAutoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+
+        try {
+            patch.apply(connection);
+            updateVersion(connection, patch.appliesTo().increase());
+
+            connection.commit();
+        } catch (Exception e) {
+            connection.rollback();
+        } finally {
+            connection.commit();
+            connection.setAutoCommit(wasAutoCommit);
+        }
+    }
+
+    private void updateVersion(Connection connection, RepositoryVersion version) throws SQLException {
+        String sql = """
+                UPDATE %s SET value = ? WHERE key = 'version'
+                """.formatted(META_DATA_TABLE_NAME);
+
+        try (var statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, version.getValue());
+            statement.executeUpdate();
+        }
     }
 
     public interface PreparedStatementConfig {

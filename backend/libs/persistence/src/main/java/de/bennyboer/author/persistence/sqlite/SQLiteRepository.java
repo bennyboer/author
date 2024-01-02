@@ -2,6 +2,8 @@ package de.bennyboer.author.persistence.sqlite;
 
 import de.bennyboer.author.persistence.RepositoryVersion;
 import de.bennyboer.author.persistence.jdbc.JDBCRepository;
+import de.bennyboer.author.persistence.patches.JDBCRepositoryPatch;
+import de.bennyboer.author.persistence.patches.PatchManager;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.IOException;
@@ -18,8 +20,8 @@ public class SQLiteRepository extends JDBCRepository {
     private final String name;
     private final boolean isTemporary;
 
-    public SQLiteRepository(String name, boolean isTemporary) {
-        super();
+    public SQLiteRepository(String name, PatchManager<JDBCRepositoryPatch> patchManager, boolean isTemporary) {
+        super(patchManager);
 
         this.name = name;
         this.isTemporary = isTemporary;
@@ -29,6 +31,10 @@ public class SQLiteRepository extends JDBCRepository {
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public SQLiteRepository(String name, boolean isTemporary) {
+        this(name, new PatchManager<>(), isTemporary);
     }
 
     public SQLiteRepository(String name) {
@@ -78,12 +84,6 @@ public class SQLiteRepository extends JDBCRepository {
                     tableName
             ));
         }
-    }
-
-    @Override
-    protected void patchIfNeeded(Connection connection) throws SQLException {
-        // TODO Implement patching
-        // TODO Get Version of repository and compare with needed version - if mismatch, patch!
     }
 
     @Override
