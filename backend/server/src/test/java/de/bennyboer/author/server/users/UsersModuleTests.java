@@ -136,6 +136,94 @@ public class UsersModuleTests {
     }
 
     @Test
+    void shouldLockTheUserAfter10UnsuccessfulLoginAttempts() {
+        JavalinTest.test(javalin, (server, client) -> {
+            // given: the user lookup has been updated after startup
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+
+            // when: trying to login with a wrong password 10 times
+            for (int i = 0; i < 10; i++) {
+                LoginUserRequest request = LoginUserRequest.builder()
+                        .name("default")
+                        .password("wrong")
+                        .build();
+                String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+                var response = client.post("/api/users/login", requestJson);
+
+                // then: the server responds with 401
+                assertThat(response.code()).isEqualTo(401);
+            }
+
+            // and: trying to login with the correct password
+            LoginUserRequest request = LoginUserRequest.builder()
+                    .name("default")
+                    .password("password")
+                    .build();
+            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+            var response = client.post("/api/users/login", requestJson);
+
+            // then: the server responds with 429
+            assertThat(response.code()).isEqualTo(429);
+        });
+    }
+
+    @Test
+    void shouldNotLockTheUserAfter10UnsuccessfulLoginAttemptsWhenOneSuccessfulHappenedInBetween() {
+        JavalinTest.test(javalin, (server, client) -> {
+            // given: the user lookup has been updated after startup
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+
+            // when: trying to login with a wrong password 9 times
+            for (int i = 0; i < 9; i++) {
+                LoginUserRequest request = LoginUserRequest.builder()
+                        .name("default")
+                        .password("wrong")
+                        .build();
+                String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+                var response = client.post("/api/users/login", requestJson);
+
+                // then: the server responds with 401
+                assertThat(response.code()).isEqualTo(401);
+            }
+
+            // and: trying to login with the correct password
+            LoginUserRequest request = LoginUserRequest.builder()
+                    .name("default")
+                    .password("password")
+                    .build();
+            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+
+            // then: the server responds with 200
+            var response = client.post("/api/users/login", requestJson);
+            assertThat(response.code()).isEqualTo(200);
+
+            // when: trying to login with a wrong password 5 times
+            for (int i = 0; i < 5; i++) {
+                request = LoginUserRequest.builder()
+                        .name("default")
+                        .password("wrong")
+                        .build();
+                requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+                response = client.post("/api/users/login", requestJson);
+
+                // then: the server responds with 401
+                assertThat(response.code()).isEqualTo(401);
+            }
+
+            // and: trying to login with the correct password
+            request = LoginUserRequest.builder()
+                    .name("default")
+                    .password("password")
+                    .build();
+            requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+            response = client.post("/api/users/login", requestJson);
+
+            // then: the server responds with 200
+            assertThat(response.code()).isEqualTo(200);
+        });
+    }
+
+    @Test
     void shouldRenameUser() {
         JavalinTest.test(javalin, (server, client) -> {
             // given: a logged in user
