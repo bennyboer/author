@@ -6,10 +6,8 @@ import de.bennyboer.author.auth.keys.KeyPair;
 import de.bennyboer.author.auth.keys.KeyPairs;
 import de.bennyboer.author.auth.token.*;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.project.Project;
 import de.bennyboer.author.server.projects.ProjectsModule;
 import de.bennyboer.author.server.shared.http.Auth;
-import de.bennyboer.author.server.shared.http.HttpApi;
 import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.modules.Module;
@@ -18,66 +16,78 @@ import de.bennyboer.author.server.shared.permissions.MissingPermissionException;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.StructureModule;
+import de.bennyboer.author.server.users.UsersConfig;
 import de.bennyboer.author.server.users.UsersModule;
-import de.bennyboer.author.structure.Structure;
-import de.bennyboer.author.user.User;
+import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import io.javalin.Javalin;
-import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
+import lombok.Getter;
 
+import java.util.List;
 import java.util.Set;
 
 import static de.bennyboer.author.server.shared.http.security.Role.UNAUTHORIZED;
 
 public class App {
 
-    public App(Profile profile) {
-        if (profile == Profile.TESTING) {
+    private final AppConfig appConfig;
+
+    @Getter
+    private final JsonMapper jsonMapper;
+
+    @Getter
+    private final Messaging messaging;
+
+    public App(AppConfig appConfig) {
+        this.appConfig = appConfig;
+        this.jsonMapper = createJsonMapper();
+        this.messaging = setupMessaging();
+
+        initAuth();
+
+        if (appConfig.getProfile() == Profile.TESTING) {
             RepoFactory.setTestingProfile(true);
         }
     }
 
-    public Javalin createJavalin() {
-        JsonMapper jsonMapper = new JavalinJackson().updateMapper(mapper -> {
+    private void initAuth() {
+        TokenVerifier tokenVerifier = appConfig.getTokenVerifier();
+        Token systemToken = appConfig.getTokenGenerator().generate(TokenContent.system()).block();
+        Auth.init(tokenVerifier, systemToken);
+    }
+
+    private Messaging setupMessaging() {
+        return new Messaging(jsonMapper);
+    }
+
+    private JsonMapper createJsonMapper() {
+        return new JavalinJackson().updateMapper(mapper -> {
             mapper.registerModule(new Jdk8Module());
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         });
+    }
 
-        KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
-        TokenGenerator tokenGenerator = TokenGenerators.create(keyPair);
-        TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
-        Token systemToken = tokenGenerator.generate(TokenContent.system()).block();
-        Auth.init(tokenVerifier, systemToken);
-
-        var messaging = new Messaging(jsonMapper);
+    public Javalin createJavalin() {
         var webSocketService = new WebSocketService(messaging);
-
-        /*
-        TODO The aggregate API config is to be taken from resources at some point.
-        For example when we extract modules to their own services.
-        All services need to know the HTTP API URLs of all modules to communicate with one another.
-         */
-        HttpApi httpApi = new HttpApi();
-        httpApi.registerHttpApiUrl(User.TYPE.getValue(), "http://localhost:7070/api/users");
-        httpApi.registerHttpApiUrl(Project.TYPE.getValue(), "http://localhost:7070/api/projects");
-        httpApi.registerHttpApiUrl(Structure.TYPE.getValue(), "http://localhost:7070/api/structures");
 
         return Javalin.create(config -> {
                     ModuleConfig moduleConfig = ModuleConfig.of(
+                            appConfig.getHostUrl(),
                             messaging,
                             jsonMapper,
-                            httpApi,
+                            appConfig.getHttpApi(),
                             webSocketService
                     );
 
-                    registerModule(config, new UsersModule(moduleConfig, tokenGenerator));
-                    registerModule(config, new ProjectsModule(moduleConfig));
-                    registerModule(config, new StructureModule(moduleConfig));
+                    for (var moduleInstaller : appConfig.getModules()) {
+                        Module module = moduleInstaller.install(moduleConfig);
+                        config.plugins.register(module);
+                    }
 
                     config.plugins.enableCors(cors -> {
                         // TODO Restrict to frontend host and only allow for DEV build
@@ -95,19 +105,39 @@ public class App {
                     ws.onError(webSocketService::onError);
                     ws.onMessage(webSocketService::onMessage);
                 }, UNAUTHORIZED)
-                .events(event -> event.serverStopping(messaging::stop))
+                .events(event -> {
+                    event.serverStopping(messaging::stop);
+                    event.serverStopped(RepoFactory::closeAll);
+                })
                 .exception(MissingPermissionException.class, (exception, ctx) -> ctx.status(403).result("Forbidden"));
     }
 
     public static void main(String[] args) {
-        App app = new App(Profile.PRODUCTION);
+        KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
+        TokenGenerator tokenGenerator = TokenGenerators.create(keyPair);
+        TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
+
+        AppConfig config = AppConfig.builder()
+                .tokenGenerator(tokenGenerator)
+                .tokenVerifier(tokenVerifier)
+                .modules(List.of(
+                        (moduleConfig) -> {
+                            UsersConfig usersConfig = UsersConfig.builder()
+                                    .tokenGenerator(tokenGenerator)
+                                    .userLookupRepo(RepoFactory.createReadModelRepo(SQLiteUserLookupRepo::new))
+                                    .build();
+
+                            return new UsersModule(moduleConfig, usersConfig);
+                        },
+                        ProjectsModule::new,
+                        StructureModule::new
+                ))
+                .build();
+
+        App app = new App(config);
 
         Javalin javalin = app.createJavalin();
-        javalin.start(7070);
-    }
-
-    private static void registerModule(JavalinConfig config, Module module) {
-        config.plugins.register(module);
+        javalin.start(config.getHost(), config.getPort());
     }
 
     private static void handleIfPermitted(Handler handler, Context ctx, Set<? extends RouteRole> permittedRoles)

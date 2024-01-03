@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -16,6 +17,8 @@ import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 public class ProjectDetailsHttpService implements ProjectDetailsService {
+
+    private final URL host;
 
     private final HttpApi api;
 
@@ -28,7 +31,7 @@ public class ProjectDetailsHttpService implements ProjectDetailsService {
 
     @Override
     public Mono<String> getProjectName(String projectId) {
-        String baseUrl = api.getUrlByAggregateType("PROJECT");
+        String baseUrl = api.getUrlByAggregateType(host.toString(), "PROJECT");
         String url = String.format("%s/%s", baseUrl, projectId);
 
         var request = HttpRequest.newBuilder()

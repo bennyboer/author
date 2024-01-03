@@ -1,31 +1,67 @@
 package de.bennyboer.author.server.users;
 
+import de.bennyboer.author.auth.keys.KeyPair;
+import de.bennyboer.author.auth.keys.KeyPairs;
+import de.bennyboer.author.auth.token.TokenGenerator;
+import de.bennyboer.author.auth.token.TokenGenerators;
+import de.bennyboer.author.auth.token.TokenVerifier;
+import de.bennyboer.author.auth.token.TokenVerifiers;
 import de.bennyboer.author.server.App;
+import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.Profile;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
+import de.bennyboer.author.user.UserName;
 import io.javalin.Javalin;
-import io.javalin.json.JavalinJackson;
+import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UsersModuleTests {
 
-    private final Javalin app = new App(Profile.TESTING).createJavalin();
+    private final TestUserLookupRepo userLookupRepo = new TestUserLookupRepo();
+    private final JsonMapper jsonMapper;
+    private final Javalin javalin;
 
-    private final JavalinJackson jsonMapper = new JavalinJackson();
+    {
+        KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
+        TokenGenerator tokenGenerator = TokenGenerators.create(keyPair);
+        TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
+
+        AppConfig config = AppConfig.builder()
+                .profile(Profile.TESTING)
+                .tokenGenerator(tokenGenerator)
+                .tokenVerifier(tokenVerifier)
+                .modules(List.of(
+                        (moduleConfig) -> {
+                            UsersConfig usersConfig = UsersConfig.builder()
+                                    .tokenGenerator(tokenGenerator)
+                                    .userLookupRepo(userLookupRepo)
+                                    .build();
+
+                            return new UsersModule(moduleConfig, usersConfig);
+                        }
+                ))
+                .build();
+
+        App app = new App(config);
+        jsonMapper = app.getJsonMapper();
+        javalin = app.createJavalin();
+    }
 
     @Test
     void shouldCreateDefaultUserOnStartupWithoutPersistentUsers() {
-        JavalinTest.test(app, (server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
+        JavalinTest.test(javalin, (server, client) -> {
+            // given: the user lookup has been updated after startup
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
 
             // when: trying to login with the default user
             LoginUserRequest request = LoginUserRequest.builder()
@@ -50,8 +86,9 @@ public class UsersModuleTests {
 
     @Test
     void shouldReturn401WhenUserNameCannotBeFound() {
-        JavalinTest.test(app, (server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
+        JavalinTest.test(javalin, (server, client) -> {
+            // given: the user lookup has been updated after startup
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
 
             // when: trying to login with a user that cannot be found
             LoginUserRequest request = LoginUserRequest.builder()
@@ -68,8 +105,9 @@ public class UsersModuleTests {
 
     @Test
     void shouldReturn401WhenPasswordIsWrong() {
-        JavalinTest.test(app, (server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
+        JavalinTest.test(javalin, (server, client) -> {
+            // given: the user lookup has been updated after startup
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
 
             // when: trying to login with a wrong password
             LoginUserRequest request = LoginUserRequest.builder()
@@ -86,9 +124,7 @@ public class UsersModuleTests {
 
     @Test
     void shouldRenameUser() {
-        JavalinTest.test(app, (server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
-
+        JavalinTest.test(javalin, (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
             var userId = loginUserResponse.getUserId();
@@ -117,9 +153,7 @@ public class UsersModuleTests {
 
     @Test
     void shouldNotBeAbleToRenameUserWithoutValidToken() {
-        JavalinTest.test(app, (server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
-
+        JavalinTest.test(javalin, (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
             var userId = loginUserResponse.getUserId();
@@ -147,9 +181,7 @@ public class UsersModuleTests {
 
     @Test
     void shouldGetUserDetails() {
-        JavalinTest.test(app, ((server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
-
+        JavalinTest.test(javalin, ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
             var userId = loginUserResponse.getUserId();
@@ -173,9 +205,7 @@ public class UsersModuleTests {
 
     @Test
     void shouldNotBeAbleToGetUserDetailsWithoutValidToken() {
-        JavalinTest.test(app, ((server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
-
+        JavalinTest.test(javalin, ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
             var userId = loginUserResponse.getUserId();
@@ -193,9 +223,7 @@ public class UsersModuleTests {
 
     @Test
     void shouldRemoveUser() {
-        JavalinTest.test(app, ((server, client) -> {
-            Thread.sleep(500); // Wait until the lookup has been created
-
+        JavalinTest.test(javalin, ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
             var userId = loginUserResponse.getUserId();
@@ -235,6 +263,9 @@ public class UsersModuleTests {
     }
 
     private LoginUserResponse loginDefaultUserAndReturnAccessToken(HttpClient client) throws IOException {
+        // Wait until the default user has been created
+        userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+
         LoginUserRequest request = LoginUserRequest.builder()
                 .name("default")
                 .password("password")

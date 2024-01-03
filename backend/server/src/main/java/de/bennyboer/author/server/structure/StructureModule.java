@@ -18,7 +18,6 @@ import de.bennyboer.author.server.structure.facade.StructureQueryFacade;
 import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
 import de.bennyboer.author.server.structure.messaging.*;
 import de.bennyboer.author.server.structure.permissions.StructurePermissionsService;
-import de.bennyboer.author.server.structure.persistence.lookup.InMemoryStructureLookupRepo;
 import de.bennyboer.author.server.structure.persistence.lookup.SQLiteStructureLookupRepo;
 import de.bennyboer.author.server.structure.rest.StructureRestHandler;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
@@ -27,10 +26,8 @@ import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.structure.StructureId;
 import de.bennyboer.author.structure.StructureService;
 import io.javalin.Javalin;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +43,6 @@ public class StructureModule extends Module {
 
     private final StructurePermissionsFacade permissionsFacade;
 
-    private final List<AutoCloseable> closeables = new ArrayList<>();
-
     public StructureModule(ModuleConfig config) {
         super(config);
 
@@ -56,23 +51,23 @@ public class StructureModule extends Module {
                 StructureEventTransformer::toSerialized,
                 StructureEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer, closeables::add);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
         var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("structure", closeables::add);
+        var permissionsRepo = RepoFactory.createPermissionsRepo("structure");
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = RepoFactory.createReadModelRepo(
-                InMemoryStructureLookupRepo::new,
-                SQLiteStructureLookupRepo::new,
-                closeables::add
-        );
+        var lookupRepo = RepoFactory.createReadModelRepo(SQLiteStructureLookupRepo::new);
 
-        var projectDetailsService = new ProjectDetailsHttpService(config.getHttpApi(), config.getJsonMapper());
+        var projectDetailsService = new ProjectDetailsHttpService(
+                config.getHost(),
+                config.getHttpApi(),
+                config.getJsonMapper()
+        );
 
         commandFacade = new StructureCommandFacade(structureService, structurePermissionsService);
         queryFacade = new StructureQueryFacade(structureService, structurePermissionsService, lookupRepo);
@@ -129,20 +124,6 @@ public class StructureModule extends Module {
     @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Structure.TYPE, StructureEventTransformer::toApi);
-    }
-
-    @Override
-    protected Mono<Void> onServerStopped() {
-        return Flux.fromIterable(closeables)
-                .flatMap(closeable -> {
-                    try {
-                        closeable.close();
-                        return Mono.empty();
-                    } catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                })
-                .then();
     }
 
 }

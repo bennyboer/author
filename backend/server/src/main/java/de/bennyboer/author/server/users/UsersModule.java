@@ -1,6 +1,5 @@
 package de.bennyboer.author.server.users;
 
-import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
@@ -19,18 +18,14 @@ import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgList
 import de.bennyboer.author.server.users.messaging.UserRemovedRemovePermissionsMsgListener;
 import de.bennyboer.author.server.users.messaging.UserRemovedUpdateLookupMsgListener;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
-import de.bennyboer.author.server.users.persistence.lookup.InMemoryUserLookupRepo;
-import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import de.bennyboer.author.server.users.rest.UsersRestHandler;
 import de.bennyboer.author.server.users.rest.UsersRestRouting;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserService;
 import io.javalin.Javalin;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -48,9 +43,10 @@ public class UsersModule extends Module {
 
     private final UsersPermissionsFacade permissionsFacade;
 
-    private final List<AutoCloseable> closeables = new ArrayList<>();
-
-    public UsersModule(ModuleConfig config, TokenGenerator tokenGenerator) {
+    public UsersModule(
+            ModuleConfig config,
+            UsersConfig usersConfig
+    ) {
         super(config);
 
         var eventSerializer = new JsonMapperEventSerializer(
@@ -58,21 +54,17 @@ public class UsersModule extends Module {
                 UserEventTransformer::toSerialized,
                 UserEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer, closeables::add);
-        var userService = new UserService(eventSourcingRepo, getEventPublisher(), tokenGenerator);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
+        var userService = new UserService(eventSourcingRepo, getEventPublisher(), usersConfig.getTokenGenerator());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("users", closeables::add);
+        var permissionsRepo = RepoFactory.createPermissionsRepo("users");
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var userPermissionsService = new UserPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var userLookupRepo = RepoFactory.createReadModelRepo(
-                InMemoryUserLookupRepo::new,
-                SQLiteUserLookupRepo::new,
-                closeables::add
-        );
+        var userLookupRepo = usersConfig.getUserLookupRepo();
 
         commandFacade = new UsersCommandFacade(userService, userPermissionsService, userLookupRepo);
         queryFacade = new UsersQueryFacade(userService, userPermissionsService);
@@ -129,20 +121,6 @@ public class UsersModule extends Module {
     @Override
     protected Mono<Void> onServerStarted() {
         return startupFacade.initDefaultUserIfNecessary();
-    }
-
-    @Override
-    protected Mono<Void> onServerStopped() {
-        return Flux.fromIterable(closeables)
-                .flatMap(closeable -> {
-                    try {
-                        closeable.close();
-                        return Mono.empty();
-                    } catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                })
-                .then();
     }
 
 }

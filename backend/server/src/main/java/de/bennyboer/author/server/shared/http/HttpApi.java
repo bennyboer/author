@@ -7,12 +7,13 @@ public class HttpApi {
 
     private final Map<String, String> aggregateTypeToUrl = new HashMap<>();
 
-    public void registerHttpApiUrl(String aggregateType, String url) {
+    public HttpApi registerHttpApiUrl(String aggregateType, String url) {
         aggregateTypeToUrl.put(aggregateType, url);
+        return this;
     }
 
-    public String getUrlByAggregateType(String aggregateType) {
-        return aggregateTypeToUrl.get(aggregateType);
+    public String getUrlByAggregateType(String host, String aggregateType) {
+        return aggregateTypeToUrl.get(aggregateType).replace("{HOST}", host);
     }
 
 }

@@ -12,7 +12,6 @@ import de.bennyboer.author.server.projects.facade.ProjectsQueryFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsSyncFacade;
 import de.bennyboer.author.server.projects.messaging.*;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
-import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
 import de.bennyboer.author.server.projects.persistence.lookup.ProjectLookupRepo;
 import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
 import de.bennyboer.author.server.projects.rest.ProjectsRestHandler;
@@ -27,10 +26,8 @@ import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +43,6 @@ public class ProjectsModule extends Module {
 
     private final ProjectsSyncFacade syncFacade;
 
-    private final List<AutoCloseable> closeables = new ArrayList<>();
-
     public ProjectsModule(ModuleConfig config) {
         super(config);
 
@@ -56,21 +51,17 @@ public class ProjectsModule extends Module {
                 ProjectEventTransformer::toSerialized,
                 ProjectEventTransformer::fromSerialized
         );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer, closeables::add);
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
         var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("projects", closeables::add);
+        var permissionsRepo = RepoFactory.createPermissionsRepo("projects");
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var projectPermissionsService = new ProjectPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        ProjectLookupRepo lookupRepo = RepoFactory.createReadModelRepo(
-                InMemoryProjectLookupRepo::new,
-                SQLiteProjectLookupRepo::new,
-                closeables::add
-        );
+        ProjectLookupRepo lookupRepo = RepoFactory.createReadModelRepo(SQLiteProjectLookupRepo::new);
 
         queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService, lookupRepo);
         commandFacade = new ProjectsCommandFacade(projectsService, projectPermissionsService);
@@ -127,20 +118,6 @@ public class ProjectsModule extends Module {
     @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Project.TYPE, ProjectEventTransformer::toApi);
-    }
-
-    @Override
-    protected Mono<Void> onServerStopped() {
-        return Flux.fromIterable(closeables)
-                .flatMap(closeable -> {
-                    try {
-                        closeable.close();
-                        return Mono.empty();
-                    } catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                })
-                .then();
     }
 
 }
