@@ -9,8 +9,6 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadT
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
-import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
 import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
@@ -43,21 +41,13 @@ public class UsersModule extends Module {
 
     private final UsersPermissionsFacade permissionsFacade;
 
-    public UsersModule(
-            ModuleConfig config,
-            UsersConfig usersConfig
-    ) {
+    public UsersModule(ModuleConfig config, UsersConfig usersConfig) {
         super(config);
 
-        var eventSerializer = new JsonMapperEventSerializer(
-                config.getJsonMapper(),
-                UserEventTransformer::toSerialized,
-                UserEventTransformer::fromSerialized
-        );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
+        var eventSourcingRepo = usersConfig.getEventSourcingRepo();
         var userService = new UserService(eventSourcingRepo, getEventPublisher(), usersConfig.getTokenGenerator());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("users");
+        var permissionsRepo = usersConfig.getPermissionsRepo();
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()

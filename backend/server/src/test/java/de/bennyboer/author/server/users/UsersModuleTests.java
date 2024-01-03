@@ -9,10 +9,14 @@ import de.bennyboer.author.auth.token.TokenVerifiers;
 import de.bennyboer.author.server.App;
 import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.Profile;
+import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
+import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
+import de.bennyboer.author.server.users.transformer.UserEventTransformer;
+import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserName;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
@@ -42,8 +46,17 @@ public class UsersModuleTests {
                 .tokenVerifier(tokenVerifier)
                 .modules(List.of(
                         (moduleConfig) -> {
+                            var eventSerializer = new JsonMapperEventSerializer(
+                                    moduleConfig.getJsonMapper(),
+                                    UserEventTransformer::toSerialized,
+                                    UserEventTransformer::fromSerialized
+                            );
+                            var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
+
                             UsersConfig usersConfig = UsersConfig.builder()
                                     .tokenGenerator(tokenGenerator)
+                                    .eventSourcingRepo(eventSourcingRepo)
+                                    .permissionsRepo(RepoFactory.createPermissionsRepo("users"))
                                     .userLookupRepo(userLookupRepo)
                                     .build();
 

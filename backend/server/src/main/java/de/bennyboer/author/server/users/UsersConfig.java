@@ -1,6 +1,8 @@
 package de.bennyboer.author.server.users;
 
 import de.bennyboer.author.auth.token.TokenGenerator;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
+import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,10 @@ public class UsersConfig {
 
     @Builder.Default
     DefaultUserCredentials defaultUserCredentials = DefaultUserCredentials.of("default", "password");
+
+    EventSourcingRepo eventSourcingRepo;
+
+    PermissionsRepo permissionsRepo;
 
     UserLookupRepo userLookupRepo;
 
