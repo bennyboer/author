@@ -15,6 +15,7 @@ import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.permissions.MissingPermissionException;
+import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.StructureModule;
 import de.bennyboer.author.server.users.UsersModule;
@@ -35,7 +36,13 @@ import static de.bennyboer.author.server.shared.http.security.Role.UNAUTHORIZED;
 
 public class App {
 
-    public static void main(String[] args) {
+    public App(Profile profile) {
+        if (profile == Profile.TESTING) {
+            RepoFactory.setTestingProfile(true);
+        }
+    }
+
+    public Javalin createJavalin() {
         JsonMapper jsonMapper = new JavalinJackson().updateMapper(mapper -> {
             mapper.registerModule(new Jdk8Module());
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -60,7 +67,7 @@ public class App {
         httpApi.registerHttpApiUrl(Project.TYPE.getValue(), "http://localhost:7070/api/projects");
         httpApi.registerHttpApiUrl(Structure.TYPE.getValue(), "http://localhost:7070/api/structures");
 
-        Javalin.create(config -> {
+        return Javalin.create(config -> {
                     ModuleConfig moduleConfig = ModuleConfig.of(
                             messaging,
                             jsonMapper,
@@ -89,8 +96,14 @@ public class App {
                     ws.onMessage(webSocketService::onMessage);
                 }, UNAUTHORIZED)
                 .events(event -> event.serverStopping(messaging::stop))
-                .exception(MissingPermissionException.class, (exception, ctx) -> ctx.status(403).result("Forbidden"))
-                .start(7070);
+                .exception(MissingPermissionException.class, (exception, ctx) -> ctx.status(403).result("Forbidden"));
+    }
+
+    public static void main(String[] args) {
+        App app = new App(Profile.PRODUCTION);
+
+        Javalin javalin = app.createJavalin();
+        javalin.start(7070);
     }
 
     private static void registerModule(JavalinConfig config, Module module) {

@@ -3,10 +3,9 @@ package de.bennyboer.author.server.users.facade;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
-import de.bennyboer.author.server.users.api.AccessTokenDTO;
+import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
-import de.bennyboer.author.server.users.transformer.AccessTokenTransformer;
 import de.bennyboer.author.user.Password;
 import de.bennyboer.author.user.UserName;
 import de.bennyboer.author.user.UserService;
@@ -48,10 +47,15 @@ public class UsersCommandFacade {
                 .then();
     }
 
-    public Mono<AccessTokenDTO> login(String userName, CharSequence password) {
+    public Mono<LoginUserResponse> login(String userName, CharSequence password) {
+        System.out.println("login " + userName + " " + password);
         return userLookupRepo.findUserIdByName(UserName.of(userName))
-                .flatMap(userId -> userService.login(userId, Password.withoutValidation(password)))
-                .map(AccessTokenTransformer::toApi);
+                .flatMap(userId -> userService.login(userId, Password.withoutValidation(password))
+                        .map(token -> LoginUserResponse.builder()
+                                .token(token.getValue())
+                                .userId(userId.getValue())
+                                .build()
+                        ));
     }
 
 }
