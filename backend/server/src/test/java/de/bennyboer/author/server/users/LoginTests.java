@@ -2,7 +2,6 @@ package de.bennyboer.author.server.users;
 
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
-import de.bennyboer.author.user.UserName;
 import io.javalin.testtools.JavalinTest;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
@@ -17,8 +16,8 @@ public class LoginTests extends UsersModuleTests {
     @Test
     void shouldReturn401WhenUserNameCannotBeFound() {
         JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+            // given: the default user has been setup
+            awaitUserSetup("default");
 
             // when: trying to login with a user that cannot be found
             LoginUserRequest request = LoginUserRequest.builder()
@@ -36,8 +35,8 @@ public class LoginTests extends UsersModuleTests {
     @Test
     void shouldReturn401WhenPasswordIsWrong() {
         JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+            // given: the default user is setup
+            awaitUserSetup("default");
 
             // when: trying to login with a wrong password
             LoginUserRequest request = LoginUserRequest.builder()

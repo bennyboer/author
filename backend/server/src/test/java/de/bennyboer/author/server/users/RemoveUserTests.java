@@ -26,8 +26,8 @@ public class RemoveUserTests extends UsersModuleTests {
             // then: the server responds with 204
             assertThat(response.code()).isEqualTo(204);
 
-            // when: waiting for the permissions to be removed
-            awaitPermissionRemoval(userId);
+            // when: waiting for the user to be cleaned up
+            awaitUserCleanup(userId);
 
             // and: fetching the user details
             var fetchUserResponse = client.get(
