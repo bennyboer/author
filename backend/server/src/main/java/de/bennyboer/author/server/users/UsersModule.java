@@ -45,7 +45,12 @@ public class UsersModule extends Module {
         super(config);
 
         var eventSourcingRepo = usersConfig.getEventSourcingRepo();
-        var userService = new UserService(eventSourcingRepo, getEventPublisher(), usersConfig.getTokenGenerator());
+        var userService = new UserService(
+                eventSourcingRepo,
+                getEventPublisher(),
+                usersConfig.getTokenGenerator(),
+                config.getAppConfig().getClock()
+        );
 
         var permissionsRepo = usersConfig.getPermissionsRepo();
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(

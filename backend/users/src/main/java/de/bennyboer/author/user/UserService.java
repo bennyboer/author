@@ -44,10 +44,6 @@ public class UserService extends AggregateService<User, UserId> {
         this.clock = clock;
     }
 
-    public UserService(EventSourcingRepo repo, EventPublisher eventPublisher, TokenGenerator tokenGenerator) {
-        this(repo, eventPublisher, tokenGenerator, Clock.systemUTC());
-    }
-
     public Mono<AggregateIdAndVersion<UserId>> create(UserName name, Password password, Agent agent) {
         UserId id = UserId.create();
 

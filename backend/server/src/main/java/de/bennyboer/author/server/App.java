@@ -80,11 +80,10 @@ public class App {
 
         return Javalin.create(config -> {
                     ModuleConfig moduleConfig = ModuleConfig.of(
-                            appConfig.getHostUrl(),
                             messaging,
                             jsonMapper,
-                            appConfig.getHttpApi(),
-                            webSocketService
+                            webSocketService,
+                            appConfig
                     );
 
                     for (var moduleInstaller : appConfig.getModules()) {

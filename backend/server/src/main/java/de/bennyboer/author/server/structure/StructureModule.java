@@ -64,8 +64,8 @@ public class StructureModule extends Module {
         var lookupRepo = RepoFactory.createReadModelRepo(SQLiteStructureLookupRepo::new);
 
         var projectDetailsService = new ProjectDetailsHttpService(
-                config.getHost(),
-                config.getHttpApi(),
+                config.getAppConfig().getHostUrl(),
+                config.getAppConfig().getHttpApi(),
                 config.getJsonMapper()
         );
 

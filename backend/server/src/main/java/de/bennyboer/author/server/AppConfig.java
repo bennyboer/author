@@ -15,6 +15,7 @@ import lombok.Value;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Clock;
 import java.util.List;
 
 @Value
@@ -33,6 +34,9 @@ public class AppConfig {
 
     @Builder.Default
     Profile profile = Profile.PRODUCTION;
+
+    @Builder.Default
+    Clock clock = Clock.systemUTC();
 
     @Builder.Default
     HttpApi httpApi = new HttpApi()
