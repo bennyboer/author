@@ -1,6 +1,7 @@
 package de.bennyboer.author.server.projects.facade;
 
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateIdAndVersion;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.project.ProjectName;
@@ -20,10 +21,10 @@ public class ProjectsCommandFacade {
 
     ProjectPermissionsService permissionsService;
 
-    public Mono<Void> create(String name, Agent agent) {
+    public Mono<ProjectId> create(String name, Agent agent) {
         return permissionsService.assertHasPermission(agent, CREATE)
                 .then(projectsService.create(ProjectName.of(name), agent))
-                .then();
+                .map(AggregateIdAndVersion::getId);
     }
 
     public Mono<Void> rename(String id, long version, String name, Agent agent) {

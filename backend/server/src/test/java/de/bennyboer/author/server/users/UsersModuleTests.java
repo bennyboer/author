@@ -20,6 +20,7 @@ import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
+import de.bennyboer.author.server.users.persistence.lookup.TestUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.testing.TestClock;
 import de.bennyboer.author.user.User;
@@ -156,6 +157,11 @@ public abstract class UsersModuleTests {
             }
 
             @Override
+            public Optional<UserId> userId() {
+                return Optional.of(userId);
+            }
+
+            @Override
             public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
                 if (message.getAggregateId().equals(Optional.of(userId.getValue()))) {
                     boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(userId)
@@ -193,6 +199,11 @@ public abstract class UsersModuleTests {
             @Override
             public AggregateType aggregateType() {
                 return User.TYPE;
+            }
+
+            @Override
+            public Optional<UserId> userId() {
+                return Optional.of(userId);
             }
 
             @Override

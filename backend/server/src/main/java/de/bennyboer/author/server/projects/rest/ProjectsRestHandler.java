@@ -43,6 +43,7 @@ public class ProjectsRestHandler {
                 ctx,
                 (agent) -> commandFacade.create(request.getName(), agent),
                 res -> ctx.status(HttpStatus.NO_CONTENT)
+                        .header("Location", "/api/projects/%s".formatted(res.getValue()))
         );
     }
 

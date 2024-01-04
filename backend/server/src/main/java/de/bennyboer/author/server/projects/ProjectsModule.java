@@ -12,8 +12,6 @@ import de.bennyboer.author.server.projects.facade.ProjectsQueryFacade;
 import de.bennyboer.author.server.projects.facade.ProjectsSyncFacade;
 import de.bennyboer.author.server.projects.messaging.*;
 import de.bennyboer.author.server.projects.permissions.ProjectPermissionsService;
-import de.bennyboer.author.server.projects.persistence.lookup.ProjectLookupRepo;
-import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
 import de.bennyboer.author.server.projects.rest.ProjectsRestHandler;
 import de.bennyboer.author.server.projects.rest.ProjectsRestRouting;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
@@ -22,8 +20,6 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadT
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
-import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import io.javalin.Javalin;
 import reactor.core.publisher.Mono;
@@ -43,25 +39,20 @@ public class ProjectsModule extends Module {
 
     private final ProjectsSyncFacade syncFacade;
 
-    public ProjectsModule(ModuleConfig config) {
+    public ProjectsModule(ModuleConfig config, ProjectsConfig projectsConfig) {
         super(config);
 
-        var eventSerializer = new JsonMapperEventSerializer(
-                config.getJsonMapper(),
-                ProjectEventTransformer::toSerialized,
-                ProjectEventTransformer::fromSerialized
-        );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
+        var eventSourcingRepo = projectsConfig.getEventSourcingRepo();
         var projectsService = new ProjectsService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("projects");
+        var permissionsRepo = projectsConfig.getPermissionsRepo();
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var projectPermissionsService = new ProjectPermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        ProjectLookupRepo lookupRepo = RepoFactory.createReadModelRepo(SQLiteProjectLookupRepo::new);
+        var lookupRepo = projectsConfig.getProjectLookupRepo();
 
         queryFacade = new ProjectsQueryFacade(projectsService, projectPermissionsService, lookupRepo);
         commandFacade = new ProjectsCommandFacade(projectsService, projectPermissionsService);

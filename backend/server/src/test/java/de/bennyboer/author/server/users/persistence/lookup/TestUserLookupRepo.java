@@ -1,8 +1,6 @@
-package de.bennyboer.author.server.users;
+package de.bennyboer.author.server.users.persistence.lookup;
 
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.server.users.persistence.lookup.InMemoryUserLookupRepo;
-import de.bennyboer.author.server.users.persistence.lookup.LookupUser;
 import de.bennyboer.author.user.UserName;
 import reactor.core.publisher.Mono;
 

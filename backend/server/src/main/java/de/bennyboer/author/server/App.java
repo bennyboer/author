@@ -6,7 +6,11 @@ import de.bennyboer.author.auth.keys.KeyPair;
 import de.bennyboer.author.auth.keys.KeyPairs;
 import de.bennyboer.author.auth.token.*;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.project.Project;
+import de.bennyboer.author.server.projects.ProjectsConfig;
 import de.bennyboer.author.server.projects.ProjectsModule;
+import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
+import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
@@ -65,7 +69,11 @@ public class App {
     }
 
     private Messaging setupMessaging() {
-        return new Messaging(jsonMapper);
+        Messaging messaging = new Messaging(jsonMapper);
+
+        appConfig.getMessagingConfig().accept(messaging);
+
+        return messaging;
     }
 
     private JsonMapper createJsonMapper() {
@@ -123,24 +131,8 @@ public class App {
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
                 .modules(List.of(
-                        (moduleConfig) -> {
-                            var eventSerializer = new JsonMapperEventSerializer(
-                                    moduleConfig.getJsonMapper(),
-                                    UserEventTransformer::toSerialized,
-                                    UserEventTransformer::fromSerialized
-                            );
-                            var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
-
-                            UsersConfig usersConfig = UsersConfig.builder()
-                                    .tokenGenerator(tokenGenerator)
-                                    .eventSourcingRepo(eventSourcingRepo)
-                                    .permissionsRepo(RepoFactory.createPermissionsRepo("users"))
-                                    .userLookupRepo(RepoFactory.createReadModelRepo(SQLiteUserLookupRepo::new))
-                                    .build();
-
-                            return new UsersModule(moduleConfig, usersConfig);
-                        },
-                        ProjectsModule::new,
+                        (moduleConfig) -> configureUsersModule(moduleConfig, tokenGenerator),
+                        App::configureProjectsModule,
                         StructureModule::new
                 ))
                 .build();
@@ -149,6 +141,41 @@ public class App {
 
         Javalin javalin = app.createJavalin();
         javalin.start(config.getHost(), config.getPort());
+    }
+
+    private static ProjectsModule configureProjectsModule(ModuleConfig moduleConfig) {
+        var eventSerializer = new JsonMapperEventSerializer(
+                moduleConfig.getJsonMapper(),
+                ProjectEventTransformer::toSerialized,
+                ProjectEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Project.TYPE, eventSerializer);
+
+        ProjectsConfig projectsConfig = ProjectsConfig.builder()
+                .eventSourcingRepo(eventSourcingRepo)
+                .permissionsRepo(RepoFactory.createPermissionsRepo("projects"))
+                .projectLookupRepo(RepoFactory.createReadModelRepo(SQLiteProjectLookupRepo::new))
+                .build();
+
+        return new ProjectsModule(moduleConfig, projectsConfig);
+    }
+
+    private static UsersModule configureUsersModule(ModuleConfig moduleConfig, TokenGenerator tokenGenerator) {
+        var eventSerializer = new JsonMapperEventSerializer(
+                moduleConfig.getJsonMapper(),
+                UserEventTransformer::toSerialized,
+                UserEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(User.TYPE, eventSerializer);
+
+        UsersConfig usersConfig = UsersConfig.builder()
+                .tokenGenerator(tokenGenerator)
+                .eventSourcingRepo(eventSourcingRepo)
+                .permissionsRepo(RepoFactory.createPermissionsRepo("users"))
+                .userLookupRepo(RepoFactory.createReadModelRepo(SQLiteUserLookupRepo::new))
+                .build();
+
+        return new UsersModule(moduleConfig, usersConfig);
     }
 
     private static void handleIfPermitted(Handler handler, Context ctx, Set<? extends RouteRole> permittedRoles)
