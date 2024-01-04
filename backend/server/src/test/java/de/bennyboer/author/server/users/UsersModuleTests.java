@@ -137,7 +137,13 @@ public abstract class UsersModuleTests {
             @Override
             public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
                 if (message.getAggregateId().equals(Optional.of(userId))) {
-                    latch.countDown();
+                    boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(UserId.of(userId))
+                            .collectList()
+                            .block()
+                            .isEmpty();
+                    if (!hasPermissions) {
+                        latch.countDown();
+                    }
                 }
 
                 return Mono.empty();
