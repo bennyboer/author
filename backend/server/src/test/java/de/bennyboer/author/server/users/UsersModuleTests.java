@@ -13,7 +13,6 @@ import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
-import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.testing.TestClock;
@@ -22,21 +21,20 @@ import de.bennyboer.author.user.UserName;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
-import io.javalin.testtools.JavalinTest;
-import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public abstract class UsersModuleTests {
 
-public class UsersModuleTests {
+    protected final TestUserLookupRepo userLookupRepo = createUserLookupRepo();
+    protected final JsonMapper jsonMapper;
+    protected final Javalin javalin;
+    protected final TestClock clock = new TestClock();
 
-    private final TestUserLookupRepo userLookupRepo = new TestUserLookupRepo();
-    private final JsonMapper jsonMapper;
-    private final Javalin javalin;
-    private final TestClock clock = new TestClock();
+    protected TestUserLookupRepo createUserLookupRepo() {
+        return new TestUserLookupRepo();
+    }
 
     {
         KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
@@ -74,335 +72,7 @@ public class UsersModuleTests {
         javalin = app.createJavalin();
     }
 
-    @Test
-    void shouldCreateDefaultUserOnStartupWithoutPersistentUsers() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with the default user
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            var response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 200
-            assertThat(response.code()).isEqualTo(200);
-
-            // and: the response contains an access token
-            LoginUserResponse loginUserResponse = jsonMapper.fromJsonString(
-                    response.body().string(),
-                    LoginUserResponse.class
-            );
-            assertThat(loginUserResponse.getToken()).isNotEmpty();
-            assertThat(loginUserResponse.getUserId()).isNotEmpty();
-        });
-    }
-
-    @Test
-    void shouldReturn401WhenUserNameCannotBeFound() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with a user that cannot be found
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("unknown")
-                    .password("password")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            var response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 401
-            assertThat(response.code()).isEqualTo(401);
-        });
-    }
-
-    @Test
-    void shouldReturn401WhenPasswordIsWrong() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with a wrong password
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("wrong")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            var response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 401
-            assertThat(response.code()).isEqualTo(401);
-        });
-    }
-
-    @Test
-    void shouldLockTheUserAfter10UnsuccessfulLoginAttempts() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with a wrong password 10 times
-            for (int i = 0; i < 10; i++) {
-                LoginUserRequest request = LoginUserRequest.builder()
-                        .name("default")
-                        .password("wrong")
-                        .build();
-                String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-                var response = client.post("/api/users/login", requestJson);
-
-                // then: the server responds with 401
-                assertThat(response.code()).isEqualTo(401);
-            }
-
-            // and: trying to login with the correct password
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            var response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 429
-            assertThat(response.code()).isEqualTo(429);
-        });
-    }
-
-    @Test
-    void shouldNotLockTheUserAfter10UnsuccessfulLoginAttemptsWhenOneSuccessfulHappenedInBetween() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with a wrong password 9 times
-            for (int i = 0; i < 9; i++) {
-                LoginUserRequest request = LoginUserRequest.builder()
-                        .name("default")
-                        .password("wrong")
-                        .build();
-                String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-                var response = client.post("/api/users/login", requestJson);
-
-                // then: the server responds with 401
-                assertThat(response.code()).isEqualTo(401);
-            }
-
-            // and: trying to login with the correct password
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-
-            // then: the server responds with 200
-            var response = client.post("/api/users/login", requestJson);
-            assertThat(response.code()).isEqualTo(200);
-
-            // when: trying to login with a wrong password 5 times
-            for (int i = 0; i < 5; i++) {
-                request = LoginUserRequest.builder()
-                        .name("default")
-                        .password("wrong")
-                        .build();
-                requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-                response = client.post("/api/users/login", requestJson);
-
-                // then: the server responds with 401
-                assertThat(response.code()).isEqualTo(401);
-            }
-
-            // and: trying to login with the correct password
-            request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 200
-            assertThat(response.code()).isEqualTo(200);
-        });
-    }
-
-    @Test
-    void shouldUnlockUserAfter30Minutes() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: the user lookup has been updated after startup
-            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
-
-            // when: trying to login with a wrong password 10 times
-            for (int i = 0; i < 10; i++) {
-                LoginUserRequest request = LoginUserRequest.builder()
-                        .name("default")
-                        .password("wrong")
-                        .build();
-                String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-                var response = client.post("/api/users/login", requestJson);
-
-                // then: the server responds with 401
-                assertThat(response.code()).isEqualTo(401);
-            }
-
-            // and: trying to login with the correct password
-            LoginUserRequest request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            var response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 429
-            assertThat(response.code()).isEqualTo(429);
-
-            // when: waiting 30 minutes
-            clock.add(Duration.ofMinutes(30));
-
-            // and: trying to login with the correct password
-            request = LoginUserRequest.builder()
-                    .name("default")
-                    .password("password")
-                    .build();
-            requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
-            response = client.post("/api/users/login", requestJson);
-
-            // then: the server responds with 200
-            assertThat(response.code()).isEqualTo(200);
-        });
-    }
-
-    @Test
-    void shouldRenameUser() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: a logged in user
-            var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
-            var userId = loginUserResponse.getUserId();
-            var token = loginUserResponse.getToken();
-            var user = getUserDetails(client, userId, token);
-
-            // when: trying to rename the user
-            RenameUserRequest request = RenameUserRequest.builder()
-                    .name("New Name")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, RenameUserRequest.class);
-            var renameResponse = client.post(
-                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
-                    requestJson,
-                    (req) -> req.header("Authorization", "Bearer " + token)
-            );
-
-            // then: the server responds with 204
-            assertThat(renameResponse.code()).isEqualTo(204);
-
-            // and: the user can be found with the new name
-            UserDTO updatedUser = getUserDetails(client, userId, token);
-            assertThat(updatedUser.getName()).isEqualTo("New Name");
-        });
-    }
-
-    @Test
-    void shouldNotBeAbleToRenameUserWithoutValidToken() {
-        JavalinTest.test(javalin, (server, client) -> {
-            // given: a logged in user
-            var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
-            var userId = loginUserResponse.getUserId();
-            var user = getUserDetails(client, userId, loginUserResponse.getToken());
-
-            // when: trying to rename the user with an invalid token
-            RenameUserRequest request = RenameUserRequest.builder()
-                    .name("New Name")
-                    .build();
-            String requestJson = jsonMapper.toJsonString(request, RenameUserRequest.class);
-            var renameResponse = client.post(
-                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
-                    requestJson,
-                    (req) -> req.header("Authorization", "Bearer " + "invalid")
-            );
-
-            // then: the server responds with 401
-            assertThat(renameResponse.code()).isEqualTo(401);
-
-            // and: the user cannot be found with the new name
-            UserDTO updatedUser = getUserDetails(client, userId, loginUserResponse.getToken());
-            assertThat(updatedUser.getName()).isEqualTo("default");
-        });
-    }
-
-    @Test
-    void shouldGetUserDetails() {
-        JavalinTest.test(javalin, ((server, client) -> {
-            // given: a logged in user
-            var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
-            var userId = loginUserResponse.getUserId();
-            var token = loginUserResponse.getToken();
-
-            // when: trying to get the user details
-            var response = client.get(
-                    "/api/users/%s".formatted(userId),
-                    (req) -> req.header("Authorization", "Bearer " + token)
-            );
-
-            // then: the server responds with 200
-            assertThat(response.code()).isEqualTo(200);
-
-            // and: the user details are returned
-            UserDTO user = jsonMapper.fromJsonString(response.body().string(), UserDTO.class);
-            assertThat(user.getId()).isEqualTo(userId);
-            assertThat(user.getName()).isEqualTo("default");
-        }));
-    }
-
-    @Test
-    void shouldNotBeAbleToGetUserDetailsWithoutValidToken() {
-        JavalinTest.test(javalin, ((server, client) -> {
-            // given: a logged in user
-            var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
-            var userId = loginUserResponse.getUserId();
-
-            // when: trying to get the user details with an invalid token
-            var response = client.get(
-                    "/api/users/%s".formatted(userId),
-                    (req) -> req.header("Authorization", "Bearer " + "invalid")
-            );
-
-            // then: the server responds with 401
-            assertThat(response.code()).isEqualTo(401);
-        }));
-    }
-
-    @Test
-    void shouldRemoveUser() {
-        JavalinTest.test(javalin, ((server, client) -> {
-            // given: a logged in user
-            var loginUserResponse = loginDefaultUserAndReturnAccessToken(client);
-            var userId = loginUserResponse.getUserId();
-            var token = loginUserResponse.getToken();
-            var user = getUserDetails(client, userId, token);
-
-            // when: trying to remove the user
-            var response = client.delete(
-                    "/api/users/%s?version=%d".formatted(userId, user.getVersion()),
-                    null,
-                    (req) -> req.header("Authorization", "Bearer " + token)
-            );
-
-            // then: the server responds with 204
-            assertThat(response.code()).isEqualTo(204);
-
-            // when: fetching the user details
-            var fetchUserResponse = client.get(
-                    "/api/users/%s".formatted(userId),
-                    (req) -> req.header("Authorization", "Bearer " + token)
-            );
-
-            // then: the server responds with 404
-            assertThat(fetchUserResponse.code()).isEqualTo(404);
-        }));
-    }
-
-    private UserDTO getUserDetails(HttpClient client, String userId, String token) throws IOException {
+    protected UserDTO getUserDetails(HttpClient client, String userId, String token) throws IOException {
         var response = client.get(
                 "/api/users/%s".formatted(userId),
                 (req) -> req.header("Authorization", "Bearer " + token)
@@ -413,19 +83,28 @@ public class UsersModuleTests {
         );
     }
 
-    private LoginUserResponse loginDefaultUserAndReturnAccessToken(HttpClient client) throws IOException {
-        // Wait until the default user has been created
-        userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of("default")));
+    protected LoginUserResponse loginDefaultUser(HttpClient client) throws IOException {
+        return loginUser(client, "default", "password");
+    }
+
+    protected LoginUserResponse loginUser(HttpClient client, String username, String password) throws IOException {
+        // Wait until the asked user has been created and updated in the user lookup repo
+        if (userLookupRepo.findUserIdByName(UserName.of(username)).blockOptional().isEmpty()) {
+            userLookupRepo.awaitUpdate(user -> user.getName().equals(UserName.of(username)));
+        }
 
         LoginUserRequest request = LoginUserRequest.builder()
-                .name("default")
-                .password("password")
+                .name(username)
+                .password(password)
                 .build();
         String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
         var response = client.post("/api/users/login", requestJson);
 
         if (response.code() != 200) {
-            throw new RuntimeException("Could not login default user. Status code is %d".formatted(response.code()));
+            throw new RuntimeException("Could not login user %s. Status code is %d".formatted(
+                    username,
+                    response.code()
+            ));
         }
 
         return jsonMapper.fromJsonString(

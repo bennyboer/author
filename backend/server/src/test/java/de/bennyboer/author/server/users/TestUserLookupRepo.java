@@ -4,9 +4,11 @@ import de.bennyboer.author.server.users.persistence.lookup.LookupUser;
 import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class TestUserLookupRepo extends SQLiteUserLookupRepo {
@@ -18,11 +20,18 @@ public class TestUserLookupRepo extends SQLiteUserLookupRepo {
     }
 
     public void awaitUpdate(Predicate<LookupUser> userPredicate) {
+        awaitUpdate(userPredicate, Duration.ofSeconds(5));
+    }
+
+    public void awaitUpdate(Predicate<LookupUser> userPredicate, Duration timeout) {
         var latch = new CountDownLatch(1);
         awaitUpdateLatches.put(userPredicate, latch);
 
         try {
-            latch.await();
+            boolean reachedZero = latch.await(timeout.getSeconds(), TimeUnit.SECONDS);
+            if (!reachedZero) {
+                throw new RuntimeException("Timeout reached");
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
