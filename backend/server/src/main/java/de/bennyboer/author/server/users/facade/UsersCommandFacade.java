@@ -48,7 +48,6 @@ public class UsersCommandFacade {
     }
 
     public Mono<LoginUserResponse> login(String userName, CharSequence password) {
-        System.out.println("login " + userName + " " + password);
         return userLookupRepo.findUserIdByName(UserName.of(userName))
                 .flatMap(userId -> userService.login(userId, Password.withoutValidation(password))
                         .map(token -> LoginUserResponse.builder()

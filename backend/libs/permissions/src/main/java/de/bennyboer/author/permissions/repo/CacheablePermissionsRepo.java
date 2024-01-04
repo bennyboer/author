@@ -78,22 +78,26 @@ public class CacheablePermissionsRepo implements PermissionsRepo {
 
     @Override
     public Flux<Permission> removeByUserId(UserId userId) {
-        return delegate.removeByUserId(userId);
+        return delegate.removeByUserId(userId)
+                .doOnNext(cache::invalidate);
     }
 
     @Override
     public Flux<Permission> removeByResource(Resource resource) {
-        return delegate.removeByResource(resource);
+        return delegate.removeByResource(resource)
+                .doOnNext(cache::invalidate);
     }
 
     @Override
     public Flux<Permission> removeByUserIdAndResource(UserId userId, Resource resource) {
-        return delegate.removeByUserIdAndResource(userId, resource);
+        return delegate.removeByUserIdAndResource(userId, resource)
+                .doOnNext(cache::invalidate);
     }
 
     @Override
     public Mono<Permission> removeByPermission(Permission permission) {
-        return delegate.removeByPermission(permission);
+        return delegate.removeByPermission(permission)
+                .doOnNext(cache::invalidate);
     }
 
     @Value

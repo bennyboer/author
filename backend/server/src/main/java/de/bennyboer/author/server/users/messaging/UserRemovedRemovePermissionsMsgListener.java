@@ -32,6 +32,12 @@ public class UserRemovedRemovePermissionsMsgListener implements AggregateEventMe
     public Mono<Void> onMessage(AggregateEventMessage message) {
         UserId userId = UserId.of(message.getAggregateId());
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return permissionsFacade.removePermissionsForUser(userId);
     }
 

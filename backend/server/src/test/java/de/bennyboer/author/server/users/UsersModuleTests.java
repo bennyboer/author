@@ -6,9 +6,15 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenGenerators;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.auth.token.TokenVerifiers;
+import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.App;
 import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.Profile;
+import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
+import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
@@ -21,16 +27,21 @@ import de.bennyboer.author.user.UserName;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 public abstract class UsersModuleTests {
 
     protected final TestUserLookupRepo userLookupRepo = createUserLookupRepo();
+    protected final PermissionsRepo permissionsRepo = RepoFactory.createPermissionsRepo("users");
     protected final JsonMapper jsonMapper;
     protected final Javalin javalin;
     protected final TestClock clock = new TestClock();
+    private final Messaging messaging;
 
     protected TestUserLookupRepo createUserLookupRepo() {
         return new TestUserLookupRepo();
@@ -58,7 +69,7 @@ public abstract class UsersModuleTests {
                             UsersConfig usersConfig = UsersConfig.builder()
                                     .tokenGenerator(tokenGenerator)
                                     .eventSourcingRepo(eventSourcingRepo)
-                                    .permissionsRepo(RepoFactory.createPermissionsRepo("users"))
+                                    .permissionsRepo(permissionsRepo)
                                     .userLookupRepo(userLookupRepo)
                                     .build();
 
@@ -68,6 +79,7 @@ public abstract class UsersModuleTests {
                 .build();
 
         App app = new App(config);
+        messaging = app.getMessaging();
         jsonMapper = app.getJsonMapper();
         javalin = app.createJavalin();
     }
@@ -111,6 +123,40 @@ public abstract class UsersModuleTests {
                 response.body().string(),
                 LoginUserResponse.class
         );
+    }
+
+    protected void awaitPermissionRemoval(String userId) {
+        CountDownLatch latch = new CountDownLatch(1);
+
+        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
+            @Override
+            public AggregateType aggregateType() {
+                return User.TYPE;
+            }
+
+            @Override
+            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
+                if (message.getAggregateId().equals(Optional.of(userId))) {
+                    latch.countDown();
+                }
+
+                return Mono.empty();
+            }
+        });
+
+        boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(UserId.of(userId))
+                .collectList()
+                .block()
+                .isEmpty();
+        if (!hasPermissions) {
+            latch.countDown();
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

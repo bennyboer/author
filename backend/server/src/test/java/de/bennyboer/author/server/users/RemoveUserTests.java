@@ -26,14 +26,17 @@ public class RemoveUserTests extends UsersModuleTests {
             // then: the server responds with 204
             assertThat(response.code()).isEqualTo(204);
 
-            // when: fetching the user details
+            // when: waiting for the permissions to be removed
+            awaitPermissionRemoval(userId);
+
+            // and: fetching the user details
             var fetchUserResponse = client.get(
                     "/api/users/%s".formatted(userId),
                     (req) -> req.header("Authorization", "Bearer " + token)
             );
 
-            // then: the server responds with 404
-            assertThat(fetchUserResponse.code()).isEqualTo(404);
+            // then: the server responds with 403 as the user does not have permission to fetch the user details
+            assertThat(fetchUserResponse.code()).isEqualTo(403);
         }));
     }
 
