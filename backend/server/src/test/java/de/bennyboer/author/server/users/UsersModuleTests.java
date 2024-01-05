@@ -10,7 +10,6 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.AppConfig;
-import de.bennyboer.author.server.Profile;
 import de.bennyboer.author.server.shared.ModuleTest;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
@@ -35,7 +34,7 @@ public abstract class UsersModuleTests extends ModuleTest {
     protected TestClock clock;
 
     @Override
-    protected AppConfig configure() {
+    protected AppConfig configure(AppConfig.AppConfigBuilder configBuilder) {
         userLookupRepo = new InMemoryUserLookupRepo();
         permissionsRepo = RepoFactory.createPermissionsRepo("users");
         clock = new TestClock();
@@ -44,8 +43,7 @@ public abstract class UsersModuleTests extends ModuleTest {
         TokenGenerator tokenGenerator = TokenGenerators.create(keyPair);
         TokenVerifier tokenVerifier = TokenVerifiers.create(keyPair);
 
-        return AppConfig.builder()
-                .profile(Profile.TESTING)
+        return configBuilder
                 .clock(clock)
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)

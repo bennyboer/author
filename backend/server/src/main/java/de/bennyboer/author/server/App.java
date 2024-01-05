@@ -56,10 +56,6 @@ public class App {
         this.messaging = setupMessaging();
 
         initAuth();
-
-        if (appConfig.getProfile() == Profile.TESTING) {
-            RepoFactory.setTestingProfile(true);
-        }
     }
 
     private void initAuth() {

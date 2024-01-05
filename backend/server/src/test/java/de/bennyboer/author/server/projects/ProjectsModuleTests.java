@@ -6,12 +6,10 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.permissions.*;
-import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
 import de.bennyboer.author.server.AppConfig;
-import de.bennyboer.author.server.Profile;
 import de.bennyboer.author.server.projects.api.ProjectDTO;
 import de.bennyboer.author.server.projects.api.requests.CreateProjectRequest;
 import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
@@ -42,9 +40,9 @@ public class ProjectsModuleTests extends ModuleTest {
     protected final UserId userId = UserId.of("USER_ID");
 
     @Override
-    protected AppConfig configure() {
+    protected AppConfig configure(AppConfig.AppConfigBuilder configBuilder) {
         projectLookupRepo = new InMemoryProjectLookupRepo();
-        permissionsRepo = new InMemoryPermissionsRepo();
+        permissionsRepo = RepoFactory.createPermissionsRepo("projects");
 
         TokenGenerator tokenGenerator = content -> Mono.just(Token.of(correctToken));
         TokenVerifier tokenVerifier = token -> {
@@ -55,8 +53,7 @@ public class ProjectsModuleTests extends ModuleTest {
             return Mono.error(new Exception("Invalid token"));
         };
 
-        return AppConfig.builder()
-                .profile(Profile.TESTING)
+        return configBuilder
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
                 .modules(List.of(
