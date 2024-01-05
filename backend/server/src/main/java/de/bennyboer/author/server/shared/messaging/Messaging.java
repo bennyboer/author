@@ -18,6 +18,7 @@ import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 
 import javax.jms.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Since the server is currently not expected to face any severe load
@@ -40,9 +41,9 @@ public class Messaging {
 
     private final JsonMapper jsonMapper;
 
-    private final Map<AggregateType, Topic> topicsByAggregateType = new HashMap<>();
+    private final Map<AggregateType, Topic> topicsByAggregateType = new ConcurrentHashMap<>();
 
-    private final Map<MessageListenerId, JMSConsumer> messageListeners = new HashMap<>();
+    private final Map<MessageListenerId, JMSConsumer> messageListeners = new ConcurrentHashMap<>();
 
     public Messaging(JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;

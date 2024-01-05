@@ -8,17 +8,13 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadT
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
 import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
-import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
-import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
-import de.bennyboer.author.server.structure.external.project.ProjectDetailsHttpService;
 import de.bennyboer.author.server.structure.facade.StructureCommandFacade;
 import de.bennyboer.author.server.structure.facade.StructurePermissionsFacade;
 import de.bennyboer.author.server.structure.facade.StructureQueryFacade;
 import de.bennyboer.author.server.structure.facade.StructureSyncFacade;
 import de.bennyboer.author.server.structure.messaging.*;
 import de.bennyboer.author.server.structure.permissions.StructurePermissionsService;
-import de.bennyboer.author.server.structure.persistence.lookup.SQLiteStructureLookupRepo;
 import de.bennyboer.author.server.structure.rest.StructureRestHandler;
 import de.bennyboer.author.server.structure.rest.StructureRestRouting;
 import de.bennyboer.author.server.structure.transformer.StructureEventTransformer;
@@ -43,31 +39,22 @@ public class StructureModule extends Module {
 
     private final StructurePermissionsFacade permissionsFacade;
 
-    public StructureModule(ModuleConfig config) {
+    public StructureModule(ModuleConfig config, StructureConfig structureConfig) {
         super(config);
 
-        var eventSerializer = new JsonMapperEventSerializer(
-                config.getJsonMapper(),
-                StructureEventTransformer::toSerialized,
-                StructureEventTransformer::fromSerialized
-        );
-        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
+        var eventSourcingRepo = structureConfig.getEventSourcingRepo();
         var structureService = new StructureService(eventSourcingRepo, getEventPublisher());
 
-        var permissionsRepo = RepoFactory.createPermissionsRepo("structure");
+        var permissionsRepo = structureConfig.getPermissionsRepo();
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
                 config.getMessaging(),
                 config.getJsonMapper()
         );
         var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
-        var lookupRepo = RepoFactory.createReadModelRepo(SQLiteStructureLookupRepo::new);
-
-        var projectDetailsService = new ProjectDetailsHttpService(
-                config.getAppConfig().getHostUrl(),
-                config.getAppConfig().getHttpApi(),
-                config.getJsonMapper()
-        );
+        var lookupRepo = structureConfig.getStructureLookupRepo();
+        
+        var projectDetailsService = structureConfig.getProjectDetailsService();
 
         commandFacade = new StructureCommandFacade(structureService, structurePermissionsService);
         queryFacade = new StructureQueryFacade(structureService, structurePermissionsService, lookupRepo);

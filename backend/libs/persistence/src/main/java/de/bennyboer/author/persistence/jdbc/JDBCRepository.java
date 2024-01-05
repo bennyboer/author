@@ -6,17 +6,23 @@ import de.bennyboer.author.persistence.patches.JDBCRepositoryPatch;
 import de.bennyboer.author.persistence.patches.RepositoryPatch;
 import de.bennyboer.author.persistence.sqlite.SQLiteRepository;
 import jakarta.annotation.Nullable;
+import org.sqlite.SQLiteException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+
+import static org.sqlite.SQLiteErrorCode.SQLITE_BUSY;
 
 public abstract class JDBCRepository implements Repository, AutoCloseable {
 
@@ -113,7 +119,8 @@ public abstract class JDBCRepository implements Repository, AutoCloseable {
                                 return Mono.error(e);
                             }
                         })
-                ));
+                ))
+                .retryWhen(retryOnBusyDB());
     }
 
     protected Mono<Integer> update(String sql, PreparedStatementConfig statementConfig) {
@@ -125,7 +132,8 @@ public abstract class JDBCRepository implements Repository, AutoCloseable {
                     } catch (SQLException e) {
                         return Mono.error(e);
                     }
-                });
+                })
+                .retryWhen(retryOnBusyDB());
     }
 
     protected <T> Mono<Void> batchUpdate(
@@ -162,7 +170,9 @@ public abstract class JDBCRepository implements Repository, AutoCloseable {
                     } catch (SQLException e) {
                         return Mono.error(e);
                     }
-                });
+                })
+                .retryWhen(retryOnBusyDB())
+                .then();
     }
 
     private <T> Flux<T> toFlux(ResultSet resultSet, SQLiteRepository.ResultSetRowMapper<T> rowMapper) {
@@ -230,6 +240,11 @@ public abstract class JDBCRepository implements Repository, AutoCloseable {
 
     private RepositoryVersion getVersionSync() throws SQLException, IOException {
         return readVersionFromMetaDataTable(getConnection(), META_DATA_TABLE_NAME);
+    }
+
+    private RetryBackoffSpec retryOnBusyDB() {
+        return Retry.backoff(3, Duration.ofMillis(200)).filter(e ->
+                e instanceof SQLiteException sqLiteException && sqLiteException.getResultCode() == SQLITE_BUSY);
     }
 
     public interface PreparedStatementConfig {

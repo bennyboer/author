@@ -19,7 +19,6 @@ import de.bennyboer.author.server.shared.websocket.api.SubscribeMessage;
 import de.bennyboer.author.server.shared.websocket.api.SubscribeToPermissionsMessage;
 import de.bennyboer.author.server.shared.websocket.api.WebSocketMessage;
 import de.bennyboer.author.server.shared.websocket.api.WebSocketMessageMethod;
-import de.bennyboer.author.user.User;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
@@ -182,7 +181,7 @@ public abstract class ModuleTest {
         JsonMapper jsonMapper = getJsonMapper();
 
         JMSProducer producer = messaging.getContext().createProducer();
-        Destination destination = messaging.getTopic(User.TYPE);
+        Destination destination = messaging.getTopic(AggregateType.of(message.getAggregateType()));
 
         String json = jsonMapper.toJsonString(message, AggregateEventMessage.class);
         TextMessage textMessage = messaging.getContext().createTextMessage(json);

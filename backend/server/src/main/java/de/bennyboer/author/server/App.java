@@ -20,11 +20,16 @@ import de.bennyboer.author.server.shared.permissions.MissingPermissionException;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
+import de.bennyboer.author.server.structure.StructureConfig;
 import de.bennyboer.author.server.structure.StructureModule;
+import de.bennyboer.author.server.structure.external.project.ProjectDetailsHttpService;
+import de.bennyboer.author.server.structure.persistence.lookup.SQLiteStructureLookupRepo;
+import de.bennyboer.author.server.structure.transformer.StructureEventTransformer;
 import de.bennyboer.author.server.users.UsersConfig;
 import de.bennyboer.author.server.users.UsersModule;
 import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
+import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.user.User;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -125,7 +130,7 @@ public class App {
                 .modules(List.of(
                         (moduleConfig) -> configureUsersModule(moduleConfig, tokenGenerator),
                         App::configureProjectsModule,
-                        StructureModule::new
+                        App::configureStructureModule
                 ))
                 .build();
 
@@ -133,6 +138,30 @@ public class App {
 
         Javalin javalin = app.createJavalin();
         javalin.start(config.getHost(), config.getPort());
+    }
+
+    private static StructureModule configureStructureModule(ModuleConfig moduleConfig) {
+        var eventSerializer = new JsonMapperEventSerializer(
+                moduleConfig.getJsonMapper(),
+                StructureEventTransformer::toSerialized,
+                StructureEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
+
+        var projectDetailsService = new ProjectDetailsHttpService(
+                moduleConfig.getAppConfig().getHostUrl(),
+                moduleConfig.getAppConfig().getHttpApi(),
+                moduleConfig.getJsonMapper()
+        );
+
+        StructureConfig structureConfig = StructureConfig.builder()
+                .eventSourcingRepo(eventSourcingRepo)
+                .permissionsRepo(RepoFactory.createPermissionsRepo("structure"))
+                .structureLookupRepo(RepoFactory.createReadModelRepo(SQLiteStructureLookupRepo::new))
+                .projectDetailsService(projectDetailsService)
+                .build();
+
+        return new StructureModule(moduleConfig, structureConfig);
     }
 
     private static ProjectsModule configureProjectsModule(ModuleConfig moduleConfig) {
