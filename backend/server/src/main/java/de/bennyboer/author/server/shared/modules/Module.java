@@ -42,8 +42,6 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
         return Mono.empty();
     }
 
-    protected abstract List<AggregateType> getAggregateTypes();
-
     protected abstract Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers();
 
     protected abstract List<AggregateEventMessageListener> createMessageListeners();
@@ -51,7 +49,6 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
     protected abstract List<AggregateEventPermissionChecker> getEventPermissionCheckers();
 
     private void initializeModule() {
-        registerAggregatesWithMessaging();
         registerAggregateEventPayloadTransformers();
         registerMessageListeners();
         registerWebSocketPermissions();
@@ -60,12 +57,6 @@ public abstract class Module implements Plugin, PluginLifecycleInit {
     private void registerWebSocketPermissions() {
         for (var permissionChecker : getEventPermissionCheckers()) {
             config.getWebSocketService().registerSubscriptionPermissionChecker(permissionChecker);
-        }
-    }
-
-    private void registerAggregatesWithMessaging() {
-        for (var aggregateType : getAggregateTypes()) {
-            config.getMessaging().registerAggregateType(aggregateType);
         }
     }
 

@@ -104,11 +104,6 @@ public class UsersModule extends Module {
     }
 
     @Override
-    protected List<AggregateType> getAggregateTypes() {
-        return List.of(User.TYPE);
-    }
-
-    @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(User.TYPE, UserEventTransformer::toApi);
     }

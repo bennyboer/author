@@ -58,7 +58,8 @@ public class Messaging {
     }
 
     public Topic getTopic(AggregateType type) {
-        return topicsByAggregateType.get(type);
+        return Optional.ofNullable(topicsByAggregateType.get(type))
+                .orElseGet(() -> createTopic(type));
     }
 
     public void stop() {
@@ -74,10 +75,6 @@ public class Messaging {
 
     public JMSContext getContext() {
         return ctx;
-    }
-
-    public void registerAggregateType(AggregateType type) {
-        createTopic(type);
     }
 
     public MessageListenerId registerAggregateEventMessageListener(AggregateEventMessageListener listener) {
@@ -189,14 +186,16 @@ public class Messaging {
         server.setConfiguration(config);
     }
 
-    private void createTopic(AggregateType aggregateType) {
-        /*
+    private Topic createTopic(AggregateType aggregateType) {
+         /*
         When calling createTopic() the topic is created on the broker when using ActiveMQ Artemis.
         See https://activemq.apache.org/how-do-i-create-new-destinations.html
          */
         String topicName = TOPIC_PREFIX + aggregateType.getValue().toLowerCase(Locale.ROOT);
         Topic topic = ctx.createTopic(topicName);
         topicsByAggregateType.put(aggregateType, topic);
+
+        return topic;
     }
 
 }

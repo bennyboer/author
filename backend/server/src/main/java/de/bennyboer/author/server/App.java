@@ -69,11 +69,7 @@ public class App {
     }
 
     private Messaging setupMessaging() {
-        Messaging messaging = new Messaging(jsonMapper);
-
-        appConfig.getMessagingConfig().accept(messaging);
-
-        return messaging;
+        return new Messaging(jsonMapper);
     }
 
     private JsonMapper createJsonMapper() {

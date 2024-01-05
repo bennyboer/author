@@ -32,10 +32,6 @@ import jakarta.annotation.Nullable;
 import lombok.Value;
 import reactor.core.publisher.Mono;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.JMSProducer;
-import javax.jms.TextMessage;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -66,7 +62,6 @@ public class ProjectsModuleTests extends ModuleTest {
                 .profile(Profile.TESTING)
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .messagingConfig(messaging -> messaging.registerAggregateType(User.TYPE)) // Register fake users topic
                 .modules(List.of(
                         (moduleConfig) -> {
                             var eventSerializer = new JsonMapperEventSerializer(
@@ -98,13 +93,16 @@ public class ProjectsModuleTests extends ModuleTest {
         return messaging;
     }
 
+    @Override
+    public JsonMapper getJsonMapper() {
+        return jsonMapper;
+    }
+
     protected void userIsCreatedThatIsNotAllowedToCreateProjects() {
         // Do nothing
     }
 
     protected void userIsCreatedThatIsAllowedToCreateProjects() {
-        JMSProducer producer = messaging.getContext().createProducer();
-        Destination destination = messaging.getTopic(User.TYPE);
         AggregateEventMessage message = AggregateEventMessage.builder()
                 .aggregateType(User.TYPE.getValue())
                 .aggregateId(userId.getValue())
@@ -113,16 +111,7 @@ public class ProjectsModuleTests extends ModuleTest {
                 .eventName("CREATED")
                 .eventVersion(0L)
                 .build();
-        String json = jsonMapper.toJsonString(message, AggregateEventMessage.class);
-        TextMessage textMessage = messaging.getContext().createTextMessage(json);
-        try {
-            textMessage.setStringProperty("aggregateId", userId.getValue());
-            textMessage.setStringProperty("eventName", "CREATED");
-        } catch (JMSException e) {
-            throw new RuntimeException(e);
-        }
-
-        producer.send(destination, textMessage);
+        publishAggregateEventMessage(message);
 
         awaitProjectPermissionsForUserGiven();
     }

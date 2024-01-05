@@ -117,11 +117,6 @@ public class StructureModule extends Module {
     }
 
     @Override
-    protected List<AggregateType> getAggregateTypes() {
-        return List.of(Structure.TYPE);
-    }
-
-    @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Structure.TYPE, StructureEventTransformer::toApi);
     }

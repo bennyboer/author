@@ -86,6 +86,11 @@ public abstract class UsersModuleTests extends ModuleTest {
     public Messaging getMessaging() {
         return messaging;
     }
+    
+    @Override
+    public JsonMapper getJsonMapper() {
+        return jsonMapper;
+    }
 
     protected UserDTO getUserDetails(HttpClient client, String userId, String token) throws IOException {
         var response = client.get(

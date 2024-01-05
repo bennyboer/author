@@ -5,10 +5,17 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.shared.messaging.Messaging;
+import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
+import de.bennyboer.author.user.User;
+import io.javalin.json.JsonMapper;
 import reactor.core.publisher.Mono;
 
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.JMSProducer;
+import javax.jms.TextMessage;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -17,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 public abstract class ModuleTest {
 
     protected abstract Messaging getMessaging();
+
+    protected abstract JsonMapper getJsonMapper();
 
     protected void awaitPermissionCreation(Permission permission, PermissionsRepo repo) {
         awaitPermissionCreation(permission, repo, Duration.ofSeconds(5));
@@ -128,6 +137,23 @@ public abstract class ModuleTest {
         }
     }
 
-    // TODO Method to easily publish aggregate event message
+    protected void publishAggregateEventMessage(AggregateEventMessage message) {
+        Messaging messaging = getMessaging();
+        JsonMapper jsonMapper = getJsonMapper();
+
+        JMSProducer producer = messaging.getContext().createProducer();
+        Destination destination = messaging.getTopic(User.TYPE);
+
+        String json = jsonMapper.toJsonString(message, AggregateEventMessage.class);
+        TextMessage textMessage = messaging.getContext().createTextMessage(json);
+        try {
+            textMessage.setStringProperty("aggregateId", message.getAggregateId());
+            textMessage.setStringProperty("eventName", message.getEventName());
+        } catch (JMSException e) {
+            throw new RuntimeException(e);
+        }
+
+        producer.send(destination, textMessage);
+    }
 
 }

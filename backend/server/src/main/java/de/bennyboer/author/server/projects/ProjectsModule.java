@@ -102,11 +102,6 @@ public class ProjectsModule extends Module {
     }
 
     @Override
-    protected List<AggregateType> getAggregateTypes() {
-        return List.of(Project.TYPE);
-    }
-
-    @Override
     protected Map<AggregateType, AggregateEventPayloadTransformer> getAggregateEventPayloadTransformers() {
         return Map.of(Project.TYPE, ProjectEventTransformer::toApi);
     }
