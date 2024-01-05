@@ -20,7 +20,7 @@ import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.permissions.UserAction;
-import de.bennyboer.author.server.users.persistence.lookup.TestUserLookupRepo;
+import de.bennyboer.author.server.users.persistence.lookup.InMemoryUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.testing.TestClock;
 import de.bennyboer.author.user.User;
@@ -34,16 +34,12 @@ import java.util.List;
 
 public abstract class UsersModuleTests extends ModuleTest {
 
-    protected final TestUserLookupRepo userLookupRepo = createUserLookupRepo();
+    protected final InMemoryUserLookupRepo userLookupRepo = new InMemoryUserLookupRepo();
     protected final PermissionsRepo permissionsRepo = RepoFactory.createPermissionsRepo("users");
     protected final JsonMapper jsonMapper;
     protected final Javalin javalin;
     protected final TestClock clock = new TestClock();
     private final Messaging messaging;
-
-    protected TestUserLookupRepo createUserLookupRepo() {
-        return new TestUserLookupRepo();
-    }
 
     {
         KeyPair keyPair = KeyPairs.read("/keys/key_pair.pem");
@@ -86,7 +82,7 @@ public abstract class UsersModuleTests extends ModuleTest {
     public Messaging getMessaging() {
         return messaging;
     }
-    
+
     @Override
     public JsonMapper getJsonMapper() {
         return jsonMapper;
@@ -156,7 +152,7 @@ public abstract class UsersModuleTests extends ModuleTest {
     }
 
     private void awaitUserPresenceInLookupRepo(UserName name) {
-        userLookupRepo.awaitUpdate(name);
+        userLookupRepo.awaitUpdate(u -> u.getName().equals(name));
     }
 
     private void awaitUserRemovalFromLookupRepo(UserId userId) {

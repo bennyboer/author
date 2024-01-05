@@ -17,7 +17,7 @@ import de.bennyboer.author.server.projects.api.ProjectDTO;
 import de.bennyboer.author.server.projects.api.requests.CreateProjectRequest;
 import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
 import de.bennyboer.author.server.projects.permissions.ProjectAction;
-import de.bennyboer.author.server.projects.persistence.lookup.TestProjectLookupRepo;
+import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.ModuleTest;
 import de.bennyboer.author.server.shared.messaging.Messaging;
@@ -38,7 +38,7 @@ import java.util.List;
 
 public class ProjectsModuleTests extends ModuleTest {
 
-    protected final TestProjectLookupRepo projectLookupRepo = new TestProjectLookupRepo();
+    protected final InMemoryProjectLookupRepo projectLookupRepo = new InMemoryProjectLookupRepo();
     protected final PermissionsRepo permissionsRepo = new InMemoryPermissionsRepo();
     protected final JsonMapper jsonMapper;
     protected final Javalin javalin;
@@ -202,15 +202,6 @@ public class ProjectsModuleTests extends ModuleTest {
                 .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
 
         awaitPermissionCreation(permission, permissionsRepo);
-    }
-
-    private void awaitProjectPermissionsRemoval(ProjectId projectId) {
-        Permission permission = Permission.builder()
-                .user(userId)
-                .isAllowedTo(Action.of(ProjectAction.READ.name()))
-                .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
-
-        awaitPermissionRemoval(permission, permissionsRepo);
     }
 
     private void awaitProjectPermissionsForUserGiven() {
