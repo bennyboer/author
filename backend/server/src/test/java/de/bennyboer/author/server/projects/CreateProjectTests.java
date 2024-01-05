@@ -1,7 +1,13 @@
 package de.bennyboer.author.server.projects;
 
+import de.bennyboer.author.permissions.Action;
+import de.bennyboer.author.project.Project;
+import de.bennyboer.author.server.projects.permissions.ProjectAction;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,6 +55,29 @@ public class CreateProjectTests extends ProjectsModuleTests {
 
             // then: the server responds with 403
             assertThat(response.getStatusCode()).isEqualTo(403);
+        });
+    }
+
+    @Test
+    void shouldReceiveWebSocketPermissionEventWhenCreatingProject() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: a user is created that is allowed to create projects
+            userIsCreatedThatIsAllowedToCreateProjects();
+
+            // when: listening to permission events on the project aggregate for the currently authenticated user
+            CountDownLatch eventReceived = getLatchForAwaitingPermissionEventOverWebSocket(
+                    client,
+                    correctToken,
+                    Project.TYPE,
+                    null,
+                    Action.of(ProjectAction.READ.name())
+            );
+
+            // and: a project is created
+            createProject(client, "Test Project", correctToken);
+
+            // then: the event is received
+            assertThat(eventReceived.await(5, TimeUnit.SECONDS)).isTrue();
         });
     }
 

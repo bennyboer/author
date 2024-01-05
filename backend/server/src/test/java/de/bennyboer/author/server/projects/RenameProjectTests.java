@@ -1,7 +1,13 @@
 package de.bennyboer.author.server.projects;
 
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
+import de.bennyboer.author.project.Project;
+import de.bennyboer.author.project.ProjectEvent;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,6 +60,32 @@ public class RenameProjectTests extends ProjectsModuleTests {
             // and: the project is not renamed
             getProjectResponse = getProject(client, projectId, correctToken);
             assertThat(getProjectResponse.getProject().getName()).isEqualTo("Test Project");
+        });
+    }
+
+    @Test
+    void shouldReceiveWebSocketMessageWhenProjectIsRenamed() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: a user is created that is allowed to create projects
+            userIsCreatedThatIsAllowedToCreateProjects();
+
+            // and: a project is created
+            var projectId = createProjectAndAwaitCreation(client, "Test Project", correctToken);
+
+            // when: listening to rename events
+            CountDownLatch eventReceived = getLatchForAwaitingEventOverWebSocket(
+                    client,
+                    correctToken,
+                    Project.TYPE,
+                    AggregateId.of(projectId),
+                    ProjectEvent.RENAMED.getName()
+            );
+
+            // and: renaming the project
+            renameProject(client, projectId, 0, "Renamed Project", correctToken);
+
+            // then: the event is received
+            assertThat(eventReceived.await(5, TimeUnit.SECONDS)).isTrue();
         });
     }
 

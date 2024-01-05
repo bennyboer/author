@@ -1,8 +1,5 @@
 package de.bennyboer.author.server.shared.websocket.api;
 
-import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.author.permissions.Action;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,6 +22,7 @@ public class SubscribeToPermissionsMessage {
     @Nullable
     String aggregateId;
 
+    @Nullable
     String action;
 
     public static SubscribeToPermissionsMessage of(
@@ -37,16 +35,12 @@ public class SubscribeToPermissionsMessage {
         return new SubscribeToPermissionsMessage(aggregateType, aggregateId, action);
     }
 
-    public AggregateType getAggregateType() {
-        return AggregateType.of(aggregateType);
+    public Optional<String> getAggregateId() {
+        return Optional.ofNullable(aggregateId);
     }
 
-    public Optional<AggregateId> getAggregateId() {
-        return Optional.ofNullable(aggregateId).map(AggregateId::of);
-    }
-
-    public Optional<Action> getAction() {
-        return Optional.ofNullable(action).map(Action::of);
+    public Optional<String> getAction() {
+        return Optional.ofNullable(action);
     }
 
 }

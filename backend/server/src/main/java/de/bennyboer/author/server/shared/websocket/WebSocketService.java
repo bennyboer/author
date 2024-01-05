@@ -2,8 +2,11 @@ package de.bennyboer.author.server.shared.websocket;
 
 import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
@@ -194,9 +197,9 @@ public class WebSocketService {
 
     private void subscribe(WsContext ctx, SubscribeMessage msg, Agent agent) {
         EventSubscriptionTarget target = EventSubscriptionTarget.of(
-                msg.getAggregateType(),
-                msg.getAggregateId(),
-                msg.getEventName().orElse(null)
+                AggregateType.of(msg.getAggregateType()),
+                AggregateId.of(msg.getAggregateId()),
+                msg.getEventName().map(EventName::of).orElse(null)
         );
         assertThatAgentIsAllowedToSubscribeToTargetEvents(target, agent);
 
@@ -210,9 +213,9 @@ public class WebSocketService {
     ) {
         PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
                 agent.getUserId().orElseThrow(),
-                msg.getAggregateType(),
-                msg.getAggregateId().orElse(null),
-                msg.getAction().orElse(null)
+                AggregateType.of(msg.getAggregateType()),
+                msg.getAggregateId().map(AggregateId::of).orElse(null),
+                msg.getAction().map(Action::of).orElse(null)
         );
 
         aggregatePermissionEventSubscriptionManager.subscribe(target, SessionId.of(ctx));

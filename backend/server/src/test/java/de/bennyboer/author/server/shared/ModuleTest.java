@@ -1,7 +1,10 @@
 package de.bennyboer.author.server.shared;
 
 import de.bennyboer.author.common.UserId;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.eventsourcing.event.EventName;
+import de.bennyboer.author.permissions.Action;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.App;
@@ -12,10 +15,21 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
+import de.bennyboer.author.server.shared.websocket.api.SubscribeMessage;
+import de.bennyboer.author.server.shared.websocket.api.SubscribeToPermissionsMessage;
+import de.bennyboer.author.server.shared.websocket.api.WebSocketMessage;
+import de.bennyboer.author.server.shared.websocket.api.WebSocketMessageMethod;
 import de.bennyboer.author.user.User;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
+import io.javalin.testtools.HttpClient;
 import lombok.Getter;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import javax.jms.Destination;
@@ -180,6 +194,110 @@ public abstract class ModuleTest {
         }
 
         producer.send(destination, textMessage);
+    }
+
+    protected CountDownLatch getLatchForAwaitingEventOverWebSocket(
+            HttpClient client,
+            String token,
+            AggregateType aggregateType,
+            AggregateId aggregateId,
+            EventName eventName
+    ) throws InterruptedException {
+        CountDownLatch connected = new CountDownLatch(1);
+        CountDownLatch eventReceived = new CountDownLatch(1);
+
+        client.getOkHttp().newWebSocket(
+                new Request.Builder().url("ws://localhost:%d/ws".formatted(javalin.port())).build(),
+                new WebSocketListener() {
+                    @Override
+                    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+                        WebSocketMessage msg = WebSocketMessage.builder()
+                                .method(WebSocketMessageMethod.SUBSCRIBE)
+                                .token(token)
+                                .subscribe(SubscribeMessage.builder()
+                                        .aggregateType(aggregateType.getValue())
+                                        .aggregateId(aggregateId.getValue())
+                                        .eventName(eventName.getValue())
+                                        .build())
+                                .build();
+                        String jsonMsg = getJsonMapper().toJsonString(msg, WebSocketMessage.class);
+
+                        webSocket.send(jsonMsg);
+
+                        connected.countDown();
+                    }
+
+                    @Override
+                    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                        WebSocketMessage msg = getJsonMapper().fromJsonString(text, WebSocketMessage.class);
+
+                        msg.getEvent().ifPresent(eventMessage -> {
+                            eventReceived.countDown();
+                            webSocket.close(1000, "Test finished");
+                        });
+                    }
+                }
+        );
+
+        boolean zeroed = connected.await(5, TimeUnit.SECONDS);
+        if (!zeroed) {
+            throw new RuntimeException("Timed out waiting for websocket connection");
+        }
+
+        return eventReceived;
+    }
+
+    protected CountDownLatch getLatchForAwaitingPermissionEventOverWebSocket(
+            HttpClient client,
+            String token,
+            AggregateType aggregateType,
+            @Nullable AggregateId aggregateId,
+            @Nullable Action action
+    ) throws InterruptedException {
+        CountDownLatch connected = new CountDownLatch(1);
+        CountDownLatch eventReceived = new CountDownLatch(1);
+
+        client.getOkHttp().newWebSocket(
+                new Request.Builder().url("ws://localhost:%d/ws".formatted(javalin.port())).build(),
+                new WebSocketListener() {
+                    @Override
+                    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+                        WebSocketMessage msg = WebSocketMessage.builder()
+                                .method(WebSocketMessageMethod.SUBSCRIBE_TO_PERMISSIONS)
+                                .token(token)
+                                .subscribeToPermissions(SubscribeToPermissionsMessage.builder()
+                                        .aggregateType(aggregateType.getValue())
+                                        .aggregateId(Optional.ofNullable(aggregateId)
+                                                .map(AggregateId::getValue)
+                                                .orElse(null))
+                                        .action(Optional.ofNullable(action).map(Action::getName).orElse(null))
+                                        .build())
+                                .build();
+                        String jsonMsg = getJsonMapper().toJsonString(msg, WebSocketMessage.class);
+
+                        webSocket.send(jsonMsg);
+
+                        connected.countDown();
+                    }
+
+                    @Override
+                    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                        WebSocketMessage msg = getJsonMapper().fromJsonString(text, WebSocketMessage.class);
+
+                        msg.getPermissionEvent().ifPresent(permissionEventMessage -> {
+                            eventReceived.countDown();
+                            webSocket.close(1000, "Test finished");
+                        });
+                    }
+                }
+        );
+
+        boolean zeroed = connected.await(5, TimeUnit.SECONDS);
+        if (!zeroed) {
+            throw new RuntimeException("Timed out waiting for websocket connection");
+        }
+
+        return eventReceived;
     }
 
 }
