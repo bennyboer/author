@@ -1,5 +1,6 @@
 package de.bennyboer.author.server.projects;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.auth.token.TokenContent;
 import de.bennyboer.author.auth.token.TokenGenerator;
@@ -36,6 +37,7 @@ public class ProjectsModuleTests extends ModuleTest {
     protected PermissionsRepo permissionsRepo;
 
     protected final String correctToken = "correctToken";
+    protected final String correctTokenForAnotherUser = "correctToken2";
     protected final String incorrectToken = "incorrectToken";
     protected final UserId userId = UserId.of("USER_ID");
 
@@ -48,6 +50,8 @@ public class ProjectsModuleTests extends ModuleTest {
         TokenVerifier tokenVerifier = token -> {
             if (token.getValue().equals(correctToken)) {
                 return Mono.just(TokenContent.user(userId));
+            } else if (token.getValue().equals(correctTokenForAnotherUser)) {
+                return Mono.just(TokenContent.user(UserId.of("USER_ID_2")));
             }
 
             return Mono.error(new Exception("Invalid token"));
@@ -125,6 +129,24 @@ public class ProjectsModuleTests extends ModuleTest {
         }
 
         return new GetProjectTestResponse(statusCode, project);
+    }
+
+    protected GetAccessibleProjectsTestResponse getAccessibleProjects(HttpClient client, String token)
+            throws IOException {
+        var response = client.get(
+                "/api/projects",
+                req -> req.header("Authorization", "Bearer " + token)
+        );
+
+        int statusCode = response.code();
+        List<ProjectDTO> projects = List.of();
+        if (statusCode == 200) {
+            String responseJson = response.body().string();
+            projects = getJsonMapper().fromJsonString(responseJson, new TypeReference<List<ProjectDTO>>() {
+            }.getType());
+        }
+
+        return new GetAccessibleProjectsTestResponse(statusCode, projects);
     }
 
     protected String createProjectAndAwaitCreation(HttpClient client, String name, String token) {
@@ -209,6 +231,15 @@ public class ProjectsModuleTests extends ModuleTest {
 
         @Nullable
         ProjectDTO project;
+
+    }
+
+    @Value
+    public static class GetAccessibleProjectsTestResponse {
+
+        int statusCode;
+
+        List<ProjectDTO> projects;
 
     }
 
