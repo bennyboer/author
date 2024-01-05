@@ -5,7 +5,6 @@ import de.bennyboer.author.auth.token.TokenContent;
 import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
@@ -20,10 +19,9 @@ import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
 import de.bennyboer.author.server.projects.permissions.ProjectAction;
 import de.bennyboer.author.server.projects.persistence.lookup.TestProjectLookupRepo;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
+import de.bennyboer.author.server.shared.ModuleTest;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
-import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
-import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.user.User;
@@ -41,11 +39,8 @@ import javax.jms.TextMessage;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-public class ProjectsModuleTests {
+public class ProjectsModuleTests extends ModuleTest {
 
     protected final TestProjectLookupRepo projectLookupRepo = new TestProjectLookupRepo();
     protected final PermissionsRepo permissionsRepo = new InMemoryPermissionsRepo();
@@ -98,6 +93,11 @@ public class ProjectsModuleTests {
         javalin = app.createJavalin();
     }
 
+    @Override
+    protected Messaging getMessaging() {
+        return messaging;
+    }
+
     protected void userIsCreatedThatIsNotAllowedToCreateProjects() {
         // Do nothing
     }
@@ -125,50 +125,6 @@ public class ProjectsModuleTests {
         producer.send(destination, textMessage);
 
         awaitProjectPermissionsForUserGiven();
-    }
-
-    private void awaitProjectPermissionsForUserGiven() {
-        CountDownLatch latch = new CountDownLatch(1);
-        Permission permission = Permission.builder()
-                .user(userId)
-                .isAllowedTo(Action.of(ProjectAction.CREATE.name()))
-                .on(Resource.ofType(ResourceType.of(Project.TYPE.getValue())));
-
-        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
-            @Override
-            public AggregateType aggregateType() {
-                return Project.TYPE;
-            }
-
-            @Override
-            public Optional<UserId> userId() {
-                return Optional.of(userId);
-            }
-
-            @Override
-            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
-                boolean hasPermissionAlready = permissionsRepo.hasPermission(permission).block();
-                if (hasPermissionAlready) {
-                    latch.countDown();
-                }
-
-                return Mono.empty();
-            }
-        });
-
-        boolean hasPermissionAlready = permissionsRepo.hasPermission(permission).block();
-        if (hasPermissionAlready) {
-            latch.countDown();
-        }
-
-        try {
-            boolean zeroReached = latch.await(5, TimeUnit.SECONDS);
-            if (!zeroReached) {
-                throw new RuntimeException("Timed out waiting for project permissions for user to be setup");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     protected int renameProject(HttpClient client, String projectId, long version, String newName, String token) {
@@ -218,12 +174,6 @@ public class ProjectsModuleTests {
         awaitProjectPermissionsSetup(id);
     }
 
-    protected void removeProjectAndAwaitRemoval(HttpClient client, String projectId, long version, String token) {
-        removeProject(client, projectId, version, token);
-
-        awaitProjectRemoval(projectId);
-    }
-
     protected int removeProject(HttpClient client, String projectId, long version, String token) {
         var response = client.delete(
                 "/api/projects/%s?version=%d".formatted(projectId, version),
@@ -232,101 +182,6 @@ public class ProjectsModuleTests {
         );
 
         return response.code();
-    }
-
-    protected void awaitProjectRemoval(String projectId) {
-        ProjectId id = ProjectId.of(projectId);
-
-        projectLookupRepo.awaitRemoval(id);
-        awaitProjectPermissionsRemoval(id);
-    }
-
-    private void awaitProjectPermissionsRemoval(ProjectId projectId) {
-        CountDownLatch latch = new CountDownLatch(1);
-        Permission permission = Permission.builder()
-                .user(userId)
-                .isAllowedTo(Action.of(ProjectAction.READ.name()))
-                .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
-
-        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
-            @Override
-            public AggregateType aggregateType() {
-                return Project.TYPE;
-            }
-
-            @Override
-            public Optional<UserId> userId() {
-                return Optional.of(userId);
-            }
-
-            @Override
-            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
-                boolean hasNoPermission = !permissionsRepo.hasPermission(permission).block();
-                if (hasNoPermission) {
-                    latch.countDown();
-                }
-
-                return Mono.empty();
-            }
-        });
-
-        boolean hasNoPermissions = !permissionsRepo.hasPermission(permission).block();
-        if (hasNoPermissions) {
-            latch.countDown();
-        }
-
-        try {
-            boolean zeroReached = latch.await(5, TimeUnit.SECONDS);
-            if (!zeroReached) {
-                throw new RuntimeException("Timed out waiting for project permissions to be removed");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void awaitProjectPermissionsSetup(ProjectId projectId) {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
-            @Override
-            public AggregateType aggregateType() {
-                return Project.TYPE;
-            }
-
-            @Override
-            public Optional<UserId> userId() {
-                return Optional.of(userId);
-            }
-
-            @Override
-            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
-                if (message.getAggregateId().equals(Optional.of(projectId.getValue()))) {
-                    latch.countDown();
-                }
-
-                return Mono.empty();
-            }
-        });
-
-        Permission permission = Permission.builder()
-                .user(userId)
-                .isAllowedTo(Action.of(ProjectAction.READ.name()))
-                .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
-
-        boolean hasPermissions = permissionsRepo.hasPermission(permission).block();
-        if (hasPermissions) {
-            latch.countDown();
-        }
-
-        try {
-            boolean zeroReached = latch.await(5, TimeUnit.SECONDS);
-            if (!zeroReached) {
-                throw new RuntimeException("Timed out waiting for newly created project permissions to be setup");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     protected CreateProjectTestResponse createProject(HttpClient client, String name, String token) {
@@ -349,6 +204,33 @@ public class ProjectsModuleTests {
         }
 
         return new CreateProjectTestResponse(statusCode, projectId);
+    }
+
+    private void awaitProjectPermissionsSetup(ProjectId projectId) {
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(Action.of(ProjectAction.READ.name()))
+                .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
+
+        awaitPermissionCreation(permission, permissionsRepo);
+    }
+
+    private void awaitProjectPermissionsRemoval(ProjectId projectId) {
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(Action.of(ProjectAction.READ.name()))
+                .on(Resource.of(ResourceType.of(Project.TYPE.getValue()), ResourceId.of(projectId.getValue())));
+
+        awaitPermissionRemoval(permission, permissionsRepo);
+    }
+
+    private void awaitProjectPermissionsForUserGiven() {
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(Action.of(ProjectAction.CREATE.name()))
+                .on(Resource.ofType(ResourceType.of(Project.TYPE.getValue())));
+
+        awaitPermissionCreation(permission, permissionsRepo);
     }
 
     @Value

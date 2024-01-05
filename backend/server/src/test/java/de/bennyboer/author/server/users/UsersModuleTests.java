@@ -7,19 +7,19 @@ import de.bennyboer.author.auth.token.TokenGenerators;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.auth.token.TokenVerifiers;
 import de.bennyboer.author.common.UserId;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
+import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.App;
 import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.Profile;
+import de.bennyboer.author.server.shared.ModuleTest;
 import de.bennyboer.author.server.shared.messaging.Messaging;
-import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
-import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
+import de.bennyboer.author.server.users.permissions.UserAction;
 import de.bennyboer.author.server.users.persistence.lookup.TestUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.testing.TestClock;
@@ -28,14 +28,11 @@ import de.bennyboer.author.user.UserName;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
-public abstract class UsersModuleTests {
+public abstract class UsersModuleTests extends ModuleTest {
 
     protected final TestUserLookupRepo userLookupRepo = createUserLookupRepo();
     protected final PermissionsRepo permissionsRepo = RepoFactory.createPermissionsRepo("users");
@@ -85,6 +82,11 @@ public abstract class UsersModuleTests {
         javalin = app.createJavalin();
     }
 
+    @Override
+    public Messaging getMessaging() {
+        return messaging;
+    }
+
     protected UserDTO getUserDetails(HttpClient client, String userId, String token) throws IOException {
         var response = client.get(
                 "/api/users/%s".formatted(userId),
@@ -129,14 +131,23 @@ public abstract class UsersModuleTests {
         awaitUserPresenceInLookupRepo(name);
 
         UserId userId = userLookupRepo.findUserIdByName(name).block();
-        awaitPermissionsSetup(userId);
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(Action.of(UserAction.READ.name()))
+                .on(Resource.of(ResourceType.of(User.TYPE.getValue()), ResourceId.of(userId.getValue())));
+        awaitPermissionCreation(permission, permissionsRepo);
     }
 
     protected void awaitUserCleanup(String userId) {
         UserId id = UserId.of(userId);
 
         awaitUserRemovalFromLookupRepo(id);
-        awaitPermissionsCleanup(id);
+
+        Permission permission = Permission.builder()
+                .user(id)
+                .isAllowedTo(Action.of(UserAction.READ.name()))
+                .on(Resource.of(ResourceType.of(User.TYPE.getValue()), ResourceId.of(id.getValue())));
+        awaitPermissionRemoval(permission, permissionsRepo);
     }
 
     private void awaitUserPresenceInLookupRepo(UserName name) {
@@ -145,96 +156,6 @@ public abstract class UsersModuleTests {
 
     private void awaitUserRemovalFromLookupRepo(UserId userId) {
         userLookupRepo.awaitRemoval(userId);
-    }
-
-    private void awaitPermissionsSetup(UserId userId) {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
-            @Override
-            public AggregateType aggregateType() {
-                return User.TYPE;
-            }
-
-            @Override
-            public Optional<UserId> userId() {
-                return Optional.of(userId);
-            }
-
-            @Override
-            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
-                if (message.getAggregateId().equals(Optional.of(userId.getValue()))) {
-                    boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(userId)
-                            .collectList()
-                            .block()
-                            .isEmpty();
-                    if (hasPermissions) {
-                        latch.countDown();
-                    }
-                }
-
-                return Mono.empty();
-            }
-        });
-
-        boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(userId)
-                .collectList()
-                .block()
-                .isEmpty();
-        if (hasPermissions) {
-            latch.countDown();
-        }
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected void awaitPermissionsCleanup(UserId userId) {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        messaging.registerAggregatePermissionEventMessageListener(new AggregatePermissionEventMessageListener() {
-            @Override
-            public AggregateType aggregateType() {
-                return User.TYPE;
-            }
-
-            @Override
-            public Optional<UserId> userId() {
-                return Optional.of(userId);
-            }
-
-            @Override
-            public Mono<Void> onMessage(AggregatePermissionEventMessage message) {
-                if (message.getAggregateId().equals(Optional.of(userId.getValue()))) {
-                    boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(userId)
-                            .collectList()
-                            .block()
-                            .isEmpty();
-                    if (!hasPermissions) {
-                        latch.countDown();
-                    }
-                }
-
-                return Mono.empty();
-            }
-        });
-
-        boolean hasPermissions = !permissionsRepo.findPermissionsByUserId(userId)
-                .collectList()
-                .block()
-                .isEmpty();
-        if (!hasPermissions) {
-            latch.countDown();
-        }
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }
