@@ -4,12 +4,16 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
 import de.bennyboer.author.permissions.Permission;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
+import de.bennyboer.author.server.App;
+import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.user.User;
+import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
+import lombok.Getter;
 import reactor.core.publisher.Mono;
 
 import javax.jms.Destination;
@@ -23,9 +27,25 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class ModuleTest {
 
-    protected abstract Messaging getMessaging();
+    @Getter
+    private final Messaging messaging;
 
-    protected abstract JsonMapper getJsonMapper();
+    @Getter
+    private final JsonMapper jsonMapper;
+
+    @Getter
+    private final Javalin javalin;
+
+    public ModuleTest() {
+        AppConfig config = configure();
+
+        App app = new App(config);
+        messaging = app.getMessaging();
+        jsonMapper = app.getJsonMapper();
+        javalin = app.createJavalin();
+    }
+
+    protected abstract AppConfig configure();
 
     protected void awaitPermissionCreation(Permission permission, PermissionsRepo repo) {
         awaitPermissionCreation(permission, repo, Duration.ofSeconds(5));

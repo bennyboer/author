@@ -9,7 +9,7 @@ public class RemoveProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldRemoveProject() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 
@@ -34,7 +34,7 @@ public class RemoveProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldNotBeAbleToRemoveProjectGivenAnIncorrectAccessToken() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 

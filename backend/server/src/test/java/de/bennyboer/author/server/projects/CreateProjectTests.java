@@ -9,7 +9,7 @@ public class CreateProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldCreateProject() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 
@@ -26,7 +26,7 @@ public class CreateProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldNotCreateProjectGivenIncorrectToken() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 
@@ -40,7 +40,7 @@ public class CreateProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldNotCreateProjectGivenMissingPermissions() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsNotAllowedToCreateProjects();
 

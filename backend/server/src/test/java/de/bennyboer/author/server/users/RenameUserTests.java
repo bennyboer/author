@@ -11,7 +11,7 @@ public class RenameUserTests extends UsersModuleTests {
 
     @Test
     void shouldRenameUser() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
             var userId = loginUserResponse.getUserId();
@@ -22,7 +22,7 @@ public class RenameUserTests extends UsersModuleTests {
             RenameUserRequest request = RenameUserRequest.builder()
                     .name("New Name")
                     .build();
-            String requestJson = jsonMapper.toJsonString(request, RenameUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
             var renameResponse = client.post(
                     "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
                     requestJson,
@@ -40,7 +40,7 @@ public class RenameUserTests extends UsersModuleTests {
 
     @Test
     void shouldNotBeAbleToRenameUserWithoutValidToken() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
             var userId = loginUserResponse.getUserId();
@@ -50,7 +50,7 @@ public class RenameUserTests extends UsersModuleTests {
             RenameUserRequest request = RenameUserRequest.builder()
                     .name("New Name")
                     .build();
-            String requestJson = jsonMapper.toJsonString(request, RenameUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
             var renameResponse = client.post(
                     "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
                     requestJson,

@@ -10,7 +10,7 @@ public class QueryUserTests extends UsersModuleTests {
 
     @Test
     void shouldGetUserDetails() {
-        JavalinTest.test(javalin, ((server, client) -> {
+        JavalinTest.test(getJavalin(), ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
             var userId = loginUserResponse.getUserId();
@@ -26,7 +26,7 @@ public class QueryUserTests extends UsersModuleTests {
             assertThat(response.code()).isEqualTo(200);
 
             // and: the user details are returned
-            UserDTO user = jsonMapper.fromJsonString(response.body().string(), UserDTO.class);
+            UserDTO user = getJsonMapper().fromJsonString(response.body().string(), UserDTO.class);
             assertThat(user.getId()).isEqualTo(userId);
             assertThat(user.getName()).isEqualTo("default");
         }));
@@ -34,7 +34,7 @@ public class QueryUserTests extends UsersModuleTests {
 
     @Test
     void shouldNotBeAbleToGetUserDetailsWithoutValidToken() {
-        JavalinTest.test(javalin, ((server, client) -> {
+        JavalinTest.test(getJavalin(), ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
             var userId = loginUserResponse.getUserId();

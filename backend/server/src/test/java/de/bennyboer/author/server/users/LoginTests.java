@@ -15,7 +15,7 @@ public class LoginTests extends UsersModuleTests {
 
     @Test
     void shouldReturn401WhenUserNameCannotBeFound() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: the default user has been setup
             awaitUserSetup("default");
 
@@ -24,7 +24,7 @@ public class LoginTests extends UsersModuleTests {
                     .name("unknown")
                     .password("password")
                     .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
             var response = client.post("/api/users/login", requestJson);
 
             // then: the server responds with 401
@@ -34,7 +34,7 @@ public class LoginTests extends UsersModuleTests {
 
     @Test
     void shouldReturn401WhenPasswordIsWrong() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: the default user is setup
             awaitUserSetup("default");
 
@@ -43,7 +43,7 @@ public class LoginTests extends UsersModuleTests {
                     .name("default")
                     .password("wrong")
                     .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
             var response = client.post("/api/users/login", requestJson);
 
             // then: the server responds with 401
@@ -53,7 +53,7 @@ public class LoginTests extends UsersModuleTests {
 
     @Test
     void shouldLockTheUserAfter10UnsuccessfulLoginAttempts() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // when: trying to login with a wrong password 10 times
             for (int i = 0; i < 10; i++) {
                 try {
@@ -68,7 +68,7 @@ public class LoginTests extends UsersModuleTests {
                     .name("default")
                     .password("password")
                     .build();
-            String requestJson = jsonMapper.toJsonString(request, LoginUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
             var response = client.post("/api/users/login", requestJson);
 
             // then: the server responds with 429
@@ -78,7 +78,7 @@ public class LoginTests extends UsersModuleTests {
 
     @Test
     void shouldNotLockTheUserAfter10UnsuccessfulLoginAttemptsWhenOneSuccessfulHappenedInBetween() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // when: trying to login with a wrong password 9 times
             for (int i = 0; i < 9; i++) {
                 try {
@@ -113,7 +113,7 @@ public class LoginTests extends UsersModuleTests {
 
     @Test
     void shouldUnlockUserAfter30Minutes() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // when: trying to login with a wrong password 10 times
             for (int i = 0; i < 10; i++) {
                 try {

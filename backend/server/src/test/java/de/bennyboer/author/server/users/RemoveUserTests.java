@@ -9,7 +9,7 @@ public class RemoveUserTests extends UsersModuleTests {
 
     @Test
     void shouldRemoveUser() {
-        JavalinTest.test(javalin, ((server, client) -> {
+        JavalinTest.test(getJavalin(), ((server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
             var userId = loginUserResponse.getUserId();

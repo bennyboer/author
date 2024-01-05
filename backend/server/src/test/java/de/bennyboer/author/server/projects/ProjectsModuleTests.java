@@ -10,7 +10,6 @@ import de.bennyboer.author.permissions.repo.InMemoryPermissionsRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectId;
-import de.bennyboer.author.server.App;
 import de.bennyboer.author.server.AppConfig;
 import de.bennyboer.author.server.Profile;
 import de.bennyboer.author.server.projects.api.ProjectDTO;
@@ -20,13 +19,10 @@ import de.bennyboer.author.server.projects.permissions.ProjectAction;
 import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.ModuleTest;
-import de.bennyboer.author.server.shared.messaging.Messaging;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.user.User;
-import io.javalin.Javalin;
-import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
 import jakarta.annotation.Nullable;
 import lombok.Value;
@@ -38,17 +34,18 @@ import java.util.List;
 
 public class ProjectsModuleTests extends ModuleTest {
 
-    protected final InMemoryProjectLookupRepo projectLookupRepo = new InMemoryProjectLookupRepo();
-    protected final PermissionsRepo permissionsRepo = new InMemoryPermissionsRepo();
-    protected final JsonMapper jsonMapper;
-    protected final Javalin javalin;
-    private final Messaging messaging;
+    protected InMemoryProjectLookupRepo projectLookupRepo;
+    protected PermissionsRepo permissionsRepo;
 
     protected final String correctToken = "correctToken";
     protected final String incorrectToken = "incorrectToken";
     protected final UserId userId = UserId.of("USER_ID");
 
-    {
+    @Override
+    protected AppConfig configure() {
+        projectLookupRepo = new InMemoryProjectLookupRepo();
+        permissionsRepo = new InMemoryPermissionsRepo();
+
         TokenGenerator tokenGenerator = content -> Mono.just(Token.of(correctToken));
         TokenVerifier tokenVerifier = token -> {
             if (token.getValue().equals(correctToken)) {
@@ -58,7 +55,7 @@ public class ProjectsModuleTests extends ModuleTest {
             return Mono.error(new Exception("Invalid token"));
         };
 
-        AppConfig config = AppConfig.builder()
+        return AppConfig.builder()
                 .profile(Profile.TESTING)
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
@@ -81,21 +78,6 @@ public class ProjectsModuleTests extends ModuleTest {
                         }
                 ))
                 .build();
-
-        App app = new App(config);
-        messaging = app.getMessaging();
-        jsonMapper = app.getJsonMapper();
-        javalin = app.createJavalin();
-    }
-
-    @Override
-    protected Messaging getMessaging() {
-        return messaging;
-    }
-
-    @Override
-    public JsonMapper getJsonMapper() {
-        return jsonMapper;
     }
 
     protected void userIsCreatedThatIsNotAllowedToCreateProjects() {
@@ -120,7 +102,7 @@ public class ProjectsModuleTests extends ModuleTest {
         RenameProjectRequest request = RenameProjectRequest.builder()
                 .name(newName)
                 .build();
-        String requestJson = jsonMapper.toJsonString(request, RenameProjectRequest.class);
+        String requestJson = getJsonMapper().toJsonString(request, RenameProjectRequest.class);
 
         var response = client.post(
                 "/api/projects/%s/rename?version=%d".formatted(projectId, version),
@@ -142,7 +124,7 @@ public class ProjectsModuleTests extends ModuleTest {
 
         ProjectDTO project = null;
         if (statusCode == 200) {
-            project = jsonMapper.fromJsonString(responseJson, ProjectDTO.class);
+            project = getJsonMapper().fromJsonString(responseJson, ProjectDTO.class);
         }
 
         return new GetProjectTestResponse(statusCode, project);
@@ -177,7 +159,7 @@ public class ProjectsModuleTests extends ModuleTest {
         CreateProjectRequest request = CreateProjectRequest.builder()
                 .name(name)
                 .build();
-        String requestJson = jsonMapper.toJsonString(request, CreateProjectRequest.class);
+        String requestJson = getJsonMapper().toJsonString(request, CreateProjectRequest.class);
 
         var response = client.post(
                 "/api/projects",

@@ -13,7 +13,7 @@ public class StartupTests extends UsersModuleTests {
 
     @Test
     void shouldCreateDefaultUserOnStartupWithoutPersistentUsers() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // when: trying to login with the default user
             LoginUserResponse response = loginDefaultUser(client);
 
@@ -28,7 +28,7 @@ public class StartupTests extends UsersModuleTests {
         // given: there is already a user in the database
         userLookupRepo.update(LookupUser.of(UserId.create(), UserName.of("TestUser"))).block();
 
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // when: server started up
             Thread.sleep(500);
 

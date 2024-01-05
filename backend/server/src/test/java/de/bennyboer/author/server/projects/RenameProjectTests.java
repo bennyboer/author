@@ -9,7 +9,7 @@ public class RenameProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldRenameProject() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 
@@ -34,7 +34,7 @@ public class RenameProjectTests extends ProjectsModuleTests {
 
     @Test
     void shouldNotBeAbleToRenameProjectWhenGivenAnIncorrectToken() {
-        JavalinTest.test(javalin, (server, client) -> {
+        JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a user is created that is allowed to create projects
             userIsCreatedThatIsAllowedToCreateProjects();
 
