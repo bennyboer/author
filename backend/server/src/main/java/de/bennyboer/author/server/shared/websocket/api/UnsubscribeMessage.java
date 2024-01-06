@@ -1,8 +1,5 @@
 package de.bennyboer.author.server.shared.websocket.api;
 
-import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateType;
-import de.bennyboer.author.eventsourcing.event.EventName;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,16 +35,8 @@ public class UnsubscribeMessage {
         return new UnsubscribeMessage(aggregateType, aggregateId, eventName);
     }
 
-    public AggregateType getAggregateType() {
-        return AggregateType.of(aggregateType);
-    }
-
-    public AggregateId getAggregateId() {
-        return AggregateId.of(aggregateId);
-    }
-
-    public Optional<EventName> getEventName() {
-        return Optional.ofNullable(eventName).map(EventName::of);
+    public Optional<String> getEventName() {
+        return Optional.ofNullable(eventName);
     }
 
 }

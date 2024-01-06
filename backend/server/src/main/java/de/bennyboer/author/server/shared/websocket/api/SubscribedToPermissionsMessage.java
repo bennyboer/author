@@ -15,7 +15,7 @@ import static de.bennyboer.author.common.Preconditions.checkNotNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Jacksonized
-public class UnsubscribeFromPermissionsMessage {
+public class SubscribedToPermissionsMessage {
 
     String aggregateType;
 
@@ -25,14 +25,14 @@ public class UnsubscribeFromPermissionsMessage {
     @Nullable
     String action;
 
-    public static UnsubscribeFromPermissionsMessage of(
+    public static SubscribedToPermissionsMessage of(
             String aggregateType,
             @Nullable String aggregateId,
             @Nullable String action
     ) {
         checkNotNull(aggregateType, "Aggregate type must be given");
 
-        return new UnsubscribeFromPermissionsMessage(aggregateType, aggregateId, action);
+        return new SubscribedToPermissionsMessage(aggregateType, aggregateId, action);
     }
 
     public Optional<String> getAggregateId() {

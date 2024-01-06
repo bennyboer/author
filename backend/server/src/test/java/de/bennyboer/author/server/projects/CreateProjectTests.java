@@ -80,4 +80,30 @@ public class CreateProjectTests extends ProjectsModuleTests {
         });
     }
 
+    @Test
+    void shouldNotReceiveWebSocketPermissionEventWhenUnsubscribing() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: a user is created that is allowed to create projects
+            userIsCreatedThatIsAllowedToCreateProjects();
+
+            // when: listening to permission events on the project aggregate for the currently authenticated user
+            var eventReceived = getLatchForAwaitingPermissionEventOverWebSocket(
+                    client,
+                    correctToken,
+                    Project.TYPE,
+                    null,
+                    Action.of(ProjectAction.READ.name())
+            );
+
+            // and: unsubscribing from the event
+            eventReceived.unsubscribe();
+
+            // and: a project is created
+            createProject(client, "Test Project", correctToken);
+
+            // then: the event is not received
+            assertThat(eventReceived.await(1, TimeUnit.SECONDS)).isFalse();
+        });
+    }
+
 }

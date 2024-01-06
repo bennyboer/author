@@ -33,13 +33,25 @@ public class WebSocketMessage {
     SubscribeMessage subscribe;
 
     @Nullable
+    SubscribedMessage subscribed;
+
+    @Nullable
     SubscribeToPermissionsMessage subscribeToPermissions;
+
+    @Nullable
+    SubscribedToPermissionsMessage subscribedToPermissions;
 
     @Nullable
     UnsubscribeMessage unsubscribe;
 
     @Nullable
+    UnsubscribedMessage unsubscribed;
+
+    @Nullable
     UnsubscribeFromPermissionsMessage unsubscribeFromPermissions;
+
+    @Nullable
+    UnsubscribedFromPermissionsMessage unsubscribedFromPermissions;
 
     public static WebSocketMessage heartbeat() {
         return WebSocketMessage.builder()
@@ -59,6 +71,34 @@ public class WebSocketMessage {
         return WebSocketMessage.builder()
                 .method(WebSocketMessageMethod.PERMISSION_EVENT)
                 .permissionEvent(permissionEvent)
+                .build();
+    }
+
+    public static WebSocketMessage subscribed(SubscribedMessage subscribed) {
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.SUBSCRIBED)
+                .subscribed(subscribed)
+                .build();
+    }
+
+    public static WebSocketMessage subscribedToPermissions(SubscribedToPermissionsMessage subscribedToPermissions) {
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.SUBSCRIBED_TO_PERMISSIONS)
+                .subscribedToPermissions(subscribedToPermissions)
+                .build();
+    }
+
+    public static WebSocketMessage unsubscribed(UnsubscribedMessage unsubscribed) {
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.UNSUBSCRIBED)
+                .unsubscribed(unsubscribed)
+                .build();
+    }
+
+    public static WebSocketMessage unsubscribedFromPermissions(UnsubscribedFromPermissionsMessage unsubscribedFromPermissions) {
+        return WebSocketMessage.builder()
+                .method(WebSocketMessageMethod.UNSUBSCRIBED_FROM_PERMISSIONS)
+                .unsubscribedFromPermissions(unsubscribedFromPermissions)
                 .build();
     }
 
@@ -82,16 +122,32 @@ public class WebSocketMessage {
         return Optional.ofNullable(subscribe);
     }
 
+    public Optional<SubscribedMessage> getSubscribed() {
+        return Optional.ofNullable(subscribed);
+    }
+
     public Optional<SubscribeToPermissionsMessage> getSubscribeToPermissions() {
         return Optional.ofNullable(subscribeToPermissions);
+    }
+
+    public Optional<SubscribedToPermissionsMessage> getSubscribedToPermissions() {
+        return Optional.ofNullable(subscribedToPermissions);
     }
 
     public Optional<UnsubscribeMessage> getUnsubscribe() {
         return Optional.ofNullable(unsubscribe);
     }
 
+    public Optional<UnsubscribedMessage> getUnsubscribed() {
+        return Optional.ofNullable(unsubscribed);
+    }
+
     public Optional<UnsubscribeFromPermissionsMessage> getUnsubscribeFromPermissions() {
         return Optional.ofNullable(unsubscribeFromPermissions);
+    }
+
+    public Optional<UnsubscribedFromPermissionsMessage> getUnsubscribedFromPermissions() {
+        return Optional.ofNullable(unsubscribedFromPermissions);
     }
 
 }

@@ -204,6 +204,12 @@ public class WebSocketService {
         assertThatAgentIsAllowedToSubscribeToTargetEvents(target, agent);
 
         aggregateEventSubscriptionManager.subscribe(target, SessionId.of(ctx));
+
+        ctx.send(WebSocketMessage.subscribed(SubscribedMessage.of(
+                msg.getAggregateType(),
+                msg.getAggregateId(),
+                msg.getEventName().orElse(null)
+        )));
     }
 
     private void subscribeToPermissions(
@@ -219,16 +225,28 @@ public class WebSocketService {
         );
 
         aggregatePermissionEventSubscriptionManager.subscribe(target, SessionId.of(ctx));
+
+        ctx.send(WebSocketMessage.subscribedToPermissions(SubscribedToPermissionsMessage.of(
+                msg.getAggregateType(),
+                msg.getAggregateId().orElse(null),
+                msg.getAction().orElse(null)
+        )));
     }
 
     private void unsubscribe(WsContext ctx, UnsubscribeMessage msg) {
         EventSubscriptionTarget target = EventSubscriptionTarget.of(
-                msg.getAggregateType(),
-                msg.getAggregateId(),
-                msg.getEventName().orElse(null)
+                AggregateType.of(msg.getAggregateType()),
+                AggregateId.of(msg.getAggregateId()),
+                msg.getEventName().map(EventName::of).orElse(null)
         );
 
         aggregateEventSubscriptionManager.unsubscribe(target, SessionId.of(ctx));
+
+        ctx.send(WebSocketMessage.unsubscribed(UnsubscribedMessage.of(
+                msg.getAggregateType(),
+                msg.getAggregateId(),
+                msg.getEventName().orElse(null)
+        )));
     }
 
     private void unsubscribeFromPermissions(
@@ -236,15 +254,21 @@ public class WebSocketService {
             UnsubscribeFromPermissionsMessage msg,
             Agent agent
     ) {
-        UserId userId = agent.getUserId().orElse(null);
+        UserId userId = agent.getUserId().orElseThrow();
         PermissionEventSubscriptionTarget target = PermissionEventSubscriptionTarget.of(
-                agent.getUserId().orElseThrow(),
-                msg.getAggregateType(),
-                msg.getAggregateId().orElse(null),
-                msg.getAction().orElse(null)
+                userId,
+                AggregateType.of(msg.getAggregateType()),
+                msg.getAggregateId().map(AggregateId::of).orElse(null),
+                msg.getAction().map(Action::of).orElse(null)
         );
 
         aggregatePermissionEventSubscriptionManager.unsubscribe(target, SessionId.of(ctx));
+
+        ctx.send(WebSocketMessage.unsubscribedFromPermissions(UnsubscribedFromPermissionsMessage.of(
+                msg.getAggregateType(),
+                msg.getAggregateId().orElse(null),
+                msg.getAction().orElse(null)
+        )));
     }
 
     private void closeSessionIfOpen(SessionId sessionId) {

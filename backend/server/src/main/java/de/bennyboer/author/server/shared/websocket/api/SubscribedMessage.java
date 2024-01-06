@@ -15,32 +15,27 @@ import static de.bennyboer.author.common.Preconditions.checkNotNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Jacksonized
-public class UnsubscribeFromPermissionsMessage {
+public class SubscribedMessage {
 
     String aggregateType;
 
-    @Nullable
     String aggregateId;
 
     @Nullable
-    String action;
+    String eventName;
 
-    public static UnsubscribeFromPermissionsMessage of(
+    public static SubscribedMessage of(
             String aggregateType,
-            @Nullable String aggregateId,
-            @Nullable String action
+            String aggregateId,
+            @Nullable String eventName
     ) {
         checkNotNull(aggregateType, "Aggregate type must be given");
 
-        return new UnsubscribeFromPermissionsMessage(aggregateType, aggregateId, action);
+        return new SubscribedMessage(aggregateType, aggregateId, eventName);
     }
 
-    public Optional<String> getAggregateId() {
-        return Optional.ofNullable(aggregateId);
-    }
-
-    public Optional<String> getAction() {
-        return Optional.ofNullable(action);
+    public Optional<String> getEventName() {
+        return Optional.ofNullable(eventName);
     }
 
 }

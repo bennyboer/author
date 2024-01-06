@@ -203,6 +203,8 @@ public abstract class ModuleTest {
             EventName eventName
     ) throws InterruptedException {
         CountDownLatch connected = new CountDownLatch(1);
+        CountDownLatch subscribed = new CountDownLatch(1);
+        CountDownLatch unsubscribed = new CountDownLatch(1);
         CountDownLatch eventReceived = new CountDownLatch(1);
 
         var webSocket = client.getOkHttp().newWebSocket(
@@ -222,11 +224,6 @@ public abstract class ModuleTest {
                         String jsonMsg = getJsonMapper().toJsonString(msg, WebSocketMessage.class);
 
                         webSocket.send(jsonMsg);
-                        try {
-                            Thread.sleep(200); // wait for subscribe to be processed
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
 
                         connected.countDown();
                     }
@@ -235,6 +232,12 @@ public abstract class ModuleTest {
                     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                         WebSocketMessage msg = getJsonMapper().fromJsonString(text, WebSocketMessage.class);
 
+                        msg.getSubscribed().ifPresent(subscribedMessage -> {
+                            subscribed.countDown();
+                        });
+                        msg.getUnsubscribed().ifPresent(unsubscribedMessage -> {
+                            unsubscribed.countDown();
+                        });
                         msg.getEvent().ifPresent(eventMessage -> {
                             eventReceived.countDown();
                             webSocket.close(1000, "Test finished");
@@ -243,9 +246,14 @@ public abstract class ModuleTest {
                 }
         );
 
-        boolean zeroed = connected.await(5, TimeUnit.SECONDS);
-        if (!zeroed) {
+        boolean zeroedWhileConnecting = connected.await(5, TimeUnit.SECONDS);
+        if (!zeroedWhileConnecting) {
             throw new RuntimeException("Timed out waiting for websocket connection");
+        }
+
+        boolean zeroedWhileSubscribing = subscribed.await(5, TimeUnit.SECONDS);
+        if (!zeroedWhileSubscribing) {
+            throw new RuntimeException("Timed out waiting for websocket subscribe");
         }
 
         return WebSocketAwaiter.of(eventReceived, () -> {
@@ -261,6 +269,15 @@ public abstract class ModuleTest {
             String jsonMsg = getJsonMapper().toJsonString(unsubscribeMsg, WebSocketMessage.class);
 
             webSocket.send(jsonMsg);
+
+            try {
+                boolean zeroedWhileUnsubscribing = unsubscribed.await(5, TimeUnit.SECONDS);
+                if (!zeroedWhileUnsubscribing) {
+                    throw new RuntimeException("Timed out waiting for websocket unsubscribe");
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
@@ -272,6 +289,8 @@ public abstract class ModuleTest {
             @Nullable Action action
     ) throws InterruptedException {
         CountDownLatch connected = new CountDownLatch(1);
+        CountDownLatch subscribed = new CountDownLatch(1);
+        CountDownLatch unsubscribed = new CountDownLatch(1);
         CountDownLatch eventReceived = new CountDownLatch(1);
 
         var webSocket = client.getOkHttp().newWebSocket(
@@ -301,6 +320,12 @@ public abstract class ModuleTest {
                     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                         WebSocketMessage msg = getJsonMapper().fromJsonString(text, WebSocketMessage.class);
 
+                        msg.getSubscribedToPermissions().ifPresent(subscribedToPermissionsMessage -> {
+                            subscribed.countDown();
+                        });
+                        msg.getUnsubscribedFromPermissions().ifPresent(unsubscribedFromPermissionsMessage -> {
+                            unsubscribed.countDown();
+                        });
                         msg.getPermissionEvent().ifPresent(permissionEventMessage -> {
                             eventReceived.countDown();
                             webSocket.close(1000, "Test finished");
@@ -309,9 +334,14 @@ public abstract class ModuleTest {
                 }
         );
 
-        boolean zeroed = connected.await(5, TimeUnit.SECONDS);
-        if (!zeroed) {
+        boolean zeroedWhileConnecting = connected.await(5, TimeUnit.SECONDS);
+        if (!zeroedWhileConnecting) {
             throw new RuntimeException("Timed out waiting for websocket connection");
+        }
+
+        boolean zeroedWhileSubscribing = subscribed.await(5, TimeUnit.SECONDS);
+        if (!zeroedWhileSubscribing) {
+            throw new RuntimeException("Timed out waiting for websocket subscribe");
         }
 
         return WebSocketAwaiter.of(eventReceived, () -> {
@@ -327,7 +357,17 @@ public abstract class ModuleTest {
                             .build())
                     .build();
             String jsonMsg = getJsonMapper().toJsonString(unsubscribeMsg, WebSocketMessage.class);
+
             webSocket.send(jsonMsg);
+
+            try {
+                boolean zeroedWhileUnsubscribing = unsubscribed.await(5, TimeUnit.SECONDS);
+                if (!zeroedWhileUnsubscribing) {
+                    throw new RuntimeException("Timed out waiting for websocket unsubscribe");
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
@@ -348,11 +388,6 @@ public abstract class ModuleTest {
 
         public void unsubscribe() {
             unsubscribe.run();
-            try {
-                Thread.sleep(200); // wait for unsubscribe to be processed
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
