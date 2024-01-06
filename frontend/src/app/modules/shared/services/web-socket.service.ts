@@ -11,6 +11,8 @@ import {
   startWith,
   Subject,
   Subscription,
+  switchMap,
+  take,
   takeUntil,
   tap,
   timer,
@@ -25,14 +27,24 @@ enum WebSocketMessageMethod {
   EVENT = 'EVENT',
   PERMISSION_EVENT = 'PERMISSION_EVENT',
   SUBSCRIBE = 'SUBSCRIBE',
+  SUBSCRIBED = 'SUBSCRIBED',
   SUBSCRIBE_TO_PERMISSIONS = 'SUBSCRIBE_TO_PERMISSIONS',
+  SUBSCRIBED_TO_PERMISSIONS = 'SUBSCRIBED_TO_PERMISSIONS',
   UNSUBSCRIBE = 'UNSUBSCRIBE',
+  UNSUBSCRIBED = 'UNSUBSCRIBED',
   UNSUBSCRIBE_FROM_PERMISSIONS = 'UNSUBSCRIBE_FROM_PERMISSIONS',
+  UNSUBSCRIBED_FROM_PERMISSIONS = 'UNSUBSCRIBED_FROM_PERMISSIONS',
 }
 
 interface HeartbeatMessage {}
 
 interface SubscribeMessage {
+  aggregateType: string;
+  aggregateId: string;
+  eventName?: string;
+}
+
+interface SubscribedMessage {
   aggregateType: string;
   aggregateId: string;
   eventName?: string;
@@ -44,13 +56,31 @@ interface SubscribeToPermissionsMessage {
   action?: string;
 }
 
+interface SubscribedToPermissionsMessage {
+  aggregateType: string;
+  aggregateId?: string;
+  action?: string;
+}
+
 interface UnsubscribeMessage {
   aggregateType: string;
   aggregateId: string;
   eventName?: string;
 }
 
+interface UnsubscribedMessage {
+  aggregateType: string;
+  aggregateId: string;
+  eventName?: string;
+}
+
 interface UnsubscribeFromPermissionsMessage {
+  aggregateType: string;
+  aggregateId?: string;
+  action?: string;
+}
+
+interface UnsubscribedFromPermissionsMessage {
   aggregateType: string;
   aggregateId?: string;
   action?: string;
@@ -90,9 +120,13 @@ interface WebSocketMessage {
   event?: EventMessage;
   permissionEvent?: PermissionEventMessage;
   subscribe?: SubscribeMessage;
+  subscribed?: SubscribedMessage;
   subscribeToPermissions?: SubscribeToPermissionsMessage;
+  subscribedToPermissions?: SubscribedToPermissionsMessage;
   unsubscribe?: UnsubscribeMessage;
+  unsubscribed?: UnsubscribedMessage;
   unsubscribeFromPermissions?: UnsubscribeFromPermissionsMessage;
+  unsubscribedFromPermissions?: UnsubscribedFromPermissionsMessage;
 }
 
 const HEARTBEAT_INTERVAL_MS: number = 5000;
@@ -158,7 +192,18 @@ export class WebSocketService implements OnDestroy {
 
     this.send(msg);
 
-    return this.getEvents$().pipe(
+    return this.getEventsAfter$((msg) =>
+      Option.someOrNone(msg.subscribed)
+        .map(
+          (subscribed) =>
+            subscribed.aggregateType === aggregateType &&
+            subscribed.aggregateId === aggregateId &&
+            Option.someOrNone(subscribed.eventName).equals(
+              Option.someOrNone(eventName),
+            ),
+        )
+        .orElse(false),
+    ).pipe(
       filter(
         (event) =>
           event.topic.aggregateType === aggregateType &&
@@ -193,7 +238,20 @@ export class WebSocketService implements OnDestroy {
 
     this.send(msg);
 
-    return this.getPermissionEvents$().pipe(
+    return this.getPermissionEventsAfter$((msg) =>
+      Option.someOrNone(msg.subscribedToPermissions)
+        .map(
+          (subscribed) =>
+            subscribed.aggregateType === aggregateType &&
+            Option.someOrNone(subscribed.aggregateId).equals(
+              Option.someOrNone(aggregateId),
+            ) &&
+            Option.someOrNone(subscribed.action).equals(
+              Option.someOrNone(action),
+            ),
+        )
+        .orElse(false),
+    ).pipe(
       filter(
         (event) =>
           event.aggregateType === aggregateType &&
@@ -268,18 +326,34 @@ export class WebSocketService implements OnDestroy {
     this.send(msg);
   }
 
-  private getEvents$(): Observable<EventMessage> {
-    return this.messages$.asObservable().pipe(
+  private getEventsAfter$(
+    afterSelector: (msg: WebSocketMessage) => boolean,
+  ): Observable<EventMessage> {
+    const after$ = this.messages$
+      .asObservable()
+      .pipe(filter(afterSelector), take(1));
+
+    const events$ = this.messages$.asObservable().pipe(
       filter((msg) => msg.method === WebSocketMessageMethod.EVENT),
       map((msg) => msg.event!),
     );
+
+    return after$.pipe(switchMap(() => events$));
   }
 
-  private getPermissionEvents$(): Observable<PermissionEventMessage> {
-    return this.messages$.asObservable().pipe(
+  private getPermissionEventsAfter$(
+    afterSelector: (msg: WebSocketMessage) => boolean,
+  ): Observable<PermissionEventMessage> {
+    const after$ = this.messages$
+      .asObservable()
+      .pipe(filter(afterSelector), take(1));
+
+    const events$ = this.messages$.asObservable().pipe(
       filter((msg) => msg.method === WebSocketMessageMethod.PERMISSION_EVENT),
       map((msg) => msg.permissionEvent!),
     );
+
+    return after$.pipe(switchMap(() => events$));
   }
 
   private send(msg: WebSocketMessage) {

@@ -10,8 +10,9 @@ interface LoginUserRequest {
   password: string;
 }
 
-interface AccessTokenDTO {
-  value: string;
+interface LoginUserResponse {
+  token: string;
+  userId: string;
 }
 
 @Injectable()
@@ -25,12 +26,12 @@ export class HttpLoginService implements RemoteLoginService {
     };
 
     return this.http
-      .post<AccessTokenDTO>(this.url('login'), request, {
+      .post<LoginUserResponse>(this.url('login'), request, {
         headers: {
           UNAUTHORIZED: 'true',
         },
       })
-      .pipe(map((token) => new Token({ value: token.value })));
+      .pipe(map((response) => new Token({ value: response.token })));
   }
 
   private url(postfix: string): string {
