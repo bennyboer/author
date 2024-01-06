@@ -16,6 +16,8 @@ import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.structure.api.StructureDTO;
 import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
+import de.bennyboer.author.server.structure.api.requests.RenameNodeRequest;
+import de.bennyboer.author.server.structure.api.requests.SwapNodesRequest;
 import de.bennyboer.author.server.structure.external.project.ProjectDetailsService;
 import de.bennyboer.author.server.structure.permissions.StructureAction;
 import de.bennyboer.author.server.structure.persistence.lookup.InMemoryStructureLookupRepo;
@@ -206,7 +208,7 @@ public class StructureModuleTests extends ModuleTest {
         return new GetStructureTestResponse(statusCode, structure);
     }
 
-    protected int addNodeChild(
+    protected int addNode(
             HttpClient client,
             String token,
             String structureId,
@@ -238,6 +240,67 @@ public class StructureModuleTests extends ModuleTest {
         var response = client.post(
                 "/api/structures/%s/nodes/%s/toggle?version=%d".formatted(structureId, nodeId, version),
                 null,
+                req -> req.header("Authorization", "Bearer %s".formatted(token))
+        );
+
+        return response.code();
+    }
+
+    protected int removeNode(
+            HttpClient client,
+            String token,
+            String structureId,
+            long version,
+            String nodeId
+    ) {
+        var response = client.delete(
+                "/api/structures/%s/nodes/%s?version=%d".formatted(structureId, nodeId, version),
+                null,
+                req -> req.header("Authorization", "Bearer %s".formatted(token))
+        );
+
+        return response.code();
+    }
+
+    protected int renameNode(
+            HttpClient client,
+            String token,
+            String structureId,
+            long version,
+            String nodeId,
+            String newName
+    ) {
+        RenameNodeRequest request = RenameNodeRequest.builder()
+                .name(newName)
+                .build();
+        String requestJson = getJsonMapper().toJsonString(request, RenameNodeRequest.class);
+
+        var response = client.post(
+                "/api/structures/%s/nodes/%s/rename?version=%d".formatted(structureId, nodeId, version),
+                requestJson,
+                req -> req.header("Authorization", "Bearer %s".formatted(token))
+        );
+
+        return response.code();
+    }
+
+    protected int swapNodes(
+            HttpClient client,
+            String token,
+            String structureId,
+            long version,
+            String nodeId1,
+            String nodeId2
+    ) {
+        SwapNodesRequest request = SwapNodesRequest.builder()
+                .nodeId1(nodeId1)
+                .nodeId2(nodeId2)
+                .build();
+        String requestJson = getJsonMapper().toJsonString(request, SwapNodesRequest.class);
+
+        var response = client.post(
+                "/api/structures/%s/nodes/swap?version=%d".formatted(structureId, version),
+                requestJson,
                 req -> req.header("Authorization", "Bearer %s".formatted(token))
         );
 

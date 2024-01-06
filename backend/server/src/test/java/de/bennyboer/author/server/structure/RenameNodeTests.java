@@ -12,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AddNodeTests extends StructureModuleTests {
+public class RenameNodeTests extends StructureModuleTests {
 
     @Test
-    void shouldAddNode() {
+    void shouldRenameNode() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
@@ -24,14 +24,14 @@ public class AddNodeTests extends StructureModuleTests {
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
 
-            // when: adding a node
-            int statusCode = addNode(
+            // when: renaming the root node
+            int statusCode = renameNode(
                     client,
                     correctToken,
                     structureId,
                     structure.getVersion(),
                     structure.getRootNodeId(),
-                    "Chapter 1"
+                    "New Name"
             );
 
             // then: the status code is 204
@@ -40,14 +40,12 @@ public class AddNodeTests extends StructureModuleTests {
             // and: the structure has been updated
             StructureDTO updatedStructure = getStructure(client, correctToken, structureId).getStructure();
             NodeDTO rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
-            assertThat(rootNode.getChildren()).hasSize(1);
-            NodeDTO chapter1Node = updatedStructure.getNodes().get(rootNode.getChildren().get(0));
-            assertThat(chapter1Node.getName()).isEqualTo("Chapter 1");
+            assertThat(rootNode.getName()).isEqualTo("New Name");
         });
     }
 
     @Test
-    void shouldNotBeAbleToAddNodeWhenGivenAnIncorrectToken() {
+    void shouldNotAllowRenamingNodeGivenAnIncorrectToken() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
@@ -56,28 +54,23 @@ public class AddNodeTests extends StructureModuleTests {
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
 
-            // when: adding a node with an incorrect token
-            int statusCode = addNode(
+            // when: renaming the root node with an incorrect token
+            int statusCode = renameNode(
                     client,
                     incorrectToken,
                     structureId,
                     structure.getVersion(),
                     structure.getRootNodeId(),
-                    "Chapter 1"
+                    "New Name"
             );
 
             // then: the status code is 401
             assertThat(statusCode).isEqualTo(401);
-
-            // and: the structure has not been updated
-            StructureDTO updatedStructure = getStructure(client, correctToken, structureId).getStructure();
-            NodeDTO rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
-            assertThat(rootNode.getChildren()).isEmpty();
         });
     }
 
     @Test
-    void shouldPublishEventOverWebSocketWhenAddingNode() {
+    void shouldReceiveEventOverWebsocketWhenRenamingNode() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
@@ -86,64 +79,27 @@ public class AddNodeTests extends StructureModuleTests {
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
 
-            // when: listening to structure events over the web socket
+            // when: listening to events
             var eventReceived = getLatchForAwaitingEventOverWebSocket(
                     client,
                     correctToken,
                     Structure.TYPE,
                     AggregateId.of(structureId),
-                    StructureEvent.NODE_ADDED.getName()
+                    StructureEvent.NODE_RENAMED.getName()
             );
 
-            // and: adding a node
-            addNode(
+            // when: renaming the root node
+            renameNode(
                     client,
                     correctToken,
                     structureId,
                     structure.getVersion(),
                     structure.getRootNodeId(),
-                    "Chapter 1"
+                    "New Name"
             );
 
-            // then: the event is received
+            // then: the event has been received
             assertThat(eventReceived.await(5, TimeUnit.SECONDS)).isTrue();
-        });
-    }
-
-    @Test
-    void shouldNotReceiveEventOverWebSocketWhenUnsubscribed() {
-        String projectId = "PROJECT_ID";
-
-        JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a structure
-            projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
-            String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
-            StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
-
-            // when: listening to structure events over the web socket
-            var eventReceived = getLatchForAwaitingEventOverWebSocket(
-                    client,
-                    correctToken,
-                    Structure.TYPE,
-                    AggregateId.of(structureId),
-                    StructureEvent.NODE_ADDED.getName()
-            );
-
-            // and: unsubscribing from the event
-            eventReceived.unsubscribe();
-
-            // and: adding a node
-            addNode(
-                    client,
-                    correctToken,
-                    structureId,
-                    structure.getVersion(),
-                    structure.getRootNodeId(),
-                    "Chapter 1"
-            );
-
-            // then: the event is not received
-            assertThat(eventReceived.await(1, TimeUnit.SECONDS)).isFalse();
         });
     }
 

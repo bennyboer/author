@@ -12,26 +12,36 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AddNodeTests extends StructureModuleTests {
+public class RemoveNodeTests extends StructureModuleTests {
 
     @Test
-    void shouldAddNode() {
+    void shouldRemoveNode() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a structure
+            // given: a structure with a node under the root node
             projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
-
-            // when: adding a node
-            int statusCode = addNode(
+            addNode(
                     client,
                     correctToken,
                     structureId,
                     structure.getVersion(),
                     structure.getRootNodeId(),
                     "Chapter 1"
+            );
+            structure = getStructure(client, correctToken, structureId).getStructure();
+            NodeDTO rootNode = structure.getNodes().get(structure.getRootNodeId());
+            String nodeIdToRemove = rootNode.getChildren().get(0);
+
+            // when: removing the node
+            int statusCode = removeNode(
+                    client,
+                    correctToken,
+                    structureId,
+                    structure.getVersion(),
+                    nodeIdToRemove
             );
 
             // then: the status code is 204
@@ -39,31 +49,39 @@ public class AddNodeTests extends StructureModuleTests {
 
             // and: the structure has been updated
             StructureDTO updatedStructure = getStructure(client, correctToken, structureId).getStructure();
-            NodeDTO rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
-            assertThat(rootNode.getChildren()).hasSize(1);
-            NodeDTO chapter1Node = updatedStructure.getNodes().get(rootNode.getChildren().get(0));
-            assertThat(chapter1Node.getName()).isEqualTo("Chapter 1");
+            rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
+            assertThat(rootNode.getChildren()).isEmpty();
         });
     }
 
     @Test
-    void shouldNotBeAbleToAddNodeWhenGivenAnIncorrectToken() {
+    void shouldNotBeAbleToRemoveNodeGivenAnIncorrectToken() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a structure
+            // given: a structure with a node under the root node
             projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
-
-            // when: adding a node with an incorrect token
-            int statusCode = addNode(
+            addNode(
                     client,
-                    incorrectToken,
+                    correctToken,
                     structureId,
                     structure.getVersion(),
                     structure.getRootNodeId(),
                     "Chapter 1"
+            );
+            structure = getStructure(client, correctToken, structureId).getStructure();
+            NodeDTO rootNode = structure.getNodes().get(structure.getRootNodeId());
+            String nodeIdToRemove = rootNode.getChildren().get(0);
+
+            // when: removing the node
+            int statusCode = removeNode(
+                    client,
+                    incorrectToken,
+                    structureId,
+                    structure.getVersion(),
+                    nodeIdToRemove
             );
 
             // then: the status code is 401
@@ -71,31 +89,48 @@ public class AddNodeTests extends StructureModuleTests {
 
             // and: the structure has not been updated
             StructureDTO updatedStructure = getStructure(client, correctToken, structureId).getStructure();
-            NodeDTO rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
-            assertThat(rootNode.getChildren()).isEmpty();
+            rootNode = updatedStructure.getNodes().get(structure.getRootNodeId());
+            assertThat(rootNode.getChildren()).isNotEmpty();
         });
     }
 
     @Test
-    void shouldPublishEventOverWebSocketWhenAddingNode() {
+    void shouldNotBeAbleToRemoveTheRootNode() {
         String projectId = "PROJECT_ID";
 
         JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a structure
+            // given: a structure with a node under the root node
             projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
             String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
             StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
 
-            // when: listening to structure events over the web socket
-            var eventReceived = getLatchForAwaitingEventOverWebSocket(
+            // when: removing the root node
+            int statusCode = removeNode(
                     client,
                     correctToken,
-                    Structure.TYPE,
-                    AggregateId.of(structureId),
-                    StructureEvent.NODE_ADDED.getName()
+                    structureId,
+                    structure.getVersion(),
+                    structure.getRootNodeId()
             );
 
-            // and: adding a node
+            // then: the status code is 500
+            assertThat(statusCode).isEqualTo(500);
+
+            // and: the structure has not been updated
+            StructureDTO updatedStructure = getStructure(client, correctToken, structureId).getStructure();
+            assertThat(updatedStructure.getNodes()).isNotEmpty();
+        });
+    }
+
+    @Test
+    void shouldReceiveEventViaWebSocketWhenNodeIsRemoved() {
+        String projectId = "PROJECT_ID";
+
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: a structure with a node under the root node
+            projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
+            String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
+            StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
             addNode(
                     client,
                     correctToken,
@@ -104,46 +139,30 @@ public class AddNodeTests extends StructureModuleTests {
                     structure.getRootNodeId(),
                     "Chapter 1"
             );
+            structure = getStructure(client, correctToken, structureId).getStructure();
+            NodeDTO rootNode = structure.getNodes().get(structure.getRootNodeId());
+            String nodeIdToRemove = rootNode.getChildren().get(0);
 
-            // then: the event is received
+            // when: listening to web socket events
+            var eventReceived = getLatchForAwaitingEventOverWebSocket(
+                    client,
+                    correctToken,
+                    Structure.TYPE,
+                    AggregateId.of(structureId),
+                    StructureEvent.NODE_REMOVED.getName()
+            );
+
+            // and: removing the node
+            removeNode(
+                    client,
+                    correctToken,
+                    structureId,
+                    structure.getVersion(),
+                    nodeIdToRemove
+            );
+
+            // then: the event has been received
             assertThat(eventReceived.await(5, TimeUnit.SECONDS)).isTrue();
-        });
-    }
-
-    @Test
-    void shouldNotReceiveEventOverWebSocketWhenUnsubscribed() {
-        String projectId = "PROJECT_ID";
-
-        JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a structure
-            projectAndItsCorrespondingStructureHaveBeenCreated(projectId, "Alice in Wonderland");
-            String structureId = getStructureIdByProjectId(client, correctToken, projectId).getStructureId();
-            StructureDTO structure = getStructure(client, correctToken, structureId).getStructure();
-
-            // when: listening to structure events over the web socket
-            var eventReceived = getLatchForAwaitingEventOverWebSocket(
-                    client,
-                    correctToken,
-                    Structure.TYPE,
-                    AggregateId.of(structureId),
-                    StructureEvent.NODE_ADDED.getName()
-            );
-
-            // and: unsubscribing from the event
-            eventReceived.unsubscribe();
-
-            // and: adding a node
-            addNode(
-                    client,
-                    correctToken,
-                    structureId,
-                    structure.getVersion(),
-                    structure.getRootNodeId(),
-                    "Chapter 1"
-            );
-
-            // then: the event is not received
-            assertThat(eventReceived.await(1, TimeUnit.SECONDS)).isFalse();
         });
     }
 
