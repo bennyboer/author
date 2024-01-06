@@ -15,6 +15,7 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.structure.api.StructureDTO;
+import de.bennyboer.author.server.structure.api.requests.AddChildRequest;
 import de.bennyboer.author.server.structure.external.project.ProjectDetailsService;
 import de.bennyboer.author.server.structure.permissions.StructureAction;
 import de.bennyboer.author.server.structure.persistence.lookup.InMemoryStructureLookupRepo;
@@ -203,6 +204,44 @@ public class StructureModuleTests extends ModuleTest {
         }
 
         return new GetStructureTestResponse(statusCode, structure);
+    }
+
+    protected int addNodeChild(
+            HttpClient client,
+            String token,
+            String structureId,
+            long version,
+            String parentId,
+            String name
+    ) {
+        AddChildRequest request = AddChildRequest.builder()
+                .name(name)
+                .build();
+        String requestJson = getJsonMapper().toJsonString(request, AddChildRequest.class);
+
+        var response = client.post(
+                "/api/structures/%s/nodes/%s/add-child?version=%d".formatted(structureId, parentId, version),
+                requestJson,
+                req -> req.header("Authorization", "Bearer %s".formatted(token))
+        );
+
+        return response.code();
+    }
+
+    protected int toggleNode(
+            HttpClient client,
+            String token,
+            String structureId,
+            long version,
+            String nodeId
+    ) {
+        var response = client.post(
+                "/api/structures/%s/nodes/%s/toggle?version=%d".formatted(structureId, nodeId, version),
+                null,
+                req -> req.header("Authorization", "Bearer %s".formatted(token))
+        );
+
+        return response.code();
     }
 
     @Value

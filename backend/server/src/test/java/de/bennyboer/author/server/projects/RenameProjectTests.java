@@ -6,7 +6,6 @@ import de.bennyboer.author.project.ProjectEvent;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +72,7 @@ public class RenameProjectTests extends ProjectsModuleTests {
             var projectId = createProjectAndAwaitCreation(client, "Test Project", correctToken);
 
             // when: listening to rename events
-            CountDownLatch eventReceived = getLatchForAwaitingEventOverWebSocket(
+            var eventReceived = getLatchForAwaitingEventOverWebSocket(
                     client,
                     correctToken,
                     Project.TYPE,

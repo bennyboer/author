@@ -15,14 +15,14 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessage;
 import de.bennyboer.author.server.shared.messaging.permissions.AggregatePermissionEventMessageListener;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
-import de.bennyboer.author.server.shared.websocket.api.SubscribeMessage;
-import de.bennyboer.author.server.shared.websocket.api.SubscribeToPermissionsMessage;
-import de.bennyboer.author.server.shared.websocket.api.WebSocketMessage;
-import de.bennyboer.author.server.shared.websocket.api.WebSocketMessageMethod;
+import de.bennyboer.author.server.shared.websocket.api.*;
 import io.javalin.Javalin;
 import io.javalin.json.JsonMapper;
 import io.javalin.testtools.HttpClient;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Value;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -195,7 +195,7 @@ public abstract class ModuleTest {
         producer.send(destination, textMessage);
     }
 
-    protected CountDownLatch getLatchForAwaitingEventOverWebSocket(
+    protected WebSocketAwaiter getLatchForAwaitingEventOverWebSocket(
             HttpClient client,
             String token,
             AggregateType aggregateType,
@@ -205,7 +205,7 @@ public abstract class ModuleTest {
         CountDownLatch connected = new CountDownLatch(1);
         CountDownLatch eventReceived = new CountDownLatch(1);
 
-        client.getOkHttp().newWebSocket(
+        var webSocket = client.getOkHttp().newWebSocket(
                 new Request.Builder().url("ws://localhost:%d/ws".formatted(javalin.port())).build(),
                 new WebSocketListener() {
                     @Override
@@ -222,6 +222,11 @@ public abstract class ModuleTest {
                         String jsonMsg = getJsonMapper().toJsonString(msg, WebSocketMessage.class);
 
                         webSocket.send(jsonMsg);
+                        try {
+                            Thread.sleep(200); // wait for subscribe to be processed
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
 
                         connected.countDown();
                     }
@@ -243,10 +248,23 @@ public abstract class ModuleTest {
             throw new RuntimeException("Timed out waiting for websocket connection");
         }
 
-        return eventReceived;
+        return WebSocketAwaiter.of(eventReceived, () -> {
+            var unsubscribeMsg = WebSocketMessage.builder()
+                    .method(WebSocketMessageMethod.UNSUBSCRIBE)
+                    .token(token)
+                    .unsubscribe(UnsubscribeMessage.builder()
+                            .aggregateType(aggregateType.getValue())
+                            .aggregateId(aggregateId.getValue())
+                            .eventName(eventName.getValue())
+                            .build())
+                    .build();
+            String jsonMsg = getJsonMapper().toJsonString(unsubscribeMsg, WebSocketMessage.class);
+
+            webSocket.send(jsonMsg);
+        });
     }
 
-    protected CountDownLatch getLatchForAwaitingPermissionEventOverWebSocket(
+    protected WebSocketAwaiter getLatchForAwaitingPermissionEventOverWebSocket(
             HttpClient client,
             String token,
             AggregateType aggregateType,
@@ -256,7 +274,7 @@ public abstract class ModuleTest {
         CountDownLatch connected = new CountDownLatch(1);
         CountDownLatch eventReceived = new CountDownLatch(1);
 
-        client.getOkHttp().newWebSocket(
+        var webSocket = client.getOkHttp().newWebSocket(
                 new Request.Builder().url("ws://localhost:%d/ws".formatted(javalin.port())).build(),
                 new WebSocketListener() {
                     @Override
@@ -296,7 +314,51 @@ public abstract class ModuleTest {
             throw new RuntimeException("Timed out waiting for websocket connection");
         }
 
-        return eventReceived;
+        return WebSocketAwaiter.of(eventReceived, () -> {
+            var unsubscribeMsg = WebSocketMessage.builder()
+                    .method(WebSocketMessageMethod.UNSUBSCRIBE_FROM_PERMISSIONS)
+                    .token(token)
+                    .unsubscribeFromPermissions(UnsubscribeFromPermissionsMessage.builder()
+                            .aggregateType(aggregateType.getValue())
+                            .aggregateId(Optional.ofNullable(aggregateId)
+                                    .map(AggregateId::getValue)
+                                    .orElse(null))
+                            .action(Optional.ofNullable(action).map(Action::getName).orElse(null))
+                            .build())
+                    .build();
+            String jsonMsg = getJsonMapper().toJsonString(unsubscribeMsg, WebSocketMessage.class);
+            webSocket.send(jsonMsg);
+        });
+    }
+
+    @Value
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class WebSocketAwaiter {
+
+        CountDownLatch eventReceived;
+
+        Runnable unsubscribe;
+
+        public static WebSocketAwaiter of(
+                CountDownLatch eventReceived,
+                Runnable unsubscribe
+        ) {
+            return new WebSocketAwaiter(eventReceived, unsubscribe);
+        }
+
+        public void unsubscribe() {
+            unsubscribe.run();
+            try {
+                Thread.sleep(200); // wait for unsubscribe to be processed
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+            return eventReceived.await(timeout, unit);
+        }
+
     }
 
 }

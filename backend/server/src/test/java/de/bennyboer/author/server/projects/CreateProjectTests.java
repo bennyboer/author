@@ -6,7 +6,6 @@ import de.bennyboer.author.server.projects.permissions.ProjectAction;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,7 +64,7 @@ public class CreateProjectTests extends ProjectsModuleTests {
             userIsCreatedThatIsAllowedToCreateProjects();
 
             // when: listening to permission events on the project aggregate for the currently authenticated user
-            CountDownLatch eventReceived = getLatchForAwaitingPermissionEventOverWebSocket(
+            var eventReceived = getLatchForAwaitingPermissionEventOverWebSocket(
                     client,
                     correctToken,
                     Project.TYPE,
