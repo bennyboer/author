@@ -3,9 +3,7 @@ package de.bennyboer.author.server.users.transformer;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
-import de.bennyboer.author.user.Password;
-import de.bennyboer.author.user.UserEvent;
-import de.bennyboer.author.user.UserName;
+import de.bennyboer.author.user.*;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
@@ -34,6 +32,9 @@ public class UserEventTransformer {
         return switch (event) {
             case CreatedEvent createdEvent -> Map.of(
                     "name", createdEvent.getName().getValue(),
+                    "mail", createdEvent.getMail().getValue(),
+                    "firstName", createdEvent.getFirstName().getValue(),
+                    "lastName", createdEvent.getLastName().getValue(),
                     "password", createdEvent.getPassword().getValue()
             );
             case RenamedEvent renamedEvent -> Map.of(
@@ -41,6 +42,9 @@ public class UserEventTransformer {
             );
             case SnapshottedEvent snapshottedEvent -> Map.of(
                     "name", snapshottedEvent.getName().getValue(),
+                    "mail", snapshottedEvent.getMail().getValue(),
+                    "firstName", snapshottedEvent.getFirstName().getValue(),
+                    "lastName", snapshottedEvent.getLastName().getValue(),
                     "password", snapshottedEvent.getPassword().getValue(),
                     "createdAt", snapshottedEvent.getCreatedAt().toString()
             );
@@ -57,6 +61,9 @@ public class UserEventTransformer {
         return switch (event) {
             case CREATED -> CreatedEvent.ofStored(
                     UserName.of(payload.get("name").toString()),
+                    Mail.of(payload.get("mail").toString()),
+                    FirstName.of(payload.get("firstName").toString()),
+                    LastName.of(payload.get("lastName").toString()),
                     Password.of(payload.get("password").toString())
             );
             case LOGGED_IN -> LoggedInEvent.of();
@@ -64,6 +71,9 @@ public class UserEventTransformer {
             case REMOVED -> RemovedEvent.of();
             case SNAPSHOTTED -> SnapshottedEvent.of(
                     UserName.of(payload.get("name").toString()),
+                    Mail.of(payload.get("mail").toString()),
+                    FirstName.of(payload.get("firstName").toString()),
+                    LastName.of(payload.get("lastName").toString()),
                     Password.of(payload.get("password").toString()),
                     Instant.parse(payload.get("createdAt").toString())
             );

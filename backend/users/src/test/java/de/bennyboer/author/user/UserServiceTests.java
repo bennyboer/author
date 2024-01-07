@@ -30,6 +30,10 @@ public class UserServiceTests {
 
     private final Agent systemAgent = Agent.system();
 
+    private final UserName defaultName = UserName.of("Max Mustermann");
+    private final Mail defaultMail = Mail.of("max.mustermann+test@example.com");
+    private final FirstName defaultFirstName = FirstName.of("Max");
+    private final LastName defaultLastName = LastName.of("Mustermann");
     private final Password defaultPassword = Password.of("password");
 
     static {
@@ -38,27 +42,86 @@ public class UserServiceTests {
 
     @Test
     void shouldCreateUser() {
-        // given: the name of the user to create
-        var name = UserName.of("Max Mustermann");
-
         // when: a user is created with system agent
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
         // then: the user can be retrieved
         var user = userService.get(userId, version).block();
-        assertEquals(name, user.getName());
+        assertEquals(defaultName, user.getName());
+        assertEquals(defaultMail, user.getMail());
+        assertEquals(defaultFirstName, user.getFirstName());
+        assertEquals(defaultLastName, user.getLastName());
 
         // and: the password is encoded
         assertNotEquals(defaultPassword, user.getPassword());
     }
 
     @Test
+    void shouldNotBeAbleToCreateUserWithInvalidCharacterInUserName() {
+        // when: a user is created with an @ in the user name
+        Executable executable = () -> userService.create(
+                UserName.of("@MaxMustermann"),
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+
+        // then: an exception is thrown
+        var exception = assertThrows(
+                IllegalArgumentException.class,
+                executable
+        );
+        assertEquals(
+                "User name must not contain '@'",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldNotBeAbleToCreateUserWithInvalidMail() {
+        // when: a user is created with an invalid mail
+        Executable executable = () -> userService.create(
+                defaultName,
+                Mail.of("thisisnotamail"),
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+
+        // then: an exception is thrown
+        var exception = assertThrows(
+                IllegalArgumentException.class,
+                executable
+        );
+        assertEquals(
+                "Mail value 'thisisnotamail' is not valid",
+                exception.getMessage()
+        );
+    }
+
+    @Test
     void shouldRenameUser() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
@@ -75,8 +138,14 @@ public class UserServiceTests {
     @Test
     void shouldRemoveUser() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
@@ -116,8 +185,14 @@ public class UserServiceTests {
     @Test
     void shouldNotAcceptCommandsAfterRemoval() {
         // given: a removed user
-        var name = UserName.of("Max Mustermann");
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var initialVersion = userIdAndVersion.getVersion();
         var userAgent = Agent.user(userId);
@@ -145,8 +220,14 @@ public class UserServiceTests {
     @Test
     void shouldNotAllowRenamingAsAnotherUser() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
@@ -173,8 +254,14 @@ public class UserServiceTests {
     @Test
     void shouldNotAllowRemovingAsAnotherUser() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
-        var userIdAndVersion = userService.create(name, defaultPassword, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
@@ -199,12 +286,16 @@ public class UserServiceTests {
 
     @Test
     void shouldNotCreateUserWhenNotSystemAgent() {
-        // given: the name of the user to create
-        var name = UserName.of("Max Mustermann");
-
         // when: a user is created with a non-system agent
         var nonSystemAgent = Agent.user(UserId.create());
-        Executable executable = () -> userService.create(name, defaultPassword, nonSystemAgent).block();
+        Executable executable = () -> userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                nonSystemAgent
+        ).block();
 
         // then: an exception is thrown
         var exception = assertThrows(
@@ -220,9 +311,15 @@ public class UserServiceTests {
     @Test
     void shouldLoginGivenTheCorrectUserNameAndPassword() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
         var password = Password.of("MySecretPassword");
-        var userIdAndVersion = userService.create(name, password, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                password,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
 
         // when: the user logs in with the correct password
@@ -235,9 +332,15 @@ public class UserServiceTests {
     @Test
     void shouldIncreaseLoginAttemptsGivenTheWrongPassword() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
         var password = Password.of("MySecretPassword");
-        var userIdAndVersion = userService.create(name, password, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                password,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
 
         // when: the user logs in with the wrong password
@@ -258,9 +361,15 @@ public class UserServiceTests {
     @Test
     void shouldLockUserGivenTooManyLoginAttempts() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
         var password = Password.of("MySecretPassword");
-        var userIdAndVersion = userService.create(name, password, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                password,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
 
         // when: the user logs in with the wrong password too many times
@@ -286,9 +395,15 @@ public class UserServiceTests {
     @Test
     void shouldNotLockUserGivenNearlyTooManyLoginAttempts() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
         var password = Password.of("MySecretPassword");
-        var userIdAndVersion = userService.create(name, password, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                password,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
 
         // when: the user logs in with the wrong password nearly too many times
@@ -311,9 +426,15 @@ public class UserServiceTests {
     @Test
     void shouldUnlockLoginAfterSomeTime() {
         // given: a user
-        var name = UserName.of("Max Mustermann");
         var password = Password.of("MySecretPassword");
-        var userIdAndVersion = userService.create(name, password, systemAgent).block();
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                password,
+                systemAgent
+        ).block();
         var userId = userIdAndVersion.getId();
 
         // when: the user logs in with the wrong password too many times

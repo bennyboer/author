@@ -29,7 +29,7 @@ public class UsersSyncFacade {
     }
 
     private LookupUser toLookupUser(User user) {
-        return LookupUser.of(user.getId(), user.getName());
+        return LookupUser.of(user.getId(), user.getName(), user.getMail());
     }
 
 }

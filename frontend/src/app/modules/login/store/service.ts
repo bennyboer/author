@@ -15,8 +15,12 @@ export class LoginService {
     this.store.dispatch(actions.loadLoginState());
   }
 
-  login(username: string, password: string): void {
-    this.store.dispatch(actions.login({ username, password }));
+  loginViaUserName(username: string, password: string): void {
+    this.store.dispatch(actions.loginViaUserName({ username, password }));
+  }
+
+  loginViaMail(mail: string, password: string): void {
+    this.store.dispatch(actions.loginViaMail({ mail, password }));
   }
 
   getToken(): Observable<Option<Token>> {

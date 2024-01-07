@@ -14,9 +14,10 @@ import { RemoteLoginService } from './remote';
 import {
   loadLoginState,
   loggedIn,
-  login,
   loginFailed,
   loginStateLoaded,
+  loginViaMail,
+  loginViaUserName,
   logout,
   redirectAfterLoginSuccess,
 } from './actions';
@@ -28,11 +29,30 @@ import { selectors } from './selectors';
 
 @Injectable()
 export class LoginStoreEffects {
-  login$ = createEffect(() =>
+  loginViaUserName$ = createEffect(() =>
     this.actions.pipe(
-      ofType(login),
+      ofType(loginViaUserName),
       mergeMap(({ username, password }) => {
-        return this.loginService.login(username, password).pipe(
+        return this.loginService.loginViaUserName(username, password).pipe(
+          map((token) => loggedIn({ token: { value: token.getValue() } })),
+          catchError((error) =>
+            of(
+              loginFailed({
+                error: LoginErrors.fromStatusCode(error.status),
+              }),
+            ),
+          ),
+          delay(500), // It's weird when the progress bar is only visible for a short time.
+        );
+      }),
+    ),
+  );
+
+  loginViaMail$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(loginViaMail),
+      mergeMap(({ mail, password }) => {
+        return this.loginService.loginViaMail(mail, password).pipe(
           map((token) => loggedIn({ token: { value: token.getValue() } })),
           catchError((error) =>
             of(

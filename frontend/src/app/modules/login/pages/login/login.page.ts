@@ -14,7 +14,7 @@ export class LoginPage implements OnDestroy {
   readonly LoginError = LoginError;
 
   readonly formGroup = new FormGroup({
-    username: new FormControl('', [Validators.required]),
+    usernameOrMail: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required]),
   });
 
@@ -34,14 +34,19 @@ export class LoginPage implements OnDestroy {
   login(): void {
     this.formGroup.disable();
 
-    const username = Option.someOrNone(
-      this.formGroup.value.username,
+    const usernameOrMail = Option.someOrNone(
+      this.formGroup.value.usernameOrMail,
     ).orElseThrow();
     const password = Option.someOrNone(
       this.formGroup.value.password,
     ).orElseThrow();
 
-    this.loginService.login(username, password);
+    const isMail = usernameOrMail.includes('@');
+    if (isMail) {
+      this.loginService.loginViaMail(usernameOrMail, password);
+    } else {
+      this.loginService.loginViaUserName(usernameOrMail, password);
+    }
 
     const loggedIn$ = this.loginService.isLoggedIn().pipe(filter((b) => b));
     const loginError$ = this.loginService

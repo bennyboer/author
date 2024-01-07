@@ -14,6 +14,44 @@ import static org.assertj.core.api.Assertions.assertThatException;
 public class LoginTests extends UsersModuleTests {
 
     @Test
+    void shouldLoginViaUserName() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: the default user has been setup
+            awaitUserSetup("default");
+
+            // when: trying to login the default user via username
+            LoginUserRequest request = LoginUserRequest.builder()
+                    .name("default")
+                    .password("password")
+                    .build();
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
+            var response = client.post("/api/users/login", requestJson);
+
+            // then: the server responds with 200
+            assertThat(response.code()).isEqualTo(200);
+        });
+    }
+
+    @Test
+    void shouldLoginViaMail() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: the default user has been setup
+            awaitUserSetup("default");
+
+            // when: trying to login the default user via mail
+            LoginUserRequest request = LoginUserRequest.builder()
+                    .mail("default+test@example.com")
+                    .password("password")
+                    .build();
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
+            var response = client.post("/api/users/login", requestJson);
+
+            // then: the server responds with 200
+            assertThat(response.code()).isEqualTo(200);
+        });
+    }
+
+    @Test
     void shouldReturn401WhenUserNameCannotBeFound() {
         JavalinTest.test(getJavalin(), (server, client) -> {
             // given: the default user has been setup
@@ -22,6 +60,25 @@ public class LoginTests extends UsersModuleTests {
             // when: trying to login with a user that cannot be found
             LoginUserRequest request = LoginUserRequest.builder()
                     .name("unknown")
+                    .password("password")
+                    .build();
+            String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
+            var response = client.post("/api/users/login", requestJson);
+
+            // then: the server responds with 401
+            assertThat(response.code()).isEqualTo(401);
+        });
+    }
+
+    @Test
+    void shouldReturn401WhenMailCannotBeFound() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: the default user has been setup
+            awaitUserSetup("default");
+
+            // when: trying to login with a mail that cannot be found
+            LoginUserRequest request = LoginUserRequest.builder()
+                    .mail("wrongmail+test@example.com")
                     .password("password")
                     .build();
             String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);

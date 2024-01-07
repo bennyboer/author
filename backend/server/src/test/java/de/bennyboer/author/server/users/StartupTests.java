@@ -3,6 +3,7 @@ package de.bennyboer.author.server.users;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.persistence.lookup.LookupUser;
+import de.bennyboer.author.user.Mail;
 import de.bennyboer.author.user.UserName;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,11 @@ public class StartupTests extends UsersModuleTests {
     @Test
     void shouldNotCreateDefaultUserOnStartupWhenAlreadyHavingPersistentUsers() {
         // given: there is already a user in the database
-        userLookupRepo.update(LookupUser.of(UserId.create(), UserName.of("TestUser"))).block();
+        userLookupRepo.update(LookupUser.of(
+                UserId.create(),
+                UserName.of("TestUser"),
+                Mail.of("default+test@example.com")
+        )).block();
 
         JavalinTest.test(getJavalin(), (server, client) -> {
             // when: server started up

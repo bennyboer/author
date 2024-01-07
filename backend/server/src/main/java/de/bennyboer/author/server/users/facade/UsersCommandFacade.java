@@ -6,9 +6,7 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
-import de.bennyboer.author.user.Password;
-import de.bennyboer.author.user.UserName;
-import de.bennyboer.author.user.UserService;
+import de.bennyboer.author.user.*;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import reactor.core.publisher.Mono;
@@ -25,9 +23,23 @@ public class UsersCommandFacade {
 
     UserLookupRepo userLookupRepo;
 
-    public Mono<Void> create(String name, String password, Agent agent) {
+    public Mono<Void> create(
+            String name,
+            String mail,
+            String firstName,
+            String lastName,
+            String password,
+            Agent agent
+    ) {
         return permissionsService.assertHasPermission(agent, CREATE, UserId.create())
-                .then(userService.create(UserName.of(name), Password.of(password), agent))
+                .then(userService.create(
+                        UserName.of(name),
+                        Mail.of(mail),
+                        FirstName.of(firstName),
+                        LastName.of(lastName),
+                        Password.of(password),
+                        agent
+                ))
                 .then();
     }
 
@@ -47,8 +59,18 @@ public class UsersCommandFacade {
                 .then();
     }
 
-    public Mono<LoginUserResponse> login(String userName, CharSequence password) {
+    public Mono<LoginUserResponse> loginByUserName(String userName, CharSequence password) {
         return userLookupRepo.findUserIdByName(UserName.of(userName))
+                .flatMap(userId -> userService.login(userId, Password.withoutValidation(password))
+                        .map(token -> LoginUserResponse.builder()
+                                .token(token.getValue())
+                                .userId(userId.getValue())
+                                .build()
+                        ));
+    }
+
+    public Mono<LoginUserResponse> loginByMail(String mail, CharSequence password) {
+        return userLookupRepo.findUserIdByMail(Mail.of(mail))
                 .flatMap(userId -> userService.login(userId, Password.withoutValidation(password))
                         .map(token -> LoginUserResponse.builder()
                                 .token(token.getValue())

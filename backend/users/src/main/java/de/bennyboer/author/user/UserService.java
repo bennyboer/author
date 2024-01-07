@@ -44,10 +44,18 @@ public class UserService extends AggregateService<User, UserId> {
         this.clock = clock;
     }
 
-    public Mono<AggregateIdAndVersion<UserId>> create(UserName name, Password password, Agent agent) {
+    public Mono<AggregateIdAndVersion<UserId>> create(
+            UserName name,
+            Mail mail,
+            FirstName firstName,
+            LastName lastName,
+            Password password,
+            Agent agent
+    ) {
         UserId id = UserId.create();
+        CreateCmd cmd = CreateCmd.of(name, mail, firstName, lastName, password);
 
-        return dispatchCommandToLatest(id, agent, CreateCmd.of(name, password))
+        return dispatchCommandToLatest(id, agent, cmd)
                 .map(version -> AggregateIdAndVersion.of(id, version));
     }
 

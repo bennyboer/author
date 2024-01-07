@@ -137,7 +137,6 @@ export class HttpProjectsService
             eventName: 'RENAMED',
           }),
         ),
-        tap((e) => console.log(e)),
         takeUntil(this.destroy$),
       )
       .subscribe((event) => this.events$.next());

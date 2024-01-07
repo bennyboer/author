@@ -6,7 +6,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 
 interface LoginUserRequest {
-  name: string;
+  name?: string;
+  mail?: string;
   password: string;
 }
 
@@ -19,12 +20,21 @@ interface LoginUserResponse {
 export class HttpLoginService implements RemoteLoginService {
   constructor(private readonly http: HttpClient) {}
 
-  login(username: string, password: string): Observable<Token> {
-    const request: LoginUserRequest = {
+  loginViaUserName(username: string, password: string): Observable<Token> {
+    return this.login({
       name: username,
       password: password,
-    };
+    });
+  }
 
+  loginViaMail(mail: string, password: string): Observable<Token> {
+    return this.login({
+      mail: mail,
+      password: password,
+    });
+  }
+
+  private login(request: LoginUserRequest): Observable<Token> {
     return this.http
       .post<LoginUserResponse>(this.url('login'), request, {
         headers: {

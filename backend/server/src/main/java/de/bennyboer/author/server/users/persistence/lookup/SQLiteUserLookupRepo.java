@@ -2,6 +2,7 @@ package de.bennyboer.author.server.users.persistence.lookup;
 
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.persistence.readmodel.SQLiteEventSourcingReadModelRepo;
+import de.bennyboer.author.user.Mail;
 import de.bennyboer.author.user.UserName;
 import reactor.core.publisher.Mono;
 
@@ -35,12 +36,17 @@ public class SQLiteUserLookupRepo extends SQLiteEventSourcingReadModelRepo<UserI
             statement.execute("""
                     CREATE TABLE %s (
                         id TEXT PRIMARY KEY,
-                        name TEXT NOT NULL
+                        name TEXT NOT NULL,
+                        mail TEXT NOT NULL
                     )
                     """.formatted(getTableName()));
 
             statement.execute("""
                     CREATE UNIQUE INDEX %s_name_idx ON %s (name)
+                    """.formatted(getTableName(), getTableName()));
+
+            statement.execute("""
+                    CREATE UNIQUE INDEX %s_mail_idx ON %s (mail)
                     """.formatted(getTableName(), getTableName()));
         }
     }
@@ -48,14 +54,17 @@ public class SQLiteUserLookupRepo extends SQLiteEventSourcingReadModelRepo<UserI
     @Override
     public Mono<Void> update(LookupUser readModel) {
         String sql = """
-                INSERT INTO %s (id, name)
-                VALUES (?, ?)
-                ON CONFLICT (id) DO UPDATE SET name = excluded.name
+                INSERT INTO %s (id, name, mail)
+                VALUES (?, ?, ?)
+                ON CONFLICT (id) DO UPDATE SET
+                  name = excluded.name,
+                  mail = excluded.mail
                 """.formatted(getTableName());
 
         return update(sql, statement -> {
             statement.setString(1, stringifyId(readModel.getId()));
             statement.setString(2, readModel.getName().getValue());
+            statement.setString(3, readModel.getMail().getValue());
         }).then();
     }
 
@@ -70,6 +79,21 @@ public class SQLiteUserLookupRepo extends SQLiteEventSourcingReadModelRepo<UserI
         return queryOne(
                 sql,
                 statement -> statement.setString(1, name.getValue()),
+                resultSet -> UserId.of(resultSet.getString("id"))
+        );
+    }
+
+    @Override
+    public Mono<UserId> findUserIdByMail(Mail mail) {
+        String sql = """
+                SELECT id
+                FROM %s
+                WHERE mail = ?
+                """.formatted(getTableName());
+
+        return queryOne(
+                sql,
+                statement -> statement.setString(1, mail.getValue()),
                 resultSet -> UserId.of(resultSet.getString("id"))
         );
     }

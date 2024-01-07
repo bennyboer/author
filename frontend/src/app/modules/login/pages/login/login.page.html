@@ -11,8 +11,8 @@
     <div class="left">
       <div>
         <mat-form-field appearance="outline">
-          <mat-label>Username</mat-label>
-          <input formControlName="username" matInput placeholder="Username">
+          <mat-label>Username or mail</mat-label>
+          <input formControlName="usernameOrMail" matInput placeholder="Username or mail">
           <mat-icon matSuffix>account_circle</mat-icon>
         </mat-form-field>
       </div>
@@ -41,7 +41,7 @@
         <span>
           @switch (error) {
             @case (LoginError.InvalidCredentials) {
-              Invalid username or password.
+              Invalid username/mail or password.
             }
             @case (LoginError.TooManyAttempts) {
               Too many failed login attempts. Please try again in half an hour.

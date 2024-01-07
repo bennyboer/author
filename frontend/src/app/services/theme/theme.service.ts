@@ -23,7 +23,6 @@ export class ThemeService implements OnDestroy {
   private darkModeEventListener!: (event: MediaQueryListEvent) => void;
 
   constructor(private readonly styleManager: StyleManagerService) {
-    console.log('ThemeService.constructor()');
     this.theme$
       .pipe(takeUntil(this.destroy$))
       .subscribe((theme) => this.applyTheme(theme));
@@ -79,7 +78,6 @@ export class ThemeService implements OnDestroy {
     this.removeTheme();
 
     this.styleManager.setStyle('theme', `${THEME_NAME_LOOKUP[theme]}.css`);
-    console.log(`Applied theme: ${theme}`);
   }
 
   private removeTheme(): void {

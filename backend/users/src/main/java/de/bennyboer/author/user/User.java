@@ -49,6 +49,12 @@ public class User implements Aggregate {
 
     UserName name;
 
+    Mail mail;
+
+    FirstName firstName;
+
+    LastName lastName;
+
     Password password;
 
     long failedLoginAttempts;
@@ -63,6 +69,9 @@ public class User implements Aggregate {
 
     public static User init() {
         return new User(
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -95,10 +104,19 @@ public class User implements Aggregate {
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
                     getName(),
+                    getMail(),
+                    getFirstName(),
+                    getLastName(),
                     getPassword(),
                     getCreatedAt()
             ));
-            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c.getName(), c.getPassword()));
+            case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(
+                    c.getName(),
+                    c.getMail(),
+                    c.getFirstName(),
+                    c.getLastName(),
+                    c.getPassword()
+            ));
             case RenameCmd c -> ApplyCommandResult.of(RenamedEvent.of(c.getNewName()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
@@ -111,10 +129,16 @@ public class User implements Aggregate {
         var updatedUser = switch (event) {
             case SnapshottedEvent e -> withId(UserId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
+                    .withMail(e.getMail())
+                    .withFirstName(e.getFirstName())
+                    .withLastName(e.getLastName())
                     .withPassword(e.getPassword())
                     .withCreatedAt(e.getCreatedAt());
             case CreatedEvent e -> withId(UserId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
+                    .withMail(e.getMail())
+                    .withFirstName(e.getFirstName())
+                    .withLastName(e.getLastName())
                     .withPassword(e.getPassword())
                     .withCreatedAt(metadata.getDate());
             case RenamedEvent e -> withName(e.getNewName());

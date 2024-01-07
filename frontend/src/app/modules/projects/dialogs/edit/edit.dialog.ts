@@ -12,7 +12,6 @@ import {
   Observable,
   Subject,
   takeUntil,
-  tap,
 } from 'rxjs';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -27,10 +26,7 @@ export class EditDialog implements OnDestroy, OnInit {
   readonly loading$: Observable<boolean> = combineLatest([
     this.data.projectsService.isRemoving(),
     this.data.projectsService.isRenaming(),
-  ]).pipe(
-    tap(console.log),
-    map(([isRemoving, isRenaming]) => isRemoving || isRenaming),
-  );
+  ]).pipe(map(([isRemoving, isRenaming]) => isRemoving || isRenaming));
 
   private readonly destroy$: Subject<void> = new Subject<void>();
 

@@ -1,9 +1,13 @@
 import { createAction, props } from '@ngrx/store';
 import { LoginError, Token } from './state';
 
-export const login = createAction(
-  '[Login] Login',
+export const loginViaUserName = createAction(
+  '[Login] Login via user name',
   props<{ username: string; password: string }>(),
+);
+export const loginViaMail = createAction(
+  '[Login] Login via mail',
+  props<{ mail: string; password: string }>(),
 );
 export const loggedIn = createAction(
   '[Login] Logged In',
@@ -32,7 +36,8 @@ export const loginStateLoaded = createAction(
 );
 
 export const actions = {
-  login,
+  loginViaUserName,
+  loginViaMail,
   logout,
   redirectAfterLogin,
   loadLoginState,

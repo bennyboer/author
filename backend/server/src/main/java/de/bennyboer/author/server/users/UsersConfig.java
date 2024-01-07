@@ -19,7 +19,13 @@ public class UsersConfig {
     TokenGenerator tokenGenerator;
 
     @Builder.Default
-    DefaultUserCredentials defaultUserCredentials = DefaultUserCredentials.of("default", "password");
+    DefaultUserDetails defaultUserDetails = DefaultUserDetails.of(
+            "default",
+            "default+test@example.com",
+            "John",
+            "Doe",
+            "password"
+    );
 
     EventSourcingRepo eventSourcingRepo;
 
@@ -29,17 +35,32 @@ public class UsersConfig {
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    public static class DefaultUserCredentials {
+    public static class DefaultUserDetails {
 
         String username;
 
+        String mail;
+
+        String firstName;
+
+        String lastName;
+
         String password;
 
-        public static DefaultUserCredentials of(String username, String password) {
+        public static DefaultUserDetails of(
+                String username,
+                String mail,
+                String firstName,
+                String lastName,
+                String password
+        ) {
             checkNotNull(username, "Default user username must be given");
+            checkNotNull(mail, "Default user mail must be given");
+            checkNotNull(firstName, "Default user first name must be given");
+            checkNotNull(lastName, "Default user last name must be given");
             checkNotNull(password, "Default user password must be given");
 
-            return new DefaultUserCredentials(username, password);
+            return new DefaultUserDetails(username, mail, firstName, lastName, password);
         }
 
     }

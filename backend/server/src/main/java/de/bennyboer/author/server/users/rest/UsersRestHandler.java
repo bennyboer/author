@@ -2,6 +2,7 @@ package de.bennyboer.author.server.users.rest;
 
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
+import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.facade.UsersCommandFacade;
 import de.bennyboer.author.server.users.facade.UsersQueryFacade;
 import de.bennyboer.author.user.login.UserLockedException;
@@ -10,6 +11,7 @@ import io.javalin.http.HttpStatus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.routines.EmailValidator;
 import reactor.core.publisher.Mono;
 
 import static de.bennyboer.author.server.shared.http.ReactiveHandler.handle;
@@ -58,9 +60,20 @@ public class UsersRestHandler {
     public void login(Context ctx) {
         var request = ctx.bodyAsClass(LoginUserRequest.class);
 
+        boolean isLoginByMail = request.getMail().isPresent() && request.getName().isEmpty() && request.getMail().map(
+                mail -> EmailValidator.getInstance().isValid(mail)).orElse(false);
+
+        String mail = request.getMail().orElse("");
+        String username = request.getName().orElse("");
+        String password = request.getPassword();
+
+        Mono<LoginUserResponse> login$ = isLoginByMail
+                ? commandFacade.loginByMail(mail, password)
+                : commandFacade.loginByUserName(username, password);
+
         handle(
                 ctx,
-                agent -> commandFacade.login(request.getName(), request.getPassword())
+                agent -> login$
                         .switchIfEmpty(Mono.defer(() -> {
                             ctx.status(HttpStatus.UNAUTHORIZED);
                             return Mono.empty();

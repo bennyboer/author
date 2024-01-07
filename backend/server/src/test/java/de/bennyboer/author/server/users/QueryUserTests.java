@@ -29,6 +29,9 @@ public class QueryUserTests extends UsersModuleTests {
             UserDTO user = getJsonMapper().fromJsonString(response.body().string(), UserDTO.class);
             assertThat(user.getId()).isEqualTo(userId);
             assertThat(user.getName()).isEqualTo("default");
+            assertThat(user.getMail()).isEqualTo("default+test@example.com");
+            assertThat(user.getFirstName()).isEqualTo("John");
+            assertThat(user.getLastName()).isEqualTo("Doe");
         }));
     }
 

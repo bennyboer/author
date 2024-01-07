@@ -2,9 +2,9 @@ import { createReducer, on } from '@ngrx/store';
 import { initialState, LoginError } from './state';
 import {
   loggedIn,
-  login,
   loginFailed,
   loginStateLoaded,
+  loginViaUserName,
   logout,
   redirectAfterLogin,
   redirectAfterLoginSuccess,
@@ -13,7 +13,11 @@ import {
 export const reducer = createReducer(
   initialState,
 
-  on(login, (state) => ({ ...state, error: LoginError.None, loading: true })),
+  on(loginViaUserName, (state) => ({
+    ...state,
+    error: LoginError.None,
+    loading: true,
+  })),
   on(loggedIn, (state, { token }) => ({ ...state, token, loading: false })),
   on(loginFailed, (state, { error }) => ({
     ...state,

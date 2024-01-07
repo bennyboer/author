@@ -10,6 +10,9 @@ public class UserTransformer {
                 .id(user.getId().getValue())
                 .version(user.getVersion().getValue())
                 .name(user.getName().getValue())
+                .mail(user.getMail().getValue())
+                .firstName(user.getFirstName().getValue())
+                .lastName(user.getLastName().getValue())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

@@ -20,6 +20,12 @@ public class UserDTO {
 
     String name;
 
+    String mail;
+
+    String firstName;
+
+    String lastName;
+
     Instant createdAt;
 
 }

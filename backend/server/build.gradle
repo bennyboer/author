@@ -17,6 +17,8 @@ dependencies {
     implementation 'org.apache.activemq:artemis-server:2.31.2'
     implementation 'org.apache.activemq:artemis-jms-client:2.31.2'
 
+    implementation 'commons-validator:commons-validator:1.8.0'
+
     testImplementation project(':libs:testing')
 }
 

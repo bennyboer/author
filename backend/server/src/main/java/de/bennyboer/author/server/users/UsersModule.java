@@ -31,6 +31,8 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 
 public class UsersModule extends Module {
 
+    private final UsersConfig.DefaultUserDetails defaultUserDetails;
+
     private final UsersCommandFacade commandFacade;
 
     private final UsersQueryFacade queryFacade;
@@ -43,6 +45,8 @@ public class UsersModule extends Module {
 
     public UsersModule(ModuleConfig config, UsersConfig usersConfig) {
         super(config);
+
+        this.defaultUserDetails = usersConfig.getDefaultUserDetails();
 
         var eventSourcingRepo = usersConfig.getEventSourcingRepo();
         var userService = new UserService(
@@ -110,7 +114,13 @@ public class UsersModule extends Module {
 
     @Override
     protected Mono<Void> onServerStarted() {
-        return startupFacade.initDefaultUserIfNecessary();
+        return startupFacade.initDefaultUserIfNecessary(
+                defaultUserDetails.getUsername(),
+                defaultUserDetails.getMail(),
+                defaultUserDetails.getFirstName(),
+                defaultUserDetails.getLastName(),
+                defaultUserDetails.getPassword()
+        );
     }
 
 }
