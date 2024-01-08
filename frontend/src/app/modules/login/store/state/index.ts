@@ -7,9 +7,9 @@ export { LoginError, LoginErrors } from './error';
 export interface State {
   loading: boolean;
   error: LoginError;
+  userId?: string;
   token?: Token;
   redirectUrlAfterLogin?: string;
-  // TODO User information (name, email, etc.)
 }
 
 export const initialState: State = {

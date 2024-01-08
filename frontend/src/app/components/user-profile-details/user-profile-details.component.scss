@@ -7,34 +7,10 @@
   padding: 0 20px;
 }
 
-.leading {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-
 .name {
   font-size: 16px;
 }
 
 .actions {
   margin-left: 12px;
-}
-
-.avatar-placeholder {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--low-contrast-color-2);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  mat-icon {
-    color: var(--contrast-color-1);
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-  }
 }

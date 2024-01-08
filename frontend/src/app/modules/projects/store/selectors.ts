@@ -2,9 +2,9 @@ import { createSelector } from '@ngrx/store';
 import { selectFeature } from '../../../store/selectors';
 import { FEATURE_NAME } from './options';
 import { Option } from '../../shared';
-import { Project } from './state';
+import { Project, State } from './state';
 
-const projectsState = selectFeature(FEATURE_NAME);
+const projectsState = selectFeature<State>(FEATURE_NAME);
 const selectAccessibleProjects = createSelector(
   projectsState,
   (state) => state.accessibleProjects,

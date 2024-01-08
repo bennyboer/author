@@ -18,7 +18,12 @@ export const reducer = createReducer(
     error: LoginError.None,
     loading: true,
   })),
-  on(loggedIn, (state, { token }) => ({ ...state, token, loading: false })),
+  on(loggedIn, (state, { token, userId }) => ({
+    ...state,
+    token,
+    userId,
+    loading: false,
+  })),
   on(loginFailed, (state, { error }) => ({
     ...state,
     error,
@@ -28,6 +33,7 @@ export const reducer = createReducer(
   on(logout, (state) => ({
     ...state,
     token: undefined,
+    userId: undefined,
     loading: false,
   })),
 
@@ -40,9 +46,10 @@ export const reducer = createReducer(
     redirectUrlAfterLogin: undefined,
   })),
 
-  on(loginStateLoaded, (state, { token }) => ({
+  on(loginStateLoaded, (state, { token, userId }) => ({
     ...state,
     token,
+    userId,
     loading: false,
   })),
 );

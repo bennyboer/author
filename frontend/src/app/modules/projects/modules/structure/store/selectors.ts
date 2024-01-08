@@ -4,7 +4,7 @@ import { selectFeature } from '../../../../../store/selectors';
 import { Option } from '../../../../shared';
 import { State } from './state';
 
-const structureState = selectFeature(FEATURE_NAME);
+const structureState = selectFeature<State>(FEATURE_NAME);
 const selectStructure = createSelector(structureState, (state: State) =>
   Option.someOrNone(state.structure),
 );

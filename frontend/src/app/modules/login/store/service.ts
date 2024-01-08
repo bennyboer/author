@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { map, Observable } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
 import { LoginError } from './state';
 import { Token } from '../models';
 import { Option } from '../../shared';
@@ -35,6 +35,13 @@ export class LoginService {
 
   isLoggedIn(): Observable<boolean> {
     return this.store.select(selectors.isLoggedIn);
+  }
+
+  getLoggedInUserId(): Observable<string> {
+    return this.store.select(selectors.loggedInUserId).pipe(
+      filter((id) => id.isSome()),
+      map((id) => id.orElseThrow()),
+    );
   }
 
   isLoading(): Observable<boolean> {

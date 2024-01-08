@@ -5,11 +5,17 @@ import { Token } from '../../models';
 
 @Injectable()
 export class LocalStorageLoginService implements RemoteLoginService {
-  loginViaUserName(username: string, password: string): Observable<Token> {
-    return of(new Token({ value: 'TEST_TOKEN' }));
+  loginViaUserName(
+    username: string,
+    password: string,
+  ): Observable<{ token: Token; userId: string }> {
+    return of({ token: new Token({ value: 'TEST_TOKEN' }), userId: 'USER_ID' });
   }
 
-  loginViaMail(mail: string, password: string): Observable<Token> {
-    return of(new Token({ value: 'TEST_TOKEN' }));
+  loginViaMail(
+    mail: string,
+    password: string,
+  ): Observable<{ token: Token; userId: string }> {
+    return of({ token: new Token({ value: 'TEST_TOKEN' }), userId: 'USER_ID' });
   }
 }

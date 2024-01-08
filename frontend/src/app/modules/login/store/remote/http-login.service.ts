@@ -20,28 +20,41 @@ interface LoginUserResponse {
 export class HttpLoginService implements RemoteLoginService {
   constructor(private readonly http: HttpClient) {}
 
-  loginViaUserName(username: string, password: string): Observable<Token> {
+  loginViaUserName(
+    username: string,
+    password: string,
+  ): Observable<{ token: Token; userId: string }> {
     return this.login({
       name: username,
       password: password,
     });
   }
 
-  loginViaMail(mail: string, password: string): Observable<Token> {
+  loginViaMail(
+    mail: string,
+    password: string,
+  ): Observable<{ token: Token; userId: string }> {
     return this.login({
       mail: mail,
       password: password,
     });
   }
 
-  private login(request: LoginUserRequest): Observable<Token> {
+  private login(
+    request: LoginUserRequest,
+  ): Observable<{ token: Token; userId: string }> {
     return this.http
       .post<LoginUserResponse>(this.url('login'), request, {
         headers: {
           UNAUTHORIZED: 'true',
         },
       })
-      .pipe(map((response) => new Token({ value: response.token })));
+      .pipe(
+        map((response) => ({
+          token: new Token({ value: response.token }),
+          userId: response.userId,
+        })),
+      );
   }
 
   private url(postfix: string): string {

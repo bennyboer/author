@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { LoginService } from '../../modules/login';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-user-profile-details',
@@ -12,5 +13,9 @@ export class UserProfileDetailsComponent {
 
   logout(): void {
     this.loginService.logout();
+  }
+
+  getUserId(): Observable<string> {
+    return this.loginService.getLoggedInUserId();
   }
 }

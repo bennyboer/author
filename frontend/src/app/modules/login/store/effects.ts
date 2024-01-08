@@ -34,7 +34,12 @@ export class LoginStoreEffects {
       ofType(loginViaUserName),
       mergeMap(({ username, password }) => {
         return this.loginService.loginViaUserName(username, password).pipe(
-          map((token) => loggedIn({ token: { value: token.getValue() } })),
+          map((result) =>
+            loggedIn({
+              token: { value: result.token.getValue() },
+              userId: result.userId,
+            }),
+          ),
           catchError((error) =>
             of(
               loginFailed({
@@ -53,7 +58,12 @@ export class LoginStoreEffects {
       ofType(loginViaMail),
       mergeMap(({ mail, password }) => {
         return this.loginService.loginViaMail(mail, password).pipe(
-          map((token) => loggedIn({ token: { value: token.getValue() } })),
+          map((result) =>
+            loggedIn({
+              token: { value: result.token.getValue() },
+              userId: result.userId,
+            }),
+          ),
           catchError((error) =>
             of(
               loginFailed({
@@ -72,6 +82,7 @@ export class LoginStoreEffects {
       this.actions.pipe(
         ofType(logout),
         tap(() => localStorage.removeItem('token')),
+        tap(() => localStorage.removeItem('userId')),
         tap(() => this.router.navigate(['/login'])),
       ),
     { dispatch: false },
@@ -99,12 +110,16 @@ export class LoginStoreEffects {
   loadLoginStateFromLocalStorage$ = createEffect(() =>
     this.actions.pipe(
       ofType(loadLoginState),
-      map(() => Option.someOrNone(localStorage.getItem('token'))),
-      map((token) =>
+      map(() => ({
+        token: Option.someOrNone(localStorage.getItem('token')),
+        userId: Option.someOrNone(localStorage.getItem('userId')),
+      })),
+      map(({ token, userId }) =>
         loginStateLoaded({
           token: token
             .map((value) => ({ value }) as Token)
             .orElse(null as unknown as Token),
+          userId: userId.orElse(null as unknown as string),
         }),
       ),
     ),
@@ -114,7 +129,10 @@ export class LoginStoreEffects {
     () =>
       this.actions.pipe(
         ofType(loggedIn),
-        tap(({ token }) => localStorage.setItem('token', token.value)),
+        tap(({ token, userId }) => {
+          localStorage.setItem('token', token.value);
+          localStorage.setItem('userId', userId);
+        }),
       ),
     { dispatch: false },
   );

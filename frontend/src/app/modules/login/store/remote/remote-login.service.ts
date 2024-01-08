@@ -5,7 +5,10 @@ export abstract class RemoteLoginService {
   abstract loginViaUserName(
     username: string,
     password: string,
-  ): Observable<Token>;
+  ): Observable<{ token: Token; userId: string }>;
 
-  abstract loginViaMail(mail: string, password: string): Observable<Token>;
+  abstract loginViaMail(
+    mail: string,
+    password: string,
+  ): Observable<{ token: Token; userId: string }>;
 }

@@ -1,11 +1,8 @@
 <span class="leading">
-  <span class="avatar-placeholder">
-    <mat-icon>person</mat-icon>
-  </span>
-
-  <span class="name">
-    Test User <!-- TODO Load from login service/store -->
-  </span>
+  @if (getUserId() | async;as userId) {
+    <app-user-profile-link [userId]="userId">
+    </app-user-profile-link>
+  }
 </span>
 
 <span class="trailing">

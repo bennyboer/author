@@ -1,0 +1,1 @@
+export { UserProfileLinkComponent } from './components';

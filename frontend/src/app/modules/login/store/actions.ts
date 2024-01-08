@@ -11,7 +11,7 @@ export const loginViaMail = createAction(
 );
 export const loggedIn = createAction(
   '[Login] Logged In',
-  props<{ token: Token }>(),
+  props<{ token: Token; userId: string }>(),
 );
 export const loginFailed = createAction(
   '[Login] Login Failed',
@@ -32,7 +32,7 @@ export const loggedOut = createAction('[Login] Logged Out');
 export const loadLoginState = createAction('[Login] Load Login State');
 export const loginStateLoaded = createAction(
   '[Login] Login State Loaded',
-  props<{ token?: Token }>(),
+  props<{ token?: Token; userId?: string }>(),
 );
 
 export const actions = {

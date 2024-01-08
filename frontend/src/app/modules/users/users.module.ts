@@ -23,8 +23,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { UserProfileLinkComponent } from './components';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 const PAGES = [UserProfilePage];
+
+const COMPONENTS = [UserProfileLinkComponent];
 
 @NgModule({
   imports: [
@@ -42,8 +46,9 @@ const PAGES = [UserProfilePage];
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    MatProgressSpinnerModule,
   ],
-  declarations: [...PAGES],
+  declarations: [...PAGES, ...COMPONENTS],
   providers: [
     UsersService,
     {
@@ -51,6 +56,6 @@ const PAGES = [UserProfilePage];
       useClass: HttpRemoteUsersService,
     },
   ],
-  exports: [],
+  exports: [UserProfileLinkComponent],
 })
 export class UsersModule {}

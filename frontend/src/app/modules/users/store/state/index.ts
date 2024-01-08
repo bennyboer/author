@@ -1,6 +1,6 @@
 import { User } from './user';
 
-export interface UsersState {
+export interface State {
   users: UserLookup;
 }
 
@@ -14,6 +14,6 @@ export interface UserState {
   user?: User;
 }
 
-export const initialState: UsersState = {
+export const initialState: State = {
   users: {},
 };

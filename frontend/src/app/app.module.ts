@@ -20,6 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NavigationService, ThemeService } from './services';
 import { MatMenuModule } from '@angular/material/menu';
+import { UsersModule } from './modules/users/users.module';
 
 const COMPONENTS = [
   AppComponent,
@@ -40,6 +41,7 @@ const COMPONENTS = [
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
     LoginModule,
+    UsersModule,
     MatIconModule,
     MatButtonModule,
     MatMenuModule,

@@ -14,16 +14,20 @@ export const reducer = createReducer(
       } as UserState,
     },
   })),
-  on(userLoaded, (state, props) => ({
-    ...state,
-    users: {
-      ...state.users,
-      [props.user.id]: {
-        loading: false,
-        user: props.user,
-      } as UserState,
-    },
-  })),
+  on(userLoaded, (state, props) => {
+    const updatedState = {
+      ...state,
+      users: {
+        ...state.users,
+        [props.user.id]: {
+          loading: false,
+          user: props.user,
+        } as UserState,
+      },
+    };
+
+    return updatedState;
+  }),
   on(loadingUserFailed, (state, props) => ({
     ...state,
     users: {
