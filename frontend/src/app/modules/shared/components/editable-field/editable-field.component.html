@@ -1,0 +1,6 @@
+<mat-form-field appearance="outline">
+  <input matInput [formControl]="ctrl" [readonly]="mode === Mode.VIEWING"/>
+  <button mat-icon-button matSuffix class="suffix">
+    <mat-icon>edit</mat-icon>
+  </button>
+</mat-form-field>

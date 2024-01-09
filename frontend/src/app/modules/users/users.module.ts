@@ -25,6 +25,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { UserProfileLinkComponent } from './components';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SharedModule } from '../shared/shared.module';
 
 const PAGES = [UserProfilePage];
 
@@ -36,6 +37,7 @@ const COMPONENTS = [UserProfileLinkComponent];
     UsersRoutingModule,
     StoreModule.forFeature(usersStore.featureName, usersStore.reducer),
     EffectsModule.forFeature([UsersStoreEffects]),
+    SharedModule,
     ReactiveFormsModule,
     MatIconModule,
     MatButtonModule,
