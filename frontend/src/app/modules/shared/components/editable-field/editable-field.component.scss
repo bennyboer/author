@@ -19,6 +19,21 @@
 }
 
 .suffix {
+  margin-right: 4px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
   white-space: nowrap;
-  display: inline-block;
+}
+
+.loading-spinner {
+  margin-right: 8px;
+}
+
+mat-hint {
+  color: var(--contrast-color-1);
+  font-size: 14px;
+  font-weight: 300;
 }

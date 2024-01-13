@@ -26,9 +26,18 @@ import {
 } from 'rxjs';
 import { Option } from '../../util';
 
+type EditableFieldType = 'text' | 'password';
+
 enum Mode {
   VIEWING = 'VIEWING',
+  WAITING_FOR_APPROVAL = 'WAITING_FOR_APPROVAL',
   EDITING = 'EDITING',
+}
+
+export interface EditRequest {
+  newValue: string;
+  approve: () => void;
+  reject: () => void;
 }
 
 @Component({
@@ -40,6 +49,11 @@ enum Mode {
 export class EditableFieldComponent implements OnInit, OnDestroy {
   @ViewChild('input', { static: true })
   input!: ElementRef;
+
+  @Input()
+  set type(value: EditableFieldType) {
+    this.type$.next(value);
+  }
 
   @Input()
   set validators(value: ValidatorFn[]) {
@@ -76,8 +90,17 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
   @Input()
   width: string = '100%';
 
+  @Input()
+  marginBottom: string = '16px';
+
+  @Input()
+  set hint(value: string) {
+    const normalizedValue = Option.someOrNone(value).orElse('');
+    this.hint$.next(normalizedValue);
+  }
+
   @Output()
-  edited: EventEmitter<string> = new EventEmitter<string>();
+  editRequested: EventEmitter<EditRequest> = new EventEmitter<EditRequest>();
 
   private readonly editable$: BehaviorSubject<boolean> =
     new BehaviorSubject<boolean>(true);
@@ -90,6 +113,11 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
     new BehaviorSubject<string>('');
   private readonly label$: BehaviorSubject<string> =
     new BehaviorSubject<string>('');
+  private readonly hint$: BehaviorSubject<string> = new BehaviorSubject<string>(
+    '',
+  );
+  private readonly type$: BehaviorSubject<EditableFieldType> =
+    new BehaviorSubject<EditableFieldType>('text');
 
   ctrl: FormControl = new FormControl(null);
 
@@ -107,16 +135,21 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
     return this.width;
   }
 
+  @HostBinding('style.margin-bottom')
+  get componentMarginBottom(): string {
+    return this.marginBottom;
+  }
+
   ngOnInit(): void {
-    this.isViewMode()
+    this.isEditMode()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((isViewMode) => {
-        if (isViewMode) {
-          this.renderer.addClass(this.elementRef.nativeElement, 'readonly');
-          this.input.nativeElement.blur();
-        } else {
+      .subscribe((isEditMode) => {
+        if (isEditMode) {
           this.renderer.removeClass(this.elementRef.nativeElement, 'readonly');
           this.input.nativeElement.select();
+        } else {
+          this.renderer.addClass(this.elementRef.nativeElement, 'readonly');
+          this.input.nativeElement.blur();
         }
       });
 
@@ -134,6 +167,8 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
     this.editable$.complete();
     this.disabled$.complete();
     this.placeholder$.complete();
+    this.label$.complete();
+    this.hint$.complete();
 
     this.destroy$.next();
     this.destroy$.complete();
@@ -145,18 +180,55 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
   }
 
   submit(): void {
-    if (this.ctrl.valid) {
-      this.mode$.next(Mode.VIEWING);
-    }
+    this.isEditMode()
+      .pipe(
+        first(),
+        filter((isEditMode) => isEditMode),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        if (this.ctrl.valid) {
+          const isChanged = this.ctrl.value !== this.originalValue;
+          if (!isChanged) {
+            this.mode$.next(Mode.VIEWING);
+            return;
+          }
+
+          this.mode$.next(Mode.WAITING_FOR_APPROVAL);
+
+          const editRequest: EditRequest = {
+            newValue: this.ctrl.value,
+            approve: () => {
+              this.mode$.next(Mode.VIEWING);
+            },
+            reject: () => {
+              this.mode$.next(Mode.EDITING);
+            },
+          };
+          this.editRequested.emit(editRequest);
+        }
+      });
   }
 
   cancel(): void {
-    this.ctrl.setValue(this.originalValue, { emitEvent: false });
-    this.mode$.next(Mode.VIEWING);
+    this.isEditMode()
+      .pipe(
+        first(),
+        filter((isEditMode) => isEditMode),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        this.ctrl.setValue(this.originalValue, { emitEvent: false });
+        this.mode$.next(Mode.VIEWING);
+      });
   }
 
   getMode(): Observable<Mode> {
     return this.mode$.asObservable().pipe(distinctUntilChanged());
+  }
+
+  getType(): Observable<EditableFieldType> {
+    return this.type$.asObservable();
   }
 
   isReadonly(): Observable<boolean> {
@@ -165,6 +237,10 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
 
   isViewMode(): Observable<boolean> {
     return this.getMode().pipe(map((mode) => mode === Mode.VIEWING));
+  }
+
+  isEditMode(): Observable<boolean> {
+    return this.getMode().pipe(map((mode) => mode === Mode.EDITING));
   }
 
   isEditable(): Observable<boolean> {
@@ -179,6 +255,10 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
 
   getLabel(): Observable<string> {
     return this.label$.asObservable();
+  }
+
+  getHint(): Observable<string> {
+    return this.hint$.asObservable();
   }
 
   onKeyUp(event: KeyboardEvent): void {

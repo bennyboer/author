@@ -4,19 +4,68 @@
   <h2>General information</h2>
 
   <app-editable-field label="Username"
-                      [validators]="[Validators.minLength(6), Validators.required]">
+                      [value]="(getUserName() | async) || ''"
+                      [validators]="[Validators.minLength(6), Validators.required]"
+                      (editRequested)="updateUserName($event)">
   </app-editable-field>
+
   <app-editable-field label="E-Mail"
-                      [validators]="[Validators.email, Validators.required]">
+                      hint="Upon changing your E-Mail address you will be sent a link via the new E-Mail address. You need to visit the link to
+    confirm the change. Otherwise the change will be reversed after 24 hours."
+                      [value]="(getMail() | async) || ''"
+                      [validators]="[Validators.email, Validators.required]"
+                      (editRequested)="updateMail($event)">
   </app-editable-field>
+
   <app-editable-field label="Password"
-                      [validators]="[Validators.minLength(8), Validators.required]">
+                      type="password"
+                      hint="When changing your password you will not be logged out. You will need to use the new password for your next login. If you forget your password you can reset it via the login page."
+                      [value]="(getPassword() | async) || '********'"
+                      [validators]="[Validators.minLength(8), Validators.required]"
+                      (editRequested)="updatePassword($event)">
   </app-editable-field>
 
   <h2>Details</h2>
 
   <div class="row">
-    <app-editable-field label="First Name" [validators]="[Validators.required]"></app-editable-field>
-    <app-editable-field label="Last Name" [validators]="[Validators.required]"></app-editable-field>
+    <app-editable-field label="First Name"
+                        [value]="(getFirstName() | async) || ''"
+                        [validators]="[Validators.required]"
+                        (editRequested)="updateFirstName($event)">
+    </app-editable-field>
+    <app-editable-field label="Last Name"
+                        [value]="(getLastName() | async) || ''"
+                        [validators]="[Validators.required]"
+                        (editRequested)="updateFirstName($event)">
+    </app-editable-field>
+  </div>
+
+  <h2>Delete user profile</h2>
+
+  <p>
+    You may delete your user profile at any time.
+    Once deleted you will lose access to all your data.
+    This action is <strong>unrecoverable</strong>.
+  </p>
+
+  <p>
+    Type in your password again for confirmation.
+  </p>
+
+  <div class="delete-user-profile-form-container">
+    <form [formGroup]="deleteUserProfileFormGroup">
+      <mat-form-field appearance="outline" class="remove-subscript-sizing">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password">
+      </mat-form-field>
+
+      <button mat-flat-button
+              color="warn"
+              type="submit"
+              [disabled]="!deleteUserProfileFormGroup.valid"
+              (click)="deleteUserProfile(deleteUserProfileFormGroup.value.password)">
+        Delete user profile
+      </button>
+    </form>
   </div>
 </div>
