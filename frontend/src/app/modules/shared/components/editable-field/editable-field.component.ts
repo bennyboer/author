@@ -1,14 +1,16 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   EventEmitter,
-  HostBinding,
   Input,
   OnDestroy,
   OnInit,
   Output,
+  Renderer2,
 } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { BehaviorSubject, map, Observable, Subject, takeUntil } from 'rxjs';
 
 enum Mode {
   VIEWING = 'VIEWING',
@@ -36,18 +38,72 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
   @Output()
   edited: EventEmitter<string> = new EventEmitter<string>();
 
-  mode: Mode = Mode.VIEWING;
+  mode$: BehaviorSubject<Mode> = new BehaviorSubject<Mode>(Mode.VIEWING);
 
   ctrl: FormControl = new FormControl(null);
 
   protected readonly Mode = Mode;
 
-  @HostBinding('class.readonly')
-  get readonly(): boolean {
-    return this.mode === Mode.VIEWING;
+  private originalValue: string = '';
+
+  private readonly destroy$: Subject<void> = new Subject<void>();
+
+  constructor(
+    private readonly renderer: Renderer2,
+    private readonly elementRef: ElementRef,
+  ) {}
+
+  ngOnInit(): void {
+    this.mode$.pipe(takeUntil(this.destroy$)).subscribe((mode) => {
+      const isReadonly = mode === Mode.VIEWING;
+      if (isReadonly) {
+        this.renderer.addClass(this.elementRef.nativeElement, 'readonly');
+      } else {
+        this.renderer.removeClass(this.elementRef.nativeElement, 'readonly');
+      }
+
+      // TODO Do we need to focus the input field on edit mode?
+    });
   }
 
-  ngOnInit(): void {}
+  ngOnDestroy(): void {
+    this.mode$.complete();
 
-  ngOnDestroy(): void {}
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  enterEditMode(): void {
+    this.originalValue = this.ctrl.value;
+    this.mode$.next(Mode.EDITING);
+  }
+
+  submit(): void {
+    this.mode$.next(Mode.VIEWING);
+  }
+
+  cancel(): void {
+    this.ctrl.setValue(this.originalValue, { emitEvent: false });
+    this.mode$.next(Mode.VIEWING);
+  }
+
+  isReadonly(): Observable<boolean> {
+    return this.mode$.asObservable().pipe(map((mode) => mode === Mode.VIEWING));
+  }
+
+  isViewMode(): Observable<boolean> {
+    return this.mode$.asObservable().pipe(map((mode) => mode === Mode.VIEWING));
+  }
+
+  isEditMode(): Observable<boolean> {
+    return this.mode$.asObservable().pipe(map((mode) => mode === Mode.EDITING));
+  }
+
+  onKeyUp(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.submit();
+    } else if (event.key === 'Escape') {
+      this.cancel();
+    }
+  }
 }

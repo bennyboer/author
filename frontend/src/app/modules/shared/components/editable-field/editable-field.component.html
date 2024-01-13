@@ -1,6 +1,9 @@
 <mat-form-field appearance="outline">
-  <input matInput [formControl]="ctrl" [readonly]="mode === Mode.VIEWING"/>
-  <button mat-icon-button matSuffix class="suffix">
+  <input matInput [formControl]="ctrl" [readonly]="isReadonly() | async" (keyup)="onKeyUp($event)"/>
+  <button *ngIf="isViewMode() | async" mat-icon-button matSuffix (click)="enterEditMode()">
     <mat-icon>edit</mat-icon>
+  </button>
+  <button *ngIf="isEditMode() | async" mat-icon-button matSuffix (click)="cancel()">
+    <mat-icon>cancel</mat-icon>
   </button>
 </mat-form-field>
