@@ -29,6 +29,7 @@ import {
 
 export interface LocalStorageRemoteStructureServiceConfig {
   delay: number;
+  clearOnDestroy: boolean;
 }
 
 export const LOCALSTORAGE_REMOTE_STRUCTURE_SERVICE_CONFIG =
@@ -71,7 +72,10 @@ export class LocalStorageStructureService
   ) {
     super();
 
-    this.config = Option.someOrNone(config).orElse({ delay: 50 });
+    this.config = Option.someOrNone(config).orElse({
+      delay: 50,
+      clearOnDestroy: false,
+    });
 
     this.loadStructure();
   }
@@ -79,6 +83,10 @@ export class LocalStorageStructureService
   ngOnDestroy() {
     this.events$.complete();
     this.structure$.complete();
+
+    if (this.config.clearOnDestroy) {
+      localStorage.removeItem(LOCALSTORAGE_KEY);
+    }
   }
 
   getStructure(structureId: string): Observable<Structure> {

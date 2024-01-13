@@ -37,7 +37,7 @@ describe('StructureStore', () => {
         },
         {
           provide: LOCALSTORAGE_REMOTE_STRUCTURE_SERVICE_CONFIG,
-          useValue: { delay: 0 },
+          useValue: { delay: 0, clearOnDestroy: true },
         },
       ],
     });
@@ -52,6 +52,10 @@ describe('StructureStore', () => {
   });
 
   it('should add node', async () => {
+    // given: a loaded structure
+    service.loadStructure('STRUCTURE_ID');
+    await firstValueFrom(service.getStructure());
+
     // when: adding a node
     service.addNode(rootId, 'Child');
 
@@ -69,7 +73,14 @@ describe('StructureStore', () => {
 
   it('should collapse node', async () => {
     // given: a structure with an expanded root node with a child
+    service.loadStructure('STRUCTURE_ID');
+    await firstValueFrom(service.getStructure());
     service.addNode(rootId, 'Child');
+    await firstValueFrom(
+      service
+        .getStructure()
+        .pipe(filter((structure) => structure.version === 1)),
+    );
 
     // when: toggling the root node
     service.toggleNode(rootId);
@@ -86,6 +97,8 @@ describe('StructureStore', () => {
 
   it('should remove node', async () => {
     // given: a structure with a root node with a child
+    service.loadStructure('STRUCTURE_ID');
+    await firstValueFrom(service.getStructure());
     service.addNode(rootId, 'Child');
     const structure = await firstValueFrom(
       service
@@ -107,8 +120,28 @@ describe('StructureStore', () => {
     expect(updatedStructure.nodes[rootId].children.length).toBe(0);
   }, 1000);
 
+  it('should rename node', async () => {
+    // given: a structure with a root node
+    service.loadStructure('STRUCTURE_ID');
+    await firstValueFrom(service.getStructure());
+
+    // when: renaming the root node
+    service.renameNode(rootId, 'New Name');
+
+    // then: the root node is renamed
+    const updatedStructure = await firstValueFrom(
+      service
+        .getStructure()
+        .pipe(filter((structure) => structure.version === 1)),
+    );
+
+    expect(updatedStructure.nodes[rootId].name).toBe('New Name');
+  }, 1000);
+
   it('should swap nodes', async () => {
     // given: a structure with a root node with two children
+    service.loadStructure('STRUCTURE_ID');
+    await firstValueFrom(service.getStructure());
     service.addNode(rootId, 'Child 1');
     const structureVersion1 = await firstValueFrom(
       service
