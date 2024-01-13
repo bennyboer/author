@@ -1,9 +1,24 @@
-<mat-form-field appearance="outline">
-  <input matInput [formControl]="ctrl" [readonly]="isReadonly() | async" (keyup)="onKeyUp($event)"/>
-  <button *ngIf="isViewMode() | async" mat-icon-button matSuffix (click)="enterEditMode()">
-    <mat-icon>edit</mat-icon>
-  </button>
-  <button *ngIf="isEditMode() | async" mat-icon-button matSuffix (click)="cancel()">
-    <mat-icon>cancel</mat-icon>
-  </button>
+<mat-form-field appearance="outline" [style.width]="width">
+  <mat-label *ngIf="getLabel() | async; let label">{{ label }}</mat-label>
+  <input #input
+         matInput
+         [placeholder]="(getPlaceholder() | async) || ''"
+         [formControl]="ctrl"
+         [readonly]="isReadonly() | async"
+         (keyup)="onKeyUp($event)"/>
+
+  @if (isViewMode() | async) {
+    <button *ngIf="isEditable() | async" mat-icon-button matSuffix (click)="enterEditMode()">
+      <mat-icon>edit</mat-icon>
+    </button>
+  } @else {
+    <span matSuffix class="suffix">
+      <button mat-icon-button color="warn" (click)="cancel()">
+        <mat-icon>cancel</mat-icon>
+      </button>
+      <button mat-icon-button color="accent" (click)="submit()">
+        <mat-icon>done</mat-icon>
+      </button>
+    </span>
+  }
 </mat-form-field>

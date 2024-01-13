@@ -1,5 +1,22 @@
 <div class="details-container">
   <h1>User Profile</h1>
 
-  <app-editable-field></app-editable-field>
+  <h2>General information</h2>
+
+  <app-editable-field label="Username"
+                      [validators]="[Validators.minLength(6), Validators.required]">
+  </app-editable-field>
+  <app-editable-field label="E-Mail"
+                      [validators]="[Validators.email, Validators.required]">
+  </app-editable-field>
+  <app-editable-field label="Password"
+                      [validators]="[Validators.minLength(8), Validators.required]">
+  </app-editable-field>
+
+  <h2>Details</h2>
+
+  <div class="row">
+    <app-editable-field label="First Name" [validators]="[Validators.required]"></app-editable-field>
+    <app-editable-field label="Last Name" [validators]="[Validators.required]"></app-editable-field>
+  </div>
 </div>

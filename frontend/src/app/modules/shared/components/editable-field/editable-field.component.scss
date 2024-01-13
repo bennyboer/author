@@ -1,19 +1,24 @@
 :host {
   display: inline-block;
 
-  button {
-    visibility: hidden;
-  }
-
-  &:hover {
-    button {
-      visibility: visible;
-    }
-  }
-
   &.readonly {
     input {
       cursor: default;
     }
+
+    button {
+      visibility: hidden;
+    }
+
+    &:hover {
+      button {
+        visibility: visible;
+      }
+    }
   }
+}
+
+.suffix {
+  white-space: nowrap;
+  display: inline-block;
 }

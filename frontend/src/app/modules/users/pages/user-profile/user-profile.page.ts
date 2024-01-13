@@ -7,6 +7,7 @@ import {
 import { NavigationService } from '../../../../services';
 import { ActivatedRoute } from '@angular/router';
 import { Option } from '../../../shared';
+import { Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-user-profile-page',
@@ -32,4 +33,6 @@ export class UserProfilePage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.navigationService.popNavigation();
   }
+
+  protected readonly Validators = Validators;
 }
