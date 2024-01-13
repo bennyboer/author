@@ -61,7 +61,7 @@ public class StructureEventTransformer {
                     "projectId", snapshottedEvent.getProjectId(),
                     "rootNodeId", snapshottedEvent.getRootNodeId().getValue(),
                     "nodes", toSerializedNodes(snapshottedEvent.getNodes()),
-                    "createdAt", snapshottedEvent.getCreatedAt(),
+                    "createdAt", snapshottedEvent.getCreatedAt().toString(),
                     "removedAt", snapshottedEvent.getRemovedAt()
             );
             case NodeAddedEvent nodeAddedEvent -> Map.of(

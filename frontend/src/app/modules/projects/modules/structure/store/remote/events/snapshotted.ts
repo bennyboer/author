@@ -1,13 +1,11 @@
 import { StructureEvent } from './event';
 import { StructureEventType } from './structure-event-type';
-import { StructureNodeId } from '../../state';
 
-export class NodeRemovedEvent implements StructureEvent {
-  readonly type = StructureEventType.NODE_REMOVED;
+export class SnapshottedEvent implements StructureEvent {
+  readonly type = StructureEventType.SNAPSHOTTED;
 
   constructor(
     public readonly structureId: string,
     public readonly version: number,
-    public readonly id: StructureNodeId,
   ) {}
 }

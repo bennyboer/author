@@ -6,6 +6,7 @@ import {
   NodeRenamedEvent,
   NodesSwappedEvent,
   NodeToggledEvent,
+  SnapshottedEvent,
   StructureEvent,
   StructureEventType,
 } from './events';
@@ -198,6 +199,8 @@ export class HttpStructureService implements RemoteStructureService, OnDestroy {
 
   private mapToStructureEvent(msg: EventMessage): StructureEvent {
     const structureId = msg.topic.aggregateId;
+    const version = msg.topic.version;
+
     const type = this.mapToStructureEventType(msg.eventName);
     const payload = msg.payload;
 
@@ -205,28 +208,31 @@ export class HttpStructureService implements RemoteStructureService, OnDestroy {
       case StructureEventType.NODE_ADDED:
         return new NodeAddedEvent(
           structureId,
+          version,
           payload.parentNodeId,
           payload.newNodeId,
           payload.newNodeName,
         );
       case StructureEventType.NODE_REMOVED:
-        return new NodeRemovedEvent(structureId, payload.nodeId);
+        return new NodeRemovedEvent(structureId, version, payload.nodeId);
       case StructureEventType.NODES_SWAPPED:
         return new NodesSwappedEvent(
           structureId,
+          version,
           payload.nodeId1,
           payload.nodeId2,
         );
       case StructureEventType.NODE_TOGGLED:
-        return new NodeToggledEvent(structureId, payload.nodeId);
+        return new NodeToggledEvent(structureId, version, payload.nodeId);
       case StructureEventType.NODE_RENAMED:
         return new NodeRenamedEvent(
           structureId,
+          version,
           payload.nodeId,
           payload.newNodeName,
         );
-      default:
-        throw new Error(`Unknown event type: ${type}`);
+      case StructureEventType.SNAPSHOTTED:
+        return new SnapshottedEvent(structureId, version);
     }
   }
 
@@ -242,8 +248,10 @@ export class HttpStructureService implements RemoteStructureService, OnDestroy {
         return StructureEventType.NODE_TOGGLED;
       case 'NODE_RENAMED':
         return StructureEventType.NODE_RENAMED;
+      case 'SNAPSHOTTED':
+        return StructureEventType.SNAPSHOTTED;
       default:
-        throw new Error(`Unknown event name: ${eventName}`);
+        throw new Error(`Unsupported event type: ${eventName}`);
     }
   }
 }

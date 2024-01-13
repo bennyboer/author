@@ -27,6 +27,7 @@ import {
   renameNode,
   renameNodeSuccess,
   renamingNodeFailed,
+  snapshotted,
   structureLoaded,
   swapNodes,
   swapNodesSuccess,
@@ -161,6 +162,7 @@ export class StructureStoreEffects {
             const nodeAddedEvent = event as NodeAddedEvent;
             return nodeAdded({
               structureId: nodeAddedEvent.structureId,
+              version: nodeAddedEvent.version,
               parentNodeId: nodeAddedEvent.parentNodeId,
               nodeId: nodeAddedEvent.id,
               name: nodeAddedEvent.name,
@@ -169,18 +171,21 @@ export class StructureStoreEffects {
             const nodeRemovedEvent = event as NodeRemovedEvent;
             return nodeRemoved({
               structureId: nodeRemovedEvent.structureId,
+              version: nodeRemovedEvent.version,
               nodeId: nodeRemovedEvent.id,
             });
           case StructureEventType.NODE_TOGGLED:
             const nodeToggledEvent = event as NodeToggledEvent;
             return nodeToggled({
               structureId: nodeToggledEvent.structureId,
+              version: nodeToggledEvent.version,
               nodeId: nodeToggledEvent.id,
             });
           case StructureEventType.NODES_SWAPPED:
             const nodesSwappedEvent = event as NodesSwappedEvent;
             return nodesSwapped({
               structureId: nodesSwappedEvent.structureId,
+              version: nodesSwappedEvent.version,
               nodeId1: nodesSwappedEvent.id1,
               nodeId2: nodesSwappedEvent.id2,
             });
@@ -188,8 +193,15 @@ export class StructureStoreEffects {
             const nodeRenamedEvent = event as NodeRenamedEvent;
             return nodeRenamed({
               structureId: nodeRenamedEvent.structureId,
+              version: nodeRenamedEvent.version,
               nodeId: nodeRenamedEvent.id,
               name: nodeRenamedEvent.name,
+            });
+          case StructureEventType.SNAPSHOTTED:
+            const snapshotEvent = event as NodeRenamedEvent;
+            return snapshotted({
+              structureId: snapshotEvent.structureId,
+              version: snapshotEvent.version,
             });
         }
       }),

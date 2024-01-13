@@ -5,3 +5,4 @@ export { NodeRemovedEvent } from './removed';
 export { NodeToggledEvent } from './toggled';
 export { NodesSwappedEvent } from './swapped';
 export { NodeRenamedEvent } from './renamed';
+export { SnapshottedEvent } from './snapshotted';

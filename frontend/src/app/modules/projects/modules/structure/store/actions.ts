@@ -22,7 +22,7 @@ export const togglingNodeFailed = createAction(
 );
 export const nodeToggled = createAction(
   '[Structure] Node Toggled',
-  props<{ structureId: string; nodeId: StructureNodeId }>(),
+  props<{ structureId: string; version: number; nodeId: StructureNodeId }>(),
 );
 
 export const addNode = createAction(
@@ -53,6 +53,7 @@ export const nodeAdded = createAction(
   '[Structure] Node Added',
   props<{
     structureId: string;
+    version: number;
     parentNodeId: StructureNodeId;
     nodeId: string;
     name: string;
@@ -77,7 +78,7 @@ export const removingNodeFailed = createAction(
 );
 export const nodeRemoved = createAction(
   '[Structure] Removed Node',
-  props<{ structureId: string; nodeId: StructureNodeId }>(),
+  props<{ structureId: string; version: number; nodeId: StructureNodeId }>(),
 );
 
 export const renameNode = createAction(
@@ -99,7 +100,12 @@ export const renamingNodeFailed = createAction(
 );
 export const nodeRenamed = createAction(
   '[Structure] Node Renamed',
-  props<{ structureId: string; nodeId: StructureNodeId; name: string }>(),
+  props<{
+    structureId: string;
+    version: number;
+    nodeId: StructureNodeId;
+    name: string;
+  }>(),
 );
 
 export const swapNodes = createAction(
@@ -132,8 +138,17 @@ export const nodesSwapped = createAction(
   '[Structure] Nodes Swapped',
   props<{
     structureId: string;
+    version: number;
     nodeId1: StructureNodeId;
     nodeId2: StructureNodeId;
+  }>(),
+);
+
+export const snapshotted = createAction(
+  '[Structure] Snapshotted',
+  props<{
+    structureId: string;
+    version: number;
   }>(),
 );
 

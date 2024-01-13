@@ -11,6 +11,7 @@ import {
   nodeToggled,
   removingNodeFailed,
   renamingNodeFailed,
+  snapshotted,
   structureLoaded,
   swappingNodesFailed,
   togglingNodeFailed,
@@ -35,17 +36,17 @@ export const reducer = createReducer(
     errorMessage: `Failed to load structure: ${message}`,
   })),
 
-  on(nodeToggled, (state, { nodeId }) =>
-    updateStructure(state, (mutator) => mutator.toggleNode(nodeId)),
+  on(nodeToggled, (state, { version, nodeId }) =>
+    updateStructure(state, (mutator) => mutator.toggleNode(nodeId, version)),
   ),
   on(togglingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to toggle node ${nodeId}: ${message}`,
   })),
 
-  on(nodeAdded, (state, { parentNodeId, nodeId, name }) =>
+  on(nodeAdded, (state, { version, parentNodeId, nodeId, name }) =>
     updateStructure(state, (mutator) =>
-      mutator.addNode(parentNodeId, nodeId, name),
+      mutator.addNode(parentNodeId, nodeId, name, version),
     ),
   ),
   on(addingNodeFailed, (state, { parentNodeId, message }) => ({
@@ -53,29 +54,37 @@ export const reducer = createReducer(
     errorMessage: `Failed to add node to ${parentNodeId}: ${message}`,
   })),
 
-  on(nodeRemoved, (state, { nodeId }) =>
-    updateStructure(state, (mutator) => mutator.removeNode(nodeId)),
+  on(nodeRemoved, (state, { version, nodeId }) =>
+    updateStructure(state, (mutator) => mutator.removeNode(nodeId, version)),
   ),
   on(removingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to remove node ${nodeId}: ${message}`,
   })),
 
-  on(nodesSwapped, (state, { nodeId1, nodeId2 }) =>
-    updateStructure(state, (mutator) => mutator.swapNodes(nodeId1, nodeId2)),
+  on(nodesSwapped, (state, { version, nodeId1, nodeId2 }) =>
+    updateStructure(state, (mutator) =>
+      mutator.swapNodes(nodeId1, nodeId2, version),
+    ),
   ),
   on(swappingNodesFailed, (state, { nodeId1, nodeId2, message }) => ({
     ...state,
     errorMessage: `Failed to swap nodes ${nodeId1} and ${nodeId2}: ${message}`,
   })),
 
-  on(nodeRenamed, (state, { nodeId, name }) =>
-    updateStructure(state, (mutator) => mutator.renameNode(nodeId, name)),
+  on(nodeRenamed, (state, { version, nodeId, name }) =>
+    updateStructure(state, (mutator) =>
+      mutator.renameNode(nodeId, name, version),
+    ),
   ),
   on(renamingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to rename node ${nodeId}: ${message}`,
   })),
+
+  on(snapshotted, (state, { version }) =>
+    updateStructure(state, (mutator) => mutator.snapshot(version)),
+  ),
 );
 
 const updateStructure = (

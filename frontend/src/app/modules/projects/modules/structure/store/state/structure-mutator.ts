@@ -16,6 +16,7 @@ export class StructureMutator {
     parentNodeId: string,
     newNodeId: string,
     name: string,
+    version: number,
   ): Option<Structure> {
     return this.findNodeById(parentNodeId).map((parentNode) => {
       const updatedNodes = {
@@ -37,12 +38,12 @@ export class StructureMutator {
       return {
         ...this.structure,
         nodes: updatedNodes,
-        version: this.structure.version + 1,
+        version,
       };
     });
   }
 
-  removeNode(nodeId: string): Option<Structure> {
+  removeNode(nodeId: string, version: number): Option<Structure> {
     return this.findNodeParentId(nodeId).map((parentNodeId) => {
       const updatedNodes = {
         ...this.structure.nodes,
@@ -60,12 +61,12 @@ export class StructureMutator {
       return {
         ...this.structure,
         nodes: updatedNodes,
-        version: this.structure.version + 1,
+        version,
       };
     });
   }
 
-  toggleNode(nodeId: string): Option<Structure> {
+  toggleNode(nodeId: string, version: number): Option<Structure> {
     return this.findNodeById(nodeId).map((node) => {
       const updatedNodes = {
         ...this.structure.nodes,
@@ -79,12 +80,12 @@ export class StructureMutator {
       return {
         ...this.structure,
         nodes: updatedNodes,
-        version: this.structure.version + 1,
+        version,
       };
     });
   }
 
-  renameNode(nodeId: string, name: string): Option<Structure> {
+  renameNode(nodeId: string, name: string, version: number): Option<Structure> {
     return this.findNodeById(nodeId).map((node) => {
       const updatedNodes = {
         ...this.structure.nodes,
@@ -98,12 +99,16 @@ export class StructureMutator {
       return {
         ...this.structure,
         nodes: updatedNodes,
-        version: this.structure.version + 1,
+        version,
       };
     });
   }
 
-  swapNodes(nodeId1: string, nodeId2: string): Option<Structure> {
+  swapNodes(
+    nodeId1: string,
+    nodeId2: string,
+    version: number,
+  ): Option<Structure> {
     if (
       this.isAncestor(nodeId1, nodeId2) ||
       this.isAncestor(nodeId2, nodeId1)
@@ -154,7 +159,14 @@ export class StructureMutator {
     return Option.some({
       ...this.structure,
       nodes: updatedNodes,
-      version: this.structure.version + 1,
+      version,
+    });
+  }
+
+  snapshot(version: number): Option<Structure> {
+    return Option.some({
+      ...this.structure,
+      version,
     });
   }
 
