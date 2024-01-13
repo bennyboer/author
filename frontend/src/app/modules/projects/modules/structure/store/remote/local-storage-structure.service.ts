@@ -98,7 +98,7 @@ export class LocalStorageStructureService
     const newNodeId = this.createUniqueId();
 
     return this.updateStructureAndFireEvent(
-      new NodeAddedEvent(parentNodeId, newNodeId, name),
+      new NodeAddedEvent(structureId, parentNodeId, newNodeId, name),
       (structure) =>
         new StructureMutator(structure).addNode(parentNodeId, newNodeId, name),
     );
@@ -110,7 +110,7 @@ export class LocalStorageStructureService
     nodeId: string,
   ): Observable<void> {
     return this.updateStructureAndFireEvent(
-      new NodeRemovedEvent(nodeId),
+      new NodeRemovedEvent(structureId, nodeId),
       (structure) => new StructureMutator(structure).removeNode(nodeId),
     );
   }
@@ -122,7 +122,7 @@ export class LocalStorageStructureService
     nodeId2: string,
   ): Observable<void> {
     return this.updateStructureAndFireEvent(
-      new NodesSwappedEvent(nodeId1, nodeId2),
+      new NodesSwappedEvent(structureId, nodeId1, nodeId2),
       (structure) =>
         new StructureMutator(structure).swapNodes(nodeId1, nodeId2),
     );
@@ -134,7 +134,7 @@ export class LocalStorageStructureService
     nodeId: string,
   ): Observable<void> {
     return this.updateStructureAndFireEvent(
-      new NodeToggledEvent(nodeId),
+      new NodeToggledEvent(structureId, nodeId),
       (structure) => new StructureMutator(structure).toggleNode(nodeId),
     );
   }
@@ -150,7 +150,7 @@ export class LocalStorageStructureService
     name: string,
   ): Observable<void> {
     return this.updateStructureAndFireEvent(
-      new NodeRenamedEvent(nodeId, name),
+      new NodeRenamedEvent(structureId, nodeId, name),
       (structure) => new StructureMutator(structure).renameNode(nodeId, name),
     );
   }

@@ -6,6 +6,7 @@ export class NodeRenamedEvent implements StructureEvent {
   readonly type = StructureEventType.NODE_RENAMED;
 
   constructor(
+    public readonly structureId: string,
     public readonly id: StructureNodeId,
     public readonly name: string,
   ) {}

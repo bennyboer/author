@@ -1,6 +1,5 @@
 import { createAction, props } from '@ngrx/store';
 import { Structure, StructureNodeId } from './state';
-import { StructureEvent } from './remote';
 
 export const toggleNode = createAction(
   '[Structure] Toggle Node',
@@ -10,13 +9,20 @@ export const toggleNode = createAction(
     nodeId: StructureNodeId;
   }>(),
 );
-export const nodeToggled = createAction(
-  '[Structure] Node Toggled',
-  props<{ nodeId: StructureNodeId }>(),
+export const toggleNodeSuccess = createAction(
+  '[Structure] Toggle Node Success',
+  props<{
+    structureId: string;
+    nodeId: StructureNodeId;
+  }>(),
 );
 export const togglingNodeFailed = createAction(
   '[Structure] Toggling Node Failed',
-  props<{ nodeId: StructureNodeId; message: string }>(),
+  props<{ structureId: string; nodeId: StructureNodeId; message: string }>(),
+);
+export const nodeToggled = createAction(
+  '[Structure] Node Toggled',
+  props<{ structureId: string; nodeId: StructureNodeId }>(),
 );
 
 export const addNode = createAction(
@@ -28,15 +34,29 @@ export const addNode = createAction(
     name: string;
   }>(),
 );
-export const nodeAdded = createAction(
-  '[Structure] Node Added',
+export const addNodeSuccess = createAction(
+  '[Structure] Add Node Success',
   props<{
+    structureId: string;
     parentNodeId: StructureNodeId;
   }>(),
 );
 export const addingNodeFailed = createAction(
   '[Structure] Adding Node Failed',
-  props<{ parentNodeId: StructureNodeId; message: string }>(),
+  props<{
+    structureId: string;
+    parentNodeId: StructureNodeId;
+    message: string;
+  }>(),
+);
+export const nodeAdded = createAction(
+  '[Structure] Node Added',
+  props<{
+    structureId: string;
+    parentNodeId: StructureNodeId;
+    nodeId: string;
+    name: string;
+  }>(),
 );
 
 export const removeNode = createAction(
@@ -47,13 +67,17 @@ export const removeNode = createAction(
     nodeId: StructureNodeId;
   }>(),
 );
-export const removedNode = createAction(
-  '[Structure] Removed Node',
-  props<{ nodeId: StructureNodeId }>(),
+export const removeNodeSuccess = createAction(
+  '[Structure] Remove Node Success',
+  props<{ structureId: string; nodeId: StructureNodeId }>(),
 );
 export const removingNodeFailed = createAction(
   '[Structure] Removing Node Failed',
-  props<{ nodeId: StructureNodeId; message: string }>(),
+  props<{ structureId: string; nodeId: StructureNodeId; message: string }>(),
+);
+export const nodeRemoved = createAction(
+  '[Structure] Removed Node',
+  props<{ structureId: string; nodeId: StructureNodeId }>(),
 );
 
 export const renameNode = createAction(
@@ -65,13 +89,17 @@ export const renameNode = createAction(
     name: string;
   }>(),
 );
-export const nodeRenamed = createAction(
-  '[Structure] Node Renamed',
-  props<{ nodeId: StructureNodeId }>(),
+export const renameNodeSuccess = createAction(
+  '[Structure] Rename Node Success',
+  props<{ structureId: string; nodeId: StructureNodeId }>(),
 );
 export const renamingNodeFailed = createAction(
   '[Structure] Renaming Node Failed',
-  props<{ nodeId: StructureNodeId; message: string }>(),
+  props<{ structureId: string; nodeId: StructureNodeId; message: string }>(),
+);
+export const nodeRenamed = createAction(
+  '[Structure] Node Renamed',
+  props<{ structureId: string; nodeId: StructureNodeId; name: string }>(),
 );
 
 export const swapNodes = createAction(
@@ -83,22 +111,30 @@ export const swapNodes = createAction(
     nodeId2: StructureNodeId;
   }>(),
 );
-export const nodesSwapped = createAction(
-  '[Structure] Nodes Swapped',
-  props<{ nodeId1: StructureNodeId; nodeId2: StructureNodeId }>(),
+export const swapNodesSuccess = createAction(
+  '[Structure] Swap Nodes Success',
+  props<{
+    structureId: string;
+    nodeId1: StructureNodeId;
+    nodeId2: StructureNodeId;
+  }>(),
 );
 export const swappingNodesFailed = createAction(
   '[Structure] Swapping Nodes Failed',
   props<{
+    structureId: string;
     nodeId1: StructureNodeId;
     nodeId2: StructureNodeId;
     message: string;
   }>(),
 );
-
-export const eventReceived = createAction(
-  '[Structure] Event Received',
-  props<{ event: StructureEvent }>(),
+export const nodesSwapped = createAction(
+  '[Structure] Nodes Swapped',
+  props<{
+    structureId: string;
+    nodeId1: StructureNodeId;
+    nodeId2: StructureNodeId;
+  }>(),
 );
 
 export const loadStructure = createAction(

@@ -1,26 +1,38 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { RemoteStructureService } from './remote';
+import {
+  NodeAddedEvent,
+  NodeRemovedEvent,
+  NodeRenamedEvent,
+  NodesSwappedEvent,
+  NodeToggledEvent,
+  RemoteStructureService,
+  StructureEventType,
+} from './remote';
 import { catchError, map, mergeMap, of, switchMap } from 'rxjs';
 import {
   addingNodeFailed,
   addNode,
-  eventReceived,
+  addNodeSuccess,
   loadingStructureFailed,
   loadStructure,
   nodeAdded,
+  nodeRemoved,
   nodeRenamed,
   nodesSwapped,
   nodeToggled,
-  removedNode,
   removeNode,
+  removeNodeSuccess,
   removingNodeFailed,
   renameNode,
+  renameNodeSuccess,
   renamingNodeFailed,
   structureLoaded,
   swapNodes,
+  swapNodesSuccess,
   swappingNodesFailed,
   toggleNode,
+  toggleNodeSuccess,
   togglingNodeFailed,
 } from './actions';
 
@@ -33,11 +45,12 @@ export class StructureStoreEffects {
         return this.structureService
           .toggleNode(structureId, version, nodeId)
           .pipe(
-            map(() => nodeToggled({ nodeId })),
+            map(() => toggleNodeSuccess({ structureId, nodeId })),
             catchError((error) =>
               of(
                 togglingNodeFailed({
-                  nodeId: error.nodeId,
+                  structureId: structureId,
+                  nodeId: nodeId,
                   message: error.message,
                 }),
               ),
@@ -54,11 +67,12 @@ export class StructureStoreEffects {
         return this.structureService
           .addNode(structureId, version, parentNodeId, name)
           .pipe(
-            map(() => nodeAdded({ parentNodeId })),
+            map(() => addNodeSuccess({ structureId, parentNodeId })),
             catchError((error) =>
               of(
                 addingNodeFailed({
-                  parentNodeId: error.nodeId,
+                  structureId: structureId,
+                  parentNodeId: parentNodeId,
                   message: error.message,
                 }),
               ),
@@ -75,11 +89,12 @@ export class StructureStoreEffects {
         return this.structureService
           .removeNode(structureId, version, nodeId)
           .pipe(
-            map(() => removedNode({ nodeId })),
+            map(() => removeNodeSuccess({ structureId, nodeId })),
             catchError((error) =>
               of(
                 removingNodeFailed({
-                  nodeId: error.nodeId,
+                  structureId: structureId,
+                  nodeId: nodeId,
                   message: error.message,
                 }),
               ),
@@ -96,11 +111,12 @@ export class StructureStoreEffects {
         return this.structureService
           .renameNode(structureId, version, nodeId, name)
           .pipe(
-            map(() => nodeRenamed({ nodeId })),
+            map(() => renameNodeSuccess({ structureId, nodeId })),
             catchError((error) =>
               of(
                 renamingNodeFailed({
-                  nodeId: error.nodeId,
+                  structureId: structureId,
+                  nodeId: nodeId,
                   message: error.message,
                 }),
               ),
@@ -117,12 +133,13 @@ export class StructureStoreEffects {
         return this.structureService
           .swapNodes(structureId, version, nodeId1, nodeId2)
           .pipe(
-            map(() => nodesSwapped({ nodeId1, nodeId2 })),
+            map(() => swapNodesSuccess({ structureId, nodeId1, nodeId2 })),
             catchError((error) =>
               of(
                 swappingNodesFailed({
-                  nodeId1: error.nodeId1,
-                  nodeId2: error.nodeId2,
+                  structureId: structureId,
+                  nodeId1: nodeId1,
+                  nodeId2: nodeId2,
                   message: error.message,
                 }),
               ),
@@ -138,7 +155,44 @@ export class StructureStoreEffects {
       switchMap(({ structureId }) =>
         this.structureService.getEvents(structureId),
       ),
-      map((event) => eventReceived({ event })),
+      map((event) => {
+        switch (event.type) {
+          case StructureEventType.NODE_ADDED:
+            const nodeAddedEvent = event as NodeAddedEvent;
+            return nodeAdded({
+              structureId: nodeAddedEvent.structureId,
+              parentNodeId: nodeAddedEvent.parentNodeId,
+              nodeId: nodeAddedEvent.id,
+              name: nodeAddedEvent.name,
+            });
+          case StructureEventType.NODE_REMOVED:
+            const nodeRemovedEvent = event as NodeRemovedEvent;
+            return nodeRemoved({
+              structureId: nodeRemovedEvent.structureId,
+              nodeId: nodeRemovedEvent.id,
+            });
+          case StructureEventType.NODE_TOGGLED:
+            const nodeToggledEvent = event as NodeToggledEvent;
+            return nodeToggled({
+              structureId: nodeToggledEvent.structureId,
+              nodeId: nodeToggledEvent.id,
+            });
+          case StructureEventType.NODES_SWAPPED:
+            const nodesSwappedEvent = event as NodesSwappedEvent;
+            return nodesSwapped({
+              structureId: nodesSwappedEvent.structureId,
+              nodeId1: nodesSwappedEvent.id1,
+              nodeId2: nodesSwappedEvent.id2,
+            });
+          case StructureEventType.NODE_RENAMED:
+            const nodeRenamedEvent = event as NodeRenamedEvent;
+            return nodeRenamed({
+              structureId: nodeRenamedEvent.structureId,
+              nodeId: nodeRenamedEvent.id,
+              name: nodeRenamedEvent.name,
+            });
+        }
+      }),
     ),
   );
 

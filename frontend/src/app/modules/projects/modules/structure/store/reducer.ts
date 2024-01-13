@@ -1,25 +1,20 @@
 import { createReducer, on } from '@ngrx/store';
-import { initialState, Structure, StructureMutator } from './state';
+import { initialState, State, Structure, StructureMutator } from './state';
 import {
   addingNodeFailed,
-  eventReceived,
   loadingStructureFailed,
   loadStructure,
+  nodeAdded,
+  nodeRemoved,
+  nodeRenamed,
+  nodesSwapped,
+  nodeToggled,
   removingNodeFailed,
   renamingNodeFailed,
   structureLoaded,
   swappingNodesFailed,
   togglingNodeFailed,
 } from './actions';
-import {
-  NodeAddedEvent,
-  NodeRemovedEvent,
-  NodeRenamedEvent,
-  NodesSwappedEvent,
-  NodeToggledEvent,
-  StructureEvent,
-  StructureEventType,
-} from './remote';
 import { Option } from '../../../../shared';
 
 export const reducer = createReducer(
@@ -40,79 +35,60 @@ export const reducer = createReducer(
     errorMessage: `Failed to load structure: ${message}`,
   })),
 
-  on(eventReceived, (state, { event }) =>
-    Option.someOrNone(state.structure)
-      .flatMap((structure) =>
-        applyEvent(structure, event).map((structure) => ({
-          ...state,
-          structure,
-        })),
-      )
-      .orElse({
-        ...state,
-        structure: state.structure!,
-      }),
+  on(nodeToggled, (state, { nodeId }) =>
+    updateStructure(state, (mutator) => mutator.toggleNode(nodeId)),
   ),
-
   on(togglingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to toggle node ${nodeId}: ${message}`,
   })),
 
+  on(nodeAdded, (state, { parentNodeId, nodeId, name }) =>
+    updateStructure(state, (mutator) =>
+      mutator.addNode(parentNodeId, nodeId, name),
+    ),
+  ),
   on(addingNodeFailed, (state, { parentNodeId, message }) => ({
     ...state,
     errorMessage: `Failed to add node to ${parentNodeId}: ${message}`,
   })),
 
+  on(nodeRemoved, (state, { nodeId }) =>
+    updateStructure(state, (mutator) => mutator.removeNode(nodeId)),
+  ),
   on(removingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to remove node ${nodeId}: ${message}`,
   })),
 
+  on(nodesSwapped, (state, { nodeId1, nodeId2 }) =>
+    updateStructure(state, (mutator) => mutator.swapNodes(nodeId1, nodeId2)),
+  ),
   on(swappingNodesFailed, (state, { nodeId1, nodeId2, message }) => ({
     ...state,
     errorMessage: `Failed to swap nodes ${nodeId1} and ${nodeId2}: ${message}`,
   })),
 
+  on(nodeRenamed, (state, { nodeId, name }) =>
+    updateStructure(state, (mutator) => mutator.renameNode(nodeId, name)),
+  ),
   on(renamingNodeFailed, (state, { nodeId, message }) => ({
     ...state,
     errorMessage: `Failed to rename node ${nodeId}: ${message}`,
   })),
 );
 
-const applyEvent = (
-  structure: Structure,
-  event: StructureEvent,
-): Option<Structure> => {
-  const structureMutator = new StructureMutator(structure);
-
-  switch (event.type) {
-    case StructureEventType.NODE_ADDED:
-      const nodeAddedEvent = event as NodeAddedEvent;
-      return structureMutator.addNode(
-        nodeAddedEvent.parentNodeId,
-        nodeAddedEvent.id,
-        nodeAddedEvent.name,
-      );
-    case StructureEventType.NODE_REMOVED:
-      const nodeRemovedEvent = event as NodeRemovedEvent;
-      return structureMutator.removeNode(nodeRemovedEvent.id);
-    case StructureEventType.NODE_TOGGLED:
-      const nodeToggledEvent = event as NodeToggledEvent;
-      return structureMutator.toggleNode(nodeToggledEvent.id);
-    case StructureEventType.NODES_SWAPPED:
-      const nodesSwappedEvent = event as NodesSwappedEvent;
-      return structureMutator.swapNodes(
-        nodesSwappedEvent.id1,
-        nodesSwappedEvent.id2,
-      );
-    case StructureEventType.NODE_RENAMED:
-      const nodeRenamedEvent = event as NodeRenamedEvent;
-      return structureMutator.renameNode(
-        nodeRenamedEvent.id,
-        nodeRenamedEvent.name,
-      );
-    default:
-      return Option.none();
-  }
-};
+const updateStructure = (
+  state: State,
+  updater: (mutator: StructureMutator) => Option<Structure>,
+) =>
+  Option.someOrNone(state.structure)
+    .flatMap((structure) => updater(new StructureMutator(structure)))
+    .map((structure) => ({
+      ...state,
+      structure,
+    }))
+    .orElse({
+      ...state,
+      structure: state.structure!,
+    });

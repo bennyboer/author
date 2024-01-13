@@ -6,6 +6,7 @@ export class NodesSwappedEvent implements StructureEvent {
   readonly type = StructureEventType.NODES_SWAPPED;
 
   constructor(
+    public readonly structureId: string,
     public readonly id1: StructureNodeId,
     public readonly id2: StructureNodeId,
   ) {}

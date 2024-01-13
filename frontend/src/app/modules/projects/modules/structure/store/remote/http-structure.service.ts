@@ -197,24 +197,34 @@ export class HttpStructureService implements RemoteStructureService, OnDestroy {
   }
 
   private mapToStructureEvent(msg: EventMessage): StructureEvent {
+    const structureId = msg.topic.aggregateId;
     const type = this.mapToStructureEventType(msg.eventName);
     const payload = msg.payload;
 
     switch (type) {
       case StructureEventType.NODE_ADDED:
         return new NodeAddedEvent(
+          structureId,
           payload.parentNodeId,
           payload.newNodeId,
           payload.newNodeName,
         );
       case StructureEventType.NODE_REMOVED:
-        return new NodeRemovedEvent(payload.nodeId);
+        return new NodeRemovedEvent(structureId, payload.nodeId);
       case StructureEventType.NODES_SWAPPED:
-        return new NodesSwappedEvent(payload.nodeId1, payload.nodeId2);
+        return new NodesSwappedEvent(
+          structureId,
+          payload.nodeId1,
+          payload.nodeId2,
+        );
       case StructureEventType.NODE_TOGGLED:
-        return new NodeToggledEvent(payload.nodeId);
+        return new NodeToggledEvent(structureId, payload.nodeId);
       case StructureEventType.NODE_RENAMED:
-        return new NodeRenamedEvent(payload.nodeId, payload.newNodeName);
+        return new NodeRenamedEvent(
+          structureId,
+          payload.nodeId,
+          payload.newNodeName,
+        );
       default:
         throw new Error(`Unknown event type: ${type}`);
     }
