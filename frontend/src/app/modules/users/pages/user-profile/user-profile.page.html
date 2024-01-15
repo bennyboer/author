@@ -3,27 +3,39 @@
 
   <h2>General information</h2>
 
-  <app-editable-field label="Username"
-                      [value]="(getUserName() | async) || ''"
-                      [validators]="[Validators.minLength(6), Validators.required]"
-                      (editRequested)="updateUserName($event)">
-  </app-editable-field>
+  <div class="general-container">
+    <div>
+      <app-editable-field label="Username"
+                          [value]="(getUserName() | async) || ''"
+                          [validators]="[Validators.minLength(6), Validators.required]"
+                          (editRequested)="updateUserName($event)">
+      </app-editable-field>
 
-  <app-editable-field label="E-Mail"
-                      hint="Upon changing your E-Mail address you will be sent a link via the new E-Mail address. You need to visit the link to
+      <app-editable-field label="E-Mail"
+                          hint="Upon changing your E-Mail address you will be sent a link via the new E-Mail address. You need to visit the link to
     confirm the change. Otherwise the change will be reversed after 24 hours."
-                      [value]="(getMail() | async) || ''"
-                      [validators]="[Validators.email, Validators.required]"
-                      (editRequested)="updateMail($event)">
-  </app-editable-field>
+                          [value]="(getMail() | async) || ''"
+                          [validators]="[Validators.email, Validators.required]"
+                          (editRequested)="updateMail($event)">
+      </app-editable-field>
 
-  <app-editable-field label="Password"
-                      type="password"
-                      hint="When changing your password you will not be logged out. You will need to use the new password for your next login. If you forget your password you can reset it via the login page."
-                      [value]="(getPassword() | async) || '********'"
-                      [validators]="[Validators.minLength(8), Validators.required]"
-                      (editRequested)="updatePassword($event)">
-  </app-editable-field>
+      <app-editable-field label="Password"
+                          type="password"
+                          hint="When changing your password you will not be logged out. You will need to use the new password for your next login. If you forget your password you can reset it via the login page."
+                          [value]="(getPassword() | async) || '********'"
+                          [validators]="[Validators.minLength(8), Validators.required]"
+                          (editRequested)="updatePassword($event)">
+      </app-editable-field>
+    </div>
+
+    <div>
+      <app-user-profile-image [userId]="getUserId() | async"
+                              [diameter]="200"
+                              [editable]="true"
+                              (clicked)="openImageChooserDialog()">
+      </app-user-profile-image>
+    </div>
+  </div>
 
   <h2>Details</h2>
 
@@ -36,7 +48,7 @@
     <app-editable-field label="Last Name"
                         [value]="(getLastName() | async) || ''"
                         [validators]="[Validators.required]"
-                        (editRequested)="updateFirstName($event)">
+                        (editRequested)="updateLastName($event)">
     </app-editable-field>
   </div>
 

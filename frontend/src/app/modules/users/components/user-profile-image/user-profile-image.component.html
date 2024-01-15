@@ -1,0 +1,15 @@
+<div class="overlay">
+  <mat-icon>edit</mat-icon>
+</div>
+
+@if (getImageUrl() | async; as imageUrl) {
+  @if (imageUrl.isSome()) {
+    <img src="{{ imageUrl.orElseThrow() }}" [width]="diameter" [height]="diameter"/>
+  } @else {
+    <mat-icon [style.width.px]="diameter * 0.75"
+              [style.height.px]="diameter * 0.75"
+              [style.font-size.px]="diameter * 0.75">
+      person
+    </mat-icon>
+  }
+}

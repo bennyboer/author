@@ -81,6 +81,10 @@ export class UserProfilePage implements OnInit, OnDestroy {
     this.navigationService.popNavigation();
   }
 
+  getUserId(): Observable<string> {
+    return this.user$.pipe(map((user) => user.id));
+  }
+
   getUserName(): Observable<string> {
     return this.user$.pipe(map((user) => user.name));
   }
@@ -143,5 +147,9 @@ export class UserProfilePage implements OnInit, OnDestroy {
 
   deleteUserProfile(password: string): void {
     console.log('deleteUserProfile', password); // TODO
+  }
+
+  openImageChooserDialog(): void {
+    console.log('openImageChooserDialog'); // TODO
   }
 }

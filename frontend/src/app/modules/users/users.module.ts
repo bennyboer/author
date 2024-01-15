@@ -23,13 +23,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { UserProfileLinkComponent } from './components';
+import {
+  UserProfileImageComponent,
+  UserProfileLinkComponent,
+} from './components';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SharedModule } from '../shared/shared.module';
 
 const PAGES = [UserProfilePage];
 
-const COMPONENTS = [UserProfileLinkComponent];
+const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
 
 @NgModule({
   imports: [

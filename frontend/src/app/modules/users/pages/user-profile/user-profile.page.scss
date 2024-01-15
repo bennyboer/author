@@ -16,6 +16,16 @@ h1 {
   padding: 20px 30px;
 }
 
+.general-container {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+
+  &:last-child {
+    flex: 0 0 auto;
+  }
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -34,3 +44,5 @@ h1 {
     gap: 20px;
   }
 }
+
+

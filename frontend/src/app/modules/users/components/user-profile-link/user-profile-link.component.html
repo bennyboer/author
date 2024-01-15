@@ -1,7 +1,5 @@
-@if (user$ | async;as user) {
-  <span class="avatar-placeholder">
-    <mat-icon>person</mat-icon> <!-- TODO Show image from user (if any, otherwise use placeholder as it is now) -->
-  </span>
+@if (user$ | async; as user) {
+  <app-user-profile-image [userId]="user.id" [diameter]="32"></app-user-profile-image>
 
   <span class="name">
     {{ user.firstName }} {{ user.lastName }}
