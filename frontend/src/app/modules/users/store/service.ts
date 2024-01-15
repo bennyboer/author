@@ -18,6 +18,10 @@ export class UsersService {
     return this.store.select(selectors.isLoadingUser(id));
   }
 
+  isError(id: string): Observable<boolean> {
+    return this.store.select(selectors.isError(id));
+  }
+
   getUser(id: string): Observable<User> {
     return this.store.select(selectors.user(id)).pipe(
       filter((user) => user.isSome()),
@@ -26,6 +30,7 @@ export class UsersService {
         (u) =>
           new User({
             id: u.id,
+            version: u.version,
             name: u.name,
             mail: u.mail,
             firstName: u.firstName,
@@ -34,5 +39,9 @@ export class UsersService {
           }),
       ),
     );
+  }
+
+  updateUserName(userId: string, version: number, name: string): void {
+    this.store.dispatch(actions.updateName({ id: userId, version, name }));
   }
 }

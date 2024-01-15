@@ -10,6 +10,7 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
     return of(
       new User({
         id: 'TEST_USER_ID',
+        version: 0,
         name: 'TEST_USER_NAME',
         mail: 'default+test@example.com',
         firstName: 'Max',
@@ -17,5 +18,9 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
         imageId: Option.none(),
       }),
     );
+  }
+
+  renameUser(id: string, version: number, name: string): Observable<void> {
+    return of();
   }
 }

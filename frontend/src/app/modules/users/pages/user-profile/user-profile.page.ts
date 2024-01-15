@@ -15,6 +15,7 @@ import {
   map,
   Observable,
   of,
+  race,
   ReplaySubject,
   Subject,
   switchMap,
@@ -38,6 +39,8 @@ export class UserProfilePage implements OnInit, OnDestroy {
     ]),
   });
 
+  private userId!: string;
+  private userVersion!: number;
   private readonly user$: Subject<User> = new ReplaySubject<User>(1);
   private readonly destroy$: Subject<void> = new Subject<void>();
 
@@ -60,6 +63,10 @@ export class UserProfilePage implements OnInit, OnDestroy {
       .pipe(
         tap((userId) => this.usersService.loadUser(userId)),
         switchMap((userId) => this.usersService.getUser(userId)),
+        tap((user) => {
+          this.userId = user.id;
+          this.userVersion = user.version;
+        }),
         takeUntil(this.destroy$),
       )
       .subscribe((user) => this.user$.next(user));
@@ -106,11 +113,24 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   updateUserName(request: EditRequest): void {
-    console.log('updateUserName', request.newValue); // TODO
+    this.usersService.updateUserName(
+      this.userId,
+      this.userVersion,
+      request.newValue,
+    );
 
-    setTimeout(() => {
-      Math.random() > 0.5 ? request.reject() : request.approve();
-    }, 1000);
+    const success$ = this.getUserName().pipe(
+      filter((name) => name === request.newValue),
+      tap(() => request.approve()),
+    );
+    const failure$ = this.usersService.isError(this.userId).pipe(
+      filter((isError) => isError),
+      tap(() => request.reject()),
+    );
+
+    race([success$, failure$])
+      .pipe(first(), takeUntil(this.destroy$))
+      .subscribe();
   }
 
   updateMail(request: EditRequest): void {

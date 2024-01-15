@@ -8,11 +8,16 @@ import { Option } from '../../../shared';
 
 interface UserDTO {
   id: string;
+  version: number;
   name: string;
   mail: string;
   firstName: string;
   lastName: string;
   imageId?: string;
+}
+
+interface RenameUserRequest {
+  name: string;
 }
 
 @Injectable()
@@ -21,10 +26,24 @@ export class HttpRemoteUsersService extends RemoteUsersService {
     super();
   }
 
+  // TODO Get events
+
   getUser(id: string): Observable<User> {
     return this.http
       .get<UserDTO>(this.url(id))
       .pipe(map((user) => this.mapToInternalUser(user)));
+  }
+
+  renameUser(id: string, version: number, name: string): Observable<void> {
+    const request: RenameUserRequest = {
+      name,
+    };
+
+    return this.http.post<void>(this.url(`${id}/rename`), request, {
+      params: {
+        version,
+      },
+    });
   }
 
   private url(postfix: string): string {
@@ -33,6 +52,7 @@ export class HttpRemoteUsersService extends RemoteUsersService {
 
   private mapToInternalUser(user: UserDTO): User {
     const id = user.id;
+    const version = user.version;
     const name = user.name;
     const mail = user.mail;
     const firstName = user.firstName;
@@ -41,6 +61,7 @@ export class HttpRemoteUsersService extends RemoteUsersService {
 
     return new User({
       id,
+      version,
       name,
       mail,
       firstName,

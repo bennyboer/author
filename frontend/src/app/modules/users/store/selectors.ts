@@ -17,8 +17,13 @@ const isLoadingUser = (id: string) =>
   createSelector(selectUserState(id), (user) =>
     user.map((u) => u.loading).orElse(false),
   );
+const isError = (id: string) =>
+  createSelector(selectUserState(id), (state) =>
+    state.map((s) => !!s.errorMessage).orElse(false),
+  );
 
 export const selectors = {
   user: selectUser,
   isLoadingUser,
+  isError,
 };

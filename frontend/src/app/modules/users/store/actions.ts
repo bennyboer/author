@@ -33,7 +33,7 @@ export const imageUpdated = createAction(
 
 export const updateName = createAction(
   '[User] Update Name',
-  props<{ id: string; name: string }>(),
+  props<{ id: string; version: number; name: string }>(),
 );
 export const updateNameSuccess = createAction(
   '[User] Update Name Success',
@@ -101,4 +101,5 @@ export const passwordUpdated = createAction(
 
 export const actions = {
   loadUser,
+  updateName,
 };

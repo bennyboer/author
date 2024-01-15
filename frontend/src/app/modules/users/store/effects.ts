@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { RemoteUsersService } from './remote';
-import { loadingUserFailed, loadUser, userLoaded } from './actions';
+import {
+  loadingUserFailed,
+  loadUser,
+  updateName,
+  updateNameSuccess,
+  updatingNameFailed,
+  userLoaded,
+} from './actions';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 @Injectable()
@@ -15,6 +22,7 @@ export class UsersStoreEffects {
             userLoaded({
               user: {
                 id: user.id,
+                version: user.version,
                 name: user.name,
                 mail: user.mail,
                 firstName: user.firstName,
@@ -36,9 +44,26 @@ export class UsersStoreEffects {
     ),
   );
 
-  // TODO Update image
+  updateName$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(updateName),
+      switchMap(({ id, version, name }) =>
+        this.remoteUsersService.renameUser(id, version, name).pipe(
+          map((user) => updateNameSuccess({ id })),
+          catchError((error) =>
+            of(
+              updatingNameFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 
-  // TODO Update user name
+  // TODO Update image
 
   // TODO Update mail
 
