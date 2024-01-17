@@ -3,9 +3,14 @@ import { RemoteUsersService } from './users.service';
 import { User } from '../../models';
 import { Observable, of } from 'rxjs';
 import { Option } from '../../../shared';
+import { UserEvent } from './events';
 
 @Injectable()
 export class LocalstorageRemoteUsersService extends RemoteUsersService {
+  getEvents(id: string): Observable<UserEvent> {
+    return of();
+  }
+
   getUser(id: string): Observable<User> {
     return of(
       new User({

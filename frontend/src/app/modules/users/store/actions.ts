@@ -45,7 +45,7 @@ export const updatingNameFailed = createAction(
 );
 export const nameUpdated = createAction(
   '[User] Name Updated',
-  props<{ id: string; name: string }>(),
+  props<{ id: string; version: number; name: string }>(),
 );
 
 export const updateMail = createAction(
@@ -97,6 +97,11 @@ export const updatingPasswordFailed = createAction(
 export const passwordUpdated = createAction(
   '[User] Password Updated',
   props<{ id: string }>(),
+);
+
+export const versionUpdated = createAction(
+  '[User] Version updated',
+  props<{ id: string; version: number }>(),
 );
 
 export const actions = {

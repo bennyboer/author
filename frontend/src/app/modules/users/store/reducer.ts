@@ -8,6 +8,7 @@ import {
   updateNameSuccess,
   updatingNameFailed,
   userLoaded,
+  versionUpdated,
 } from './actions';
 
 export const reducer = createReducer(
@@ -37,6 +38,16 @@ export const reducer = createReducer(
     })),
   ),
 
+  on(versionUpdated, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+      },
+    })),
+  ),
+
   on(updateName, (state, props) =>
     updateUserState(state, props.id, (userState) => ({
       ...userState,
@@ -61,6 +72,7 @@ export const reducer = createReducer(
       ...userState,
       user: {
         ...userState.user!,
+        version: props.version,
         name: props.name,
       },
     })),

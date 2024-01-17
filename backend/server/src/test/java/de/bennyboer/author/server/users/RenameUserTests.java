@@ -2,6 +2,7 @@ package de.bennyboer.author.server.users;
 
 import de.bennyboer.author.server.users.api.UserDTO;
 import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
+import de.bennyboer.author.user.UserName;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +64,37 @@ public class RenameUserTests extends UsersModuleTests {
             // and: the user cannot be found with the new name
             UserDTO updatedUser = getUserDetails(client, userId, loginUserResponse.getToken());
             assertThat(updatedUser.getName()).isEqualTo("default");
+        });
+    }
+
+    @Test
+    void shouldBeAbleToLoginWithTheNewName() {
+        JavalinTest.test(getJavalin(), (server, client) -> {
+            // given: a logged in user
+            var loginUserResponse = loginDefaultUser(client);
+            var userId = loginUserResponse.getUserId();
+            var token = loginUserResponse.getToken();
+            var user = getUserDetails(client, userId, token);
+
+            // and: the user is renamed
+            RenameUserRequest request = RenameUserRequest.builder()
+                    .name("New Name")
+                    .build();
+            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
+            client.post(
+                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
+                    requestJson,
+                    (req) -> req.header("Authorization", "Bearer " + token)
+            );
+
+            // and: awaiting the user to be renamed
+            awaitUserPresenceInLookupRepo(UserName.of("New Name"));
+
+            // when: the user is logging in with the new name
+            var newLoginUserResponse = loginUser(client, "New Name", "password");
+
+            // then: the server responds with 200
+            assertThat(newLoginUserResponse).isNotNull();
         });
     }
 

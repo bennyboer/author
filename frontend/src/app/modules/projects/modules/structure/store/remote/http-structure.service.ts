@@ -1,5 +1,5 @@
 import { RemoteStructureService } from './structure.service';
-import { map, Observable, Subject } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import {
   NodeAddedEvent,
   NodeRemovedEvent,
@@ -11,7 +11,7 @@ import {
   StructureEventType,
 } from './events';
 import { Structure, StructureNode, StructureNodeLookup } from '../state';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from '../../../../../shared';
 import { EventMessage } from '../../../../../shared/services';
@@ -50,17 +50,12 @@ interface NodeDTO {
 }
 
 @Injectable()
-export class HttpStructureService implements RemoteStructureService, OnDestroy {
-  private readonly destroy$: Subject<void> = new Subject<void>();
-
+export class HttpStructureService extends RemoteStructureService {
   constructor(
     private readonly http: HttpClient,
     private readonly webSocketService: WebSocketService,
-  ) {}
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+  ) {
+    super();
   }
 
   addNode(

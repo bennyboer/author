@@ -30,7 +30,9 @@ import java.util.List;
 public abstract class UsersModuleTests extends ModuleTest {
 
     protected InMemoryUserLookupRepo userLookupRepo;
+
     protected PermissionsRepo permissionsRepo;
+
     protected TestClock clock;
 
     @Override
@@ -132,7 +134,7 @@ public abstract class UsersModuleTests extends ModuleTest {
         awaitPermissionRemoval(permission, permissionsRepo);
     }
 
-    private void awaitUserPresenceInLookupRepo(UserName name) {
+    protected void awaitUserPresenceInLookupRepo(UserName name) {
         userLookupRepo.awaitUpdate(u -> u.getName().equals(name));
     }
 

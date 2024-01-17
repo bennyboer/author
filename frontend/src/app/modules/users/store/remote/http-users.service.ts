@@ -4,7 +4,9 @@ import { map, Observable } from 'rxjs';
 import { User } from '../../models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
-import { Option } from '../../../shared';
+import { Option, WebSocketService } from '../../../shared';
+import { UserEvent, UserEventType, UserNameChangedEvent } from './events';
+import { EventMessage } from '../../../shared/services';
 
 interface UserDTO {
   id: string;
@@ -22,11 +24,18 @@ interface RenameUserRequest {
 
 @Injectable()
 export class HttpRemoteUsersService extends RemoteUsersService {
-  constructor(private readonly http: HttpClient) {
+  constructor(
+    private readonly http: HttpClient,
+    private readonly webSocketService: WebSocketService,
+  ) {
     super();
   }
 
-  // TODO Get events
+  getEvents(id: string): Observable<UserEvent> {
+    return this.webSocketService
+      .subscribeTo({ aggregateType: 'USER', aggregateId: id })
+      .pipe(map((msg) => this.mapToUserEvent(msg)));
+  }
 
   getUser(id: string): Observable<User> {
     return this.http
@@ -68,5 +77,33 @@ export class HttpRemoteUsersService extends RemoteUsersService {
       lastName,
       imageId,
     });
+  }
+
+  private mapToUserEvent(msg: EventMessage): UserEvent {
+    const userId = msg.topic.aggregateId;
+    const version = msg.topic.version;
+
+    const type = this.mapToUserEventType(msg.eventName);
+    const payload = msg.payload;
+
+    switch (type) {
+      case UserEventType.USERNAME_CHANGED:
+        return new UserNameChangedEvent(userId, version, payload.name);
+      default:
+        return {
+          type,
+          id: userId,
+          version,
+        };
+    }
+  }
+
+  private mapToUserEventType(eventName: string): UserEventType {
+    switch (eventName) {
+      case 'RENAMED':
+        return UserEventType.RENAMED;
+      default:
+        return UserEventType.OTHER;
+    }
   }
 }

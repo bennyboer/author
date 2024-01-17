@@ -11,10 +11,7 @@ import de.bennyboer.author.server.shared.modules.Module;
 import de.bennyboer.author.server.shared.modules.ModuleConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
-import de.bennyboer.author.server.users.messaging.UserCreatedAddPermissionsMsgListener;
-import de.bennyboer.author.server.users.messaging.UserCreatedUpdateLookupMsgListener;
-import de.bennyboer.author.server.users.messaging.UserRemovedRemovePermissionsMsgListener;
-import de.bennyboer.author.server.users.messaging.UserRemovedUpdateLookupMsgListener;
+import de.bennyboer.author.server.users.messaging.*;
 import de.bennyboer.author.server.users.permissions.UserPermissionsService;
 import de.bennyboer.author.server.users.rest.UsersRestHandler;
 import de.bennyboer.author.server.users.rest.UsersRestRouting;
@@ -86,7 +83,8 @@ public class UsersModule extends Module {
                 new UserCreatedUpdateLookupMsgListener(syncFacade),
                 new UserCreatedAddPermissionsMsgListener(permissionsFacade),
                 new UserRemovedUpdateLookupMsgListener(syncFacade),
-                new UserRemovedRemovePermissionsMsgListener(permissionsFacade)
+                new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new UserRenamedUpdateLookupMsgListener(syncFacade)
         );
     }
 

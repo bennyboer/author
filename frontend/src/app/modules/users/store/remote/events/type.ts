@@ -5,4 +5,5 @@ export enum UserEventType {
   IMAGE_CHANGED = 'IMAGE_CHANGED',
   RENAMED = 'RENAMED',
   REMOVED = 'REMOVED',
+  OTHER = 'OTHER',
 }

@@ -199,10 +199,14 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
           const editRequest: EditRequest = {
             newValue: this.ctrl.value,
             approve: () => {
-              this.mode$.next(Mode.VIEWING);
+              if (this.mode$.value === Mode.WAITING_FOR_APPROVAL) {
+                this.mode$.next(Mode.VIEWING);
+              }
             },
             reject: () => {
-              this.mode$.next(Mode.EDITING);
+              if (this.mode$.value === Mode.WAITING_FOR_APPROVAL) {
+                this.mode$.next(Mode.EDITING);
+              }
             },
           };
           this.editRequested.emit(editRequest);

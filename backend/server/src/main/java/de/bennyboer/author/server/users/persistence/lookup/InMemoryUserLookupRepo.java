@@ -40,25 +40,27 @@ public class InMemoryUserLookupRepo extends InMemoryEventSourcingReadModelRepo<U
 
     @Override
     public Mono<Void> update(LookupUser readModel) {
-        return assertThatUserDoesNotExistByNameOrMail(readModel.getName(), readModel.getMail())
+        return assertThatUserDoesNotExistByNameOrMail(readModel.getId(), readModel.getName(), readModel.getMail())
                 .then(super.update(readModel));
     }
 
-    private Mono<Void> assertThatUserDoesNotExistByNameOrMail(UserName name, Mail mail) {
-        return assertThatUserDoesNotExistByName(name)
-                .then(assertThatUserDoesNotExistByMail(mail));
+    private Mono<Void> assertThatUserDoesNotExistByNameOrMail(UserId userId, UserName name, Mail mail) {
+        return assertThatUserDoesNotExistByName(userId, name)
+                .then(assertThatUserDoesNotExistByMail(userId, mail));
     }
 
-    private Mono<Void> assertThatUserDoesNotExistByName(UserName name) {
+    private Mono<Void> assertThatUserDoesNotExistByName(UserId userId, UserName name) {
         return findUserIdByName(name)
-                .flatMap(userId -> Mono.error(new IllegalArgumentException(
+                .filter(uId -> !uId.equals(userId))
+                .flatMap(uId -> Mono.error(new IllegalArgumentException(
                         "User with name %s already exists".formatted(name)
                 )));
     }
 
-    private Mono<Void> assertThatUserDoesNotExistByMail(Mail mail) {
+    private Mono<Void> assertThatUserDoesNotExistByMail(UserId userId, Mail mail) {
         return findUserIdByMail(mail)
-                .flatMap(userId -> Mono.error(new IllegalArgumentException(
+                .filter(uId -> !uId.equals(userId))
+                .flatMap(uId -> Mono.error(new IllegalArgumentException(
                         "User with mail %s already exists".formatted(mail)
                 )));
     }
