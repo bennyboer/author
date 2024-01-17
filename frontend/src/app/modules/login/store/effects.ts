@@ -142,5 +142,9 @@ export class LoginStoreEffects {
     private readonly store: Store,
     private readonly loginService: RemoteLoginService,
     private readonly router: Router,
-  ) {}
+  ) {
+    setTimeout(() => {
+      this.store.dispatch(loadLoginState());
+    });
+  }
 }

@@ -11,9 +11,7 @@ import { selectors } from './selectors';
   providedIn: 'root',
 })
 export class LoginService {
-  constructor(private readonly store: Store) {
-    this.store.dispatch(actions.loadLoginState());
-  }
+  constructor(private readonly store: Store) {}
 
   loginViaUserName(username: string, password: string): void {
     this.store.dispatch(actions.loginViaUserName({ username, password }));

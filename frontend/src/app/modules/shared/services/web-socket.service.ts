@@ -421,6 +421,7 @@ export class WebSocketService implements OnDestroy {
   }
 
   private startHeartbeat() {
+    this.stopHeartbeat();
     this.heartbeatTimeoutSub = Option.none();
     this.heartbeatSub = Option.some(
       timer(HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS)
