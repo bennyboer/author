@@ -84,7 +84,7 @@ public class UsersModule extends Module {
                 new UserCreatedAddPermissionsMsgListener(permissionsFacade),
                 new UserRemovedUpdateLookupMsgListener(syncFacade),
                 new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
-                new UserRenamedUpdateLookupMsgListener(syncFacade)
+                new UserNameChangedUpdateLookupMsgListener(syncFacade)
         );
     }
 

@@ -31,9 +31,13 @@ public class UserServiceTests {
     private final Agent systemAgent = Agent.system();
 
     private final UserName defaultName = UserName.of("Max Mustermann");
+
     private final Mail defaultMail = Mail.of("max.mustermann+test@example.com");
+
     private final FirstName defaultFirstName = FirstName.of("Max");
+
     private final LastName defaultLastName = LastName.of("Mustermann");
+
     private final Password defaultPassword = Password.of("password");
 
     static {
@@ -112,7 +116,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void shouldRenameUser() {
+    void shouldUpdateUserName() {
         // given: a user
         var userIdAndVersion = userService.create(
                 defaultName,
@@ -125,10 +129,10 @@ public class UserServiceTests {
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
-        // when: the user is renamed
+        // when: the user name is changed
         var userAgent = Agent.user(userId);
         var newName = UserName.of("Maximilian Mustermann");
-        userService.rename(userId, version, newName, userAgent).block();
+        userService.updateUserName(userId, version, newName, userAgent).block();
 
         // then: the user name has changed
         var user = userService.get(userId).block();
@@ -162,9 +166,9 @@ public class UserServiceTests {
     void shouldNotAcceptOtherCommandBeforeCreating() {
         UserId userId = UserId.create();
 
-        // when: trying to rename a non-existing user
+        // when: trying to update the user name of a non-existing user
         var userAgent = Agent.user(userId);
-        Executable executable = () -> userService.rename(
+        Executable executable = () -> userService.updateUserName(
                 userId,
                 Version.zero(),
                 UserName.of("Alice in Wonderland"),
@@ -198,8 +202,8 @@ public class UserServiceTests {
         var userAgent = Agent.user(userId);
         var version = userService.remove(userId, initialVersion, userAgent).block();
 
-        // when: trying to rename the removed user
-        Executable executable = () -> userService.rename(
+        // when: trying to update the user name of the removed user
+        Executable executable = () -> userService.updateUserName(
                 userId,
                 version,
                 UserName.of("Maximilian Mustermann"),
@@ -231,9 +235,9 @@ public class UserServiceTests {
         var userId = userIdAndVersion.getId();
         var version = userIdAndVersion.getVersion();
 
-        // when: trying to rename the user as another user
+        // when: trying to update the user name of the user as another user
         var userAgent = Agent.user(UserId.create());
-        Executable executable = () -> userService.rename(
+        Executable executable = () -> userService.updateUserName(
                 userId,
                 version,
                 UserName.of("Maximilian Mustermann"),

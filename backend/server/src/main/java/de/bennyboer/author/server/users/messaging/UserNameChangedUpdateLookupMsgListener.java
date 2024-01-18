@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class UserRenamedUpdateLookupMsgListener implements AggregateEventMessageListener {
+public class UserNameChangedUpdateLookupMsgListener implements AggregateEventMessageListener {
 
     private final UsersSyncFacade syncFacade;
 
@@ -25,7 +25,7 @@ public class UserRenamedUpdateLookupMsgListener implements AggregateEventMessage
 
     @Override
     public Optional<EventName> eventName() {
-        return Optional.of(UserEvent.RENAMED.getName());
+        return Optional.of(UserEvent.USERNAME_CHANGED.getName());
     }
 
     @Override

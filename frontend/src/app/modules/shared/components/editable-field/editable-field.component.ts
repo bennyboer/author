@@ -40,6 +40,8 @@ export interface EditRequest {
   reject: () => void;
 }
 
+const MINIMUM_RESPONSE_TIME_MS: number = 500;
+
 @Component({
   selector: 'app-editable-field',
   templateUrl: './editable-field.component.html',
@@ -149,7 +151,9 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
           this.input.nativeElement.select();
         } else {
           this.renderer.addClass(this.elementRef.nativeElement, 'readonly');
-          this.input.nativeElement.blur();
+          setTimeout(() => {
+            this.input.nativeElement.blur();
+          });
         }
       });
 
@@ -196,11 +200,24 @@ export class EditableFieldComponent implements OnInit, OnDestroy {
 
           this.mode$.next(Mode.WAITING_FOR_APPROVAL);
 
+          const startTime = window.performance.now();
           const editRequest: EditRequest = {
             newValue: this.ctrl.value,
             approve: () => {
               if (this.mode$.value === Mode.WAITING_FOR_APPROVAL) {
-                this.mode$.next(Mode.VIEWING);
+                const responseTime = window.performance.now() - startTime;
+                const respondedTooFast =
+                  responseTime < MINIMUM_RESPONSE_TIME_MS;
+                if (respondedTooFast) {
+                  /*
+                  It's weird to see the UI change so quickly, so we wait a bit to show the loading indicator
+                   */
+                  setTimeout(() => {
+                    this.mode$.next(Mode.VIEWING);
+                  }, MINIMUM_RESPONSE_TIME_MS - responseTime);
+                } else {
+                  this.mode$.next(Mode.VIEWING);
+                }
               }
             },
             reject: () => {

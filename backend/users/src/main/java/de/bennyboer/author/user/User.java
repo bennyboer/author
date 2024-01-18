@@ -19,9 +19,9 @@ import de.bennyboer.author.user.login.LoginFailedEvent;
 import de.bennyboer.author.user.login.UserLockedException;
 import de.bennyboer.author.user.remove.RemoveCmd;
 import de.bennyboer.author.user.remove.RemovedEvent;
-import de.bennyboer.author.user.rename.RenameCmd;
-import de.bennyboer.author.user.rename.RenamedEvent;
 import de.bennyboer.author.user.snapshot.SnapshottedEvent;
+import de.bennyboer.author.user.usernamechange.ChangeUserNameCmd;
+import de.bennyboer.author.user.usernamechange.UserNameChangedEvent;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -117,7 +117,7 @@ public class User implements Aggregate {
                     c.getLastName(),
                     c.getPassword()
             ));
-            case RenameCmd c -> ApplyCommandResult.of(RenamedEvent.of(c.getNewName()));
+            case ChangeUserNameCmd c -> ApplyCommandResult.of(UserNameChangedEvent.of(c.getNewName()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
@@ -141,7 +141,7 @@ public class User implements Aggregate {
                     .withLastName(e.getLastName())
                     .withPassword(e.getPassword())
                     .withCreatedAt(metadata.getDate());
-            case RenamedEvent e -> withName(e.getNewName());
+            case UserNameChangedEvent e -> withName(e.getNewName());
             case RemovedEvent ignored -> withRemovedAt(metadata.getDate());
             case LoggedInEvent ignored -> withFailedLoginAttempts(0L)
                     .withFirstFailedLoginAttemptAt(null);

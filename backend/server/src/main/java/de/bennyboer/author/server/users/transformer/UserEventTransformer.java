@@ -8,8 +8,8 @@ import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
 import de.bennyboer.author.user.remove.RemovedEvent;
-import de.bennyboer.author.user.rename.RenamedEvent;
 import de.bennyboer.author.user.snapshot.SnapshottedEvent;
+import de.bennyboer.author.user.usernamechange.UserNameChangedEvent;
 
 import java.time.Instant;
 import java.util.Map;
@@ -21,8 +21,8 @@ public class UserEventTransformer {
             case CreatedEvent createdEvent -> Map.of(
                     "name", createdEvent.getName().getValue()
             );
-            case RenamedEvent renamedEvent -> Map.of(
-                    "newName", renamedEvent.getNewName().getValue()
+            case UserNameChangedEvent userNameChangedEvent -> Map.of(
+                    "newName", userNameChangedEvent.getNewName().getValue()
             );
             default -> Map.of();
         };
@@ -37,8 +37,8 @@ public class UserEventTransformer {
                     "lastName", createdEvent.getLastName().getValue(),
                     "password", createdEvent.getPassword().getValue()
             );
-            case RenamedEvent renamedEvent -> Map.of(
-                    "newName", renamedEvent.getNewName().getValue()
+            case UserNameChangedEvent userNameChangedEvent -> Map.of(
+                    "newName", userNameChangedEvent.getNewName().getValue()
             );
             case SnapshottedEvent snapshottedEvent -> Map.of(
                     "name", snapshottedEvent.getName().getValue(),
@@ -77,7 +77,7 @@ public class UserEventTransformer {
                     Password.of(payload.get("password").toString()),
                     Instant.parse(payload.get("createdAt").toString())
             );
-            case RENAMED -> RenamedEvent.of(
+            case USERNAME_CHANGED -> UserNameChangedEvent.of(
                     UserName.of(payload.get("newName").toString())
             );
         };

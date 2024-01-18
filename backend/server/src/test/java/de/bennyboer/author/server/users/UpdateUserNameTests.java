@@ -1,17 +1,17 @@
 package de.bennyboer.author.server.users;
 
 import de.bennyboer.author.server.users.api.UserDTO;
-import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
+import de.bennyboer.author.server.users.api.requests.UpdateUserNameRequest;
 import de.bennyboer.author.user.UserName;
 import io.javalin.testtools.JavalinTest;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RenameUserTests extends UsersModuleTests {
+public class UpdateUserNameTests extends UsersModuleTests {
 
     @Test
-    void shouldRenameUser() {
+    void shouldUpdateUserName() {
         JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
@@ -19,13 +19,13 @@ public class RenameUserTests extends UsersModuleTests {
             var token = loginUserResponse.getToken();
             var user = getUserDetails(client, userId, token);
 
-            // when: trying to rename the user
-            RenameUserRequest request = RenameUserRequest.builder()
+            // when: trying to update the user name
+            UpdateUserNameRequest request = UpdateUserNameRequest.builder()
                     .name("New Name")
                     .build();
-            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, UpdateUserNameRequest.class);
             var renameResponse = client.post(
-                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
+                    "/api/users/%s/username?version=%d".formatted(userId, user.getVersion()),
                     requestJson,
                     (req) -> req.header("Authorization", "Bearer " + token)
             );
@@ -40,7 +40,7 @@ public class RenameUserTests extends UsersModuleTests {
     }
 
     @Test
-    void shouldNotBeAbleToRenameUserWithoutValidToken() {
+    void shouldNotBeAbleToUpdateUserNameWithoutValidToken() {
         JavalinTest.test(getJavalin(), (server, client) -> {
             // given: a logged in user
             var loginUserResponse = loginDefaultUser(client);
@@ -48,12 +48,12 @@ public class RenameUserTests extends UsersModuleTests {
             var user = getUserDetails(client, userId, loginUserResponse.getToken());
 
             // when: trying to rename the user with an invalid token
-            RenameUserRequest request = RenameUserRequest.builder()
+            UpdateUserNameRequest request = UpdateUserNameRequest.builder()
                     .name("New Name")
                     .build();
-            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, UpdateUserNameRequest.class);
             var renameResponse = client.post(
-                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
+                    "/api/users/%s/username?version=%d".formatted(userId, user.getVersion()),
                     requestJson,
                     (req) -> req.header("Authorization", "Bearer " + "invalid")
             );
@@ -76,18 +76,18 @@ public class RenameUserTests extends UsersModuleTests {
             var token = loginUserResponse.getToken();
             var user = getUserDetails(client, userId, token);
 
-            // and: the user is renamed
-            RenameUserRequest request = RenameUserRequest.builder()
+            // and: the user name is updated
+            UpdateUserNameRequest request = UpdateUserNameRequest.builder()
                     .name("New Name")
                     .build();
-            String requestJson = getJsonMapper().toJsonString(request, RenameUserRequest.class);
+            String requestJson = getJsonMapper().toJsonString(request, UpdateUserNameRequest.class);
             client.post(
-                    "/api/users/%s/rename?version=%d".formatted(userId, user.getVersion()),
+                    "/api/users/%s/username?version=%d".formatted(userId, user.getVersion()),
                     requestJson,
                     (req) -> req.header("Authorization", "Bearer " + token)
             );
 
-            // and: awaiting the user to be renamed
+            // and: awaiting the user name to be updated
             awaitUserPresenceInLookupRepo(UserName.of("New Name"));
 
             // when: the user is logging in with the new name

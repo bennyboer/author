@@ -10,7 +10,7 @@ import lombok.extern.jackson.Jacksonized;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Jacksonized
-public class RenameUserRequest {
+public class UpdateUserNameRequest {
 
     String name;
 

@@ -9,7 +9,7 @@ public enum UserEvent {
     LOGIN_FAILED,
     REMOVED,
     SNAPSHOTTED,
-    RENAMED;
+    USERNAME_CHANGED;
 
     public EventName getName() {
         return EventName.of(name());

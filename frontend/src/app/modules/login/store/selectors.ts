@@ -13,7 +13,9 @@ const selectLoggedInUserId = createSelector(loginState, (state) =>
 );
 const selectError = createSelector(loginState, (state) => state.error);
 const isLoading = createSelector(loginState, (state) => state.loading);
-const isLoggedIn = createSelector(loginState, (state) => !!state.token);
+const isLoggedIn = createSelector(loginState, (state) =>
+  Option.someOrNone(state.token).isSome(),
+);
 const selectRedirectUrlAfterLogin = createSelector(loginState, (state) =>
   Option.someOrNone(state.redirectUrlAfterLogin),
 );

@@ -43,11 +43,11 @@ public class UsersCommandFacade {
                 .then();
     }
 
-    public Mono<Void> rename(String id, long version, String name, Agent agent) {
+    public Mono<Void> updateUserName(String id, long version, String name, Agent agent) {
         UserId userId = UserId.of(id);
 
         return permissionsService.assertHasPermission(agent, RENAME, userId)
-                .then(userService.rename(userId, Version.of(version), UserName.of(name), agent))
+                .then(userService.updateUserName(userId, Version.of(version), UserName.of(name), agent))
                 .then();
     }
 

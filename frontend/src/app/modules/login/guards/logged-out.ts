@@ -9,8 +9,8 @@ import { inject } from '@angular/core';
 import { LoginService } from '../store';
 
 export const loggedOutGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot,
+  _route: ActivatedRouteSnapshot,
+  _state: RouterStateSnapshot,
 ) => {
   const router = inject(Router);
   const loginService = inject(LoginService);

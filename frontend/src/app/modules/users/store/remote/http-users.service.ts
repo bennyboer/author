@@ -1,6 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { RemoteUsersService } from './users.service';
-import { map, Observable } from 'rxjs';
+import {
+  map,
+  Observable,
+  Subject,
+  Subscription,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import { User } from '../../models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
@@ -22,8 +29,20 @@ interface RenameUserRequest {
   name: string;
 }
 
+type UserId = string;
+
 @Injectable()
-export class HttpRemoteUsersService extends RemoteUsersService {
+export class HttpRemoteUsersService
+  extends RemoteUsersService
+  implements OnDestroy
+{
+  private readonly userEventsSubscriptions: Map<UserId, Subscription> = new Map<
+    UserId,
+    Subscription
+  >();
+  private readonly events$: Subject<EventMessage> = new Subject<EventMessage>();
+  private readonly destroy$: Subject<void> = new Subject<void>();
+
   constructor(
     private readonly http: HttpClient,
     private readonly webSocketService: WebSocketService,
@@ -31,24 +50,31 @@ export class HttpRemoteUsersService extends RemoteUsersService {
     super();
   }
 
-  getEvents(id: string): Observable<UserEvent> {
-    return this.webSocketService
-      .subscribeTo({ aggregateType: 'USER', aggregateId: id })
-      .pipe(map((msg) => this.mapToUserEvent(msg)));
+  ngOnDestroy(): void {
+    this.events$.complete();
+
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  getUser(id: string): Observable<User> {
+  getEvents(id: UserId): Observable<UserEvent> {
+    this.listenToUserEvents(id);
+
+    return this.events$.pipe(map((event) => this.mapToUserEvent(event)));
+  }
+
+  getUser(id: UserId): Observable<User> {
     return this.http
       .get<UserDTO>(this.url(id))
       .pipe(map((user) => this.mapToInternalUser(user)));
   }
 
-  renameUser(id: string, version: number, name: string): Observable<void> {
+  renameUser(id: UserId, version: number, name: string): Observable<void> {
     const request: RenameUserRequest = {
       name,
     };
 
-    return this.http.post<void>(this.url(`${id}/rename`), request, {
+    return this.http.post<void>(this.url(`${id}/username`), request, {
       params: {
         version,
       },
@@ -88,7 +114,7 @@ export class HttpRemoteUsersService extends RemoteUsersService {
 
     switch (type) {
       case UserEventType.USERNAME_CHANGED:
-        return new UserNameChangedEvent(userId, version, payload.name);
+        return new UserNameChangedEvent(userId, version, payload.newName);
       default:
         return {
           type,
@@ -100,10 +126,33 @@ export class HttpRemoteUsersService extends RemoteUsersService {
 
   private mapToUserEventType(eventName: string): UserEventType {
     switch (eventName) {
-      case 'RENAMED':
-        return UserEventType.RENAMED;
+      case 'USERNAME_CHANGED':
+        return UserEventType.USERNAME_CHANGED;
       default:
         return UserEventType.OTHER;
     }
+  }
+
+  private listenToUserEvents(id: UserId): Subscription {
+    if (this.userEventsSubscriptions.has(id)) {
+      return this.userEventsSubscriptions.get(id)!;
+    }
+
+    const subscription = this.webSocketService
+      .onConnected$()
+      .pipe(
+        switchMap(() =>
+          this.webSocketService.subscribeTo({
+            aggregateType: 'USER',
+            aggregateId: id,
+          }),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((event) => this.events$.next(event));
+
+    this.userEventsSubscriptions.set(id, subscription);
+
+    return subscription;
   }
 }

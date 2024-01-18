@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, NgModule } from '@angular/core';
+import { APP_INITIALIZER, isDevMode, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -21,6 +21,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { NavigationService, ThemeService } from './services';
 import { MatMenuModule } from '@angular/material/menu';
 import { UsersModule } from './modules/users/users.module';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from '../environments';
 
 const COMPONENTS = [
   AppComponent,
@@ -40,11 +42,16 @@ const COMPONENTS = [
     BrowserAnimationsModule,
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: !environment.production,
+    }),
     LoginModule,
     UsersModule,
     MatIconModule,
     MatButtonModule,
     MatMenuModule,
+    StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: !isDevMode() }),
   ],
   providers: [
     ThemeService,

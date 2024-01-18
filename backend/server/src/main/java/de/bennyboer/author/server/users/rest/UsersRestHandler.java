@@ -1,7 +1,7 @@
 package de.bennyboer.author.server.users.rest;
 
 import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
-import de.bennyboer.author.server.users.api.requests.RenameUserRequest;
+import de.bennyboer.author.server.users.api.requests.UpdateUserNameRequest;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.facade.UsersCommandFacade;
 import de.bennyboer.author.server.users.facade.UsersQueryFacade;
@@ -34,14 +34,14 @@ public class UsersRestHandler {
         ));
     }
 
-    public void renameUser(Context ctx) {
-        var request = ctx.bodyAsClass(RenameUserRequest.class);
+    public void updateUserName(Context ctx) {
+        var request = ctx.bodyAsClass(UpdateUserNameRequest.class);
         var userId = ctx.pathParam("userId");
         var version = ctx.queryParamAsClass("version", Long.class).get();
 
         handle(
                 ctx,
-                agent -> commandFacade.rename(userId, version, request.getName(), agent),
+                agent -> commandFacade.updateUserName(userId, version, request.getName(), agent),
                 (res) -> ctx.status(HttpStatus.NO_CONTENT)
         );
     }
