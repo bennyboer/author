@@ -140,6 +140,54 @@ public class UserServiceTests {
     }
 
     @Test
+    void shouldUpdateFirstName() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: the first name is changed
+        var userAgent = Agent.user(userId);
+        var newFirstName = FirstName.of("Maximilian");
+        userService.renameFirstName(userId, version, newFirstName, userAgent).block();
+
+        // then: the first name has changed
+        var user = userService.get(userId).block();
+        assertEquals(newFirstName, user.getFirstName());
+    }
+
+    @Test
+    void shouldUpdateLastName() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: the last name is changed
+        var userAgent = Agent.user(userId);
+        var newLastName = LastName.of("Mustermann-Schmidt");
+        userService.renameLastName(userId, version, newLastName, userAgent).block();
+
+        // then: the last name has changed
+        var user = userService.get(userId).block();
+        assertEquals(newLastName, user.getLastName());
+    }
+
+    @Test
     void shouldRemoveUser() {
         // given: a user
         var userIdAndVersion = userService.create(
@@ -222,7 +270,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void shouldNotAllowRenamingAsAnotherUser() {
+    void shouldNotAllowUpdatingUserNameAsAnotherUser() {
         // given: a user
         var userIdAndVersion = userService.create(
                 defaultName,

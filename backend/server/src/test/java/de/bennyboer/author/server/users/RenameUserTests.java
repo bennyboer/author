@@ -120,7 +120,7 @@ public class RenameUserTests extends UsersModuleTests {
 
             // and: the user cannot be found with the new last name
             UserDTO updatedUser = getUserDetails(client, userId, loginUserResponse.getToken());
-            assertThat(updatedUser.getFirstName()).isEqualTo("Doe");
+            assertThat(updatedUser.getLastName()).isEqualTo("Doe");
         });
     }
 

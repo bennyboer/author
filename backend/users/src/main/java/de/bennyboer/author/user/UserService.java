@@ -14,6 +14,8 @@ import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.login.LoginCmd;
 import de.bennyboer.author.user.remove.RemoveCmd;
+import de.bennyboer.author.user.rename.RenameFirstNameCmd;
+import de.bennyboer.author.user.rename.RenameLastNameCmd;
 import de.bennyboer.author.user.usernamechange.ChangeUserNameCmd;
 import reactor.core.publisher.Mono;
 
@@ -61,6 +63,14 @@ public class UserService extends AggregateService<User, UserId> {
 
     public Mono<Version> updateUserName(UserId id, Version version, UserName name, Agent agent) {
         return dispatchCommand(id, version, agent, ChangeUserNameCmd.of(name));
+    }
+
+    public Mono<Version> renameFirstName(UserId id, Version version, FirstName firstName, Agent agent) {
+        return dispatchCommand(id, version, agent, RenameFirstNameCmd.of(firstName));
+    }
+
+    public Mono<Version> renameLastName(UserId id, Version version, LastName lastName, Agent agent) {
+        return dispatchCommand(id, version, agent, RenameLastNameCmd.of(lastName));
     }
 
     public Mono<Version> remove(UserId id, Version version, Agent agent) {

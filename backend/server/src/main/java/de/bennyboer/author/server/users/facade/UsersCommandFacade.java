@@ -46,8 +46,24 @@ public class UsersCommandFacade {
     public Mono<Void> updateUserName(String id, long version, String name, Agent agent) {
         UserId userId = UserId.of(id);
 
-        return permissionsService.assertHasPermission(agent, RENAME, userId)
+        return permissionsService.assertHasPermission(agent, UPDATE_USERNAME, userId)
                 .then(userService.updateUserName(userId, Version.of(version), UserName.of(name), agent))
+                .then();
+    }
+
+    public Mono<Void> renameFirstName(String userId, Long version, String firstName, Agent agent) {
+        UserId id = UserId.of(userId);
+
+        return permissionsService.assertHasPermission(agent, RENAME, id)
+                .then(userService.renameFirstName(id, Version.of(version), FirstName.of(firstName), agent))
+                .then();
+    }
+
+    public Mono<Void> renameLastName(String userId, Long version, String lastName, Agent agent) {
+        UserId id = UserId.of(userId);
+
+        return permissionsService.assertHasPermission(agent, RENAME, id)
+                .then(userService.renameLastName(id, Version.of(version), LastName.of(lastName), agent))
                 .then();
     }
 

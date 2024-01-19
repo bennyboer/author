@@ -8,6 +8,8 @@ import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
 import de.bennyboer.author.user.remove.RemovedEvent;
+import de.bennyboer.author.user.rename.RenamedFirstNameEvent;
+import de.bennyboer.author.user.rename.RenamedLastNameEvent;
 import de.bennyboer.author.user.snapshot.SnapshottedEvent;
 import de.bennyboer.author.user.usernamechange.UserNameChangedEvent;
 
@@ -39,6 +41,12 @@ public class UserEventTransformer {
             );
             case UserNameChangedEvent userNameChangedEvent -> Map.of(
                     "newName", userNameChangedEvent.getNewName().getValue()
+            );
+            case RenamedFirstNameEvent renamedFirstNameEvent -> Map.of(
+                    "firstName", renamedFirstNameEvent.getFirstName().getValue()
+            );
+            case RenamedLastNameEvent renamedLastNameEvent -> Map.of(
+                    "lastName", renamedLastNameEvent.getLastName().getValue()
             );
             case SnapshottedEvent snapshottedEvent -> Map.of(
                     "name", snapshottedEvent.getName().getValue(),
@@ -79,6 +87,12 @@ public class UserEventTransformer {
             );
             case USERNAME_CHANGED -> UserNameChangedEvent.of(
                     UserName.of(payload.get("newName").toString())
+            );
+            case RENAMED_FIRST_NAME -> RenamedFirstNameEvent.of(
+                    FirstName.of(payload.get("firstName").toString())
+            );
+            case RENAMED_LAST_NAME -> RenamedLastNameEvent.of(
+                    LastName.of(payload.get("lastName").toString())
             );
         };
     }
