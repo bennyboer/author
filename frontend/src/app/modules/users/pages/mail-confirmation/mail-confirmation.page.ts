@@ -4,15 +4,9 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../../../environments';
-import { catchError, Subject, takeUntil, throwError } from 'rxjs';
-
-interface ConfirmMailRequest {
-  mail: string;
-  token: string;
-}
+import { catchError, delay, Subject, takeUntil, throwError } from 'rxjs';
+import { RemoteUsersService } from '../../store';
 
 @Component({
   selector: 'app-mail-confirmation-page',
@@ -26,30 +20,30 @@ export class MailConfirmationPage implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly http: HttpClient,
+    private readonly remoteUsersService: RemoteUsersService,
   ) {}
 
   ngOnInit(): void {
-    const userId = this.route.snapshot.queryParams['userId'];
+    const userId = this.route.snapshot.params['userId'];
     const mail = this.route.snapshot.queryParams['mail'];
     const token = this.route.snapshot.queryParams['token'];
 
-    const request: ConfirmMailRequest = {
-      mail,
-      token,
-    };
-
-    this.http
-      .post<void>(`${environment.apiUrl}/users/${userId}/mail/confirm`, request)
+    this.remoteUsersService
+      .confirmMail(userId, mail, token)
       .pipe(
+        delay(1000), // Not too fast
         catchError((e) => {
-          this.router.navigateByUrl('/users/mail/confirmation/failed');
+          this.router.navigate(['./failed'], {
+            relativeTo: this.route,
+          });
           return throwError(() => e);
         }),
         takeUntil(this.destroy$),
       )
       .subscribe(() => {
-        this.router.navigateByUrl('/users/mail/confirmation/success');
+        this.router.navigate(['./success'], {
+          relativeTo: this.route,
+        });
       });
   }
 

@@ -4,4 +4,4 @@ export { UserNameChangedEvent } from './username-changed';
 export { RenamedFirstNameEvent } from './renamed-first-name';
 export { RenamedLastNameEvent } from './renamed-last-name';
 export { PasswordChangedEvent } from './password-changed';
-export { MailUpdateRequestedEvent } from './mail-updated';
+export { MailUpdatedEvent } from './mail-updated';

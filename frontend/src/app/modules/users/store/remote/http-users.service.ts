@@ -13,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 import { Option, WebSocketService } from '../../../shared';
 import {
-  MailUpdateRequestedEvent,
+  MailUpdatedEvent,
   PasswordChangedEvent,
   RenamedFirstNameEvent,
   RenamedLastNameEvent,
@@ -51,6 +51,11 @@ interface ChangePasswordRequest {
 
 interface UpdateMailRequest {
   mail: string;
+}
+
+interface ConfirmMailRequest {
+  mail: string;
+  token: string;
 }
 
 type UserId = string;
@@ -115,6 +120,18 @@ export class HttpRemoteUsersService
         version,
       },
     });
+  }
+
+  confirmMail(userId: string, mail: string, token: string): Observable<void> {
+    const request: ConfirmMailRequest = {
+      mail,
+      token,
+    };
+
+    return this.http.post<void>(
+      `${environment.apiUrl}/users/${userId}/mail/confirm`,
+      request,
+    );
   }
 
   updateFirstName(
@@ -206,8 +223,8 @@ export class HttpRemoteUsersService
         return new RenamedLastNameEvent(userId, version, payload.lastName);
       case UserEventType.PASSWORD_CHANGED:
         return new PasswordChangedEvent(userId, version, '********');
-      case UserEventType.MAIL_UPDATE_REQUESTED:
-        return new MailUpdateRequestedEvent(userId, version, payload.mail);
+      case UserEventType.MAIL_UPDATED:
+        return new MailUpdatedEvent(userId, version, payload.mail);
       default:
         return {
           type,
@@ -228,7 +245,8 @@ export class HttpRemoteUsersService
       case 'PASSWORD_CHANGED':
         return UserEventType.PASSWORD_CHANGED;
       case 'MAIL_UPDATE_REQUESTED':
-        return UserEventType.MAIL_UPDATE_REQUESTED;
+      case 'MAIL_UPDATE_CONFIRMED':
+        return UserEventType.MAIL_UPDATED;
       default:
         return UserEventType.OTHER;
     }

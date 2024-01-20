@@ -1,14 +1,14 @@
-<span class="leading">
-  @if (getUserId() | async;as userId) {
+@if (getUserId() | async; as userId) {
+  <span class="leading">
     <app-user-profile-link [userId]="userId">
     </app-user-profile-link>
-  }
-</span>
-
-<span class="trailing">
-  <span class="actions">
-    <button mat-icon-button (click)="logout()">
-      <mat-icon>logout</mat-icon>
-    </button>
   </span>
-</span>
+  
+  <span class="trailing">
+    <span class="actions">
+      <button mat-icon-button (click)="logout()">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </span>
+  </span>
+}

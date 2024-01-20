@@ -2,35 +2,12 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { loggedInGuard, loggedOutGuard, LoginModule } from './modules/login';
 import { PageContainerComponent } from './components';
-import {
-  MailConfirmationFailedPage,
-  MailConfirmationPage,
-  MailConfirmationSuccessPage,
-} from './modules/users';
 
 const routes: Routes = [
   {
     path: 'login',
     canActivate: [loggedOutGuard],
     loadChildren: () => LoginModule,
-  },
-  {
-    path: 'users/mail/confirmation',
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        component: MailConfirmationPage,
-      },
-      {
-        path: 'success',
-        component: MailConfirmationSuccessPage,
-      },
-      {
-        path: 'failed',
-        component: MailConfirmationFailedPage,
-      },
-    ],
   },
   {
     path: '',

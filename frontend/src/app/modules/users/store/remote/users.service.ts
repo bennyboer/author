@@ -36,4 +36,10 @@ export abstract class RemoteUsersService {
     version: number,
     mail: string,
   ): Observable<void>;
+
+  abstract confirmMail(
+    userId: string,
+    mail: string,
+    token: string,
+  ): Observable<void>;
 }

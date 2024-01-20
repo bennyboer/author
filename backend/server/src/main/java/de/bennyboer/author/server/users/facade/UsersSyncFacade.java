@@ -54,7 +54,7 @@ public class UsersSyncFacade {
                             user.getName(),
                             user.getPendingMail().orElseThrow(),
                             user.getMailConfirmationToken().orElseThrow(),
-                            "http://localhost:4200/users/mail/confirmation?userId=%s&mail=%s&token=%s".formatted(
+                            "http://localhost:4200/users/%s/mail/confirmation?mail=%s&token=%s".formatted(
                                     user.getId().getValue(),
                                     URLEncoder.encode(
                                             user.getPendingMail().orElseThrow().getValue(),

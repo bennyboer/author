@@ -38,6 +38,9 @@ public class UserEventTransformer {
             case MailUpdateRequestedEvent mailUpdateRequestedEvent -> Map.of(
                     "mail", mailUpdateRequestedEvent.getMail().getValue()
             );
+            case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
+                    "mail", mailUpdateConfirmedEvent.getMail().getValue()
+            );
             default -> Map.of();
         };
     }
@@ -75,7 +78,9 @@ public class UserEventTransformer {
                     "mail", mailUpdateRequestedEvent.getMail().getValue(),
                     "token", mailUpdateRequestedEvent.getToken().getValue()
             );
-            case MailUpdateConfirmedEvent ignoredEvent -> Map.of();
+            case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
+                    "mail", mailUpdateConfirmedEvent.getMail().getValue()
+            );
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
             case RemovedEvent ignoredEvent -> Map.of();
@@ -121,7 +126,9 @@ public class UserEventTransformer {
                     Mail.of(payload.get("mail").toString()),
                     MailConfirmationToken.of(payload.get("token").toString())
             );
-            case MAIL_UPDATE_CONFIRMED -> MailUpdateConfirmedEvent.of();
+            case MAIL_UPDATE_CONFIRMED -> MailUpdateConfirmedEvent.of(
+                    Mail.of(payload.get("mail").toString())
+            );
         };
     }
 

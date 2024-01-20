@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
-  MailUpdateRequestedEvent,
+  MailUpdatedEvent,
   PasswordChangedEvent,
   RemoteUsersService,
   RenamedFirstNameEvent,
@@ -202,12 +202,12 @@ export class UsersStoreEffects {
               version: event.version,
               password: passwordChangedEvent.password,
             });
-          case UserEventType.MAIL_UPDATE_REQUESTED:
-            const mailUpdateRequestedEvent = event as MailUpdateRequestedEvent;
+          case UserEventType.MAIL_UPDATED:
+            const mailUpdatedEvent = event as MailUpdatedEvent;
             return mailUpdated({
               id: event.id,
               version: event.version,
-              mail: mailUpdateRequestedEvent.mail,
+              mail: mailUpdatedEvent.mail,
             });
           default:
             return versionUpdated({

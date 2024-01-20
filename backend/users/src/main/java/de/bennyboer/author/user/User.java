@@ -289,7 +289,7 @@ public class User implements Aggregate {
             throw new IllegalStateException("Invalid mail confirmation token");
         }
 
-        return ApplyCommandResult.of(MailUpdateConfirmedEvent.of());
+        return ApplyCommandResult.of(MailUpdateConfirmedEvent.of(c.getMail()));
     }
 
 }

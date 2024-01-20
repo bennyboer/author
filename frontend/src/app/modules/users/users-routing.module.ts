@@ -1,11 +1,45 @@
 import { RouterModule, Routes } from '@angular/router';
 import { NgModule } from '@angular/core';
-import { UserProfilePage } from './pages';
+import {
+  MailConfirmationFailedPage,
+  MailConfirmationPage,
+  MailConfirmationSuccessPage,
+  UserProfilePage,
+} from './pages';
 
 const routes: Routes = [
   {
     path: ':userId',
-    component: UserProfilePage,
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: UserProfilePage,
+      },
+      {
+        path: 'mail',
+        children: [
+          {
+            path: 'confirmation',
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                component: MailConfirmationPage,
+              },
+              {
+                path: 'success',
+                component: MailConfirmationSuccessPage,
+              },
+              {
+                path: 'failed',
+                component: MailConfirmationFailedPage,
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
 ];
 

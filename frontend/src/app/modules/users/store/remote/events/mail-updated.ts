@@ -1,8 +1,8 @@
 import { UserEvent } from './event';
 import { UserEventType } from './type';
 
-export class MailUpdateRequestedEvent implements UserEvent {
-  readonly type: UserEventType = UserEventType.MAIL_UPDATE_REQUESTED;
+export class MailUpdatedEvent implements UserEvent {
+  readonly type: UserEventType = UserEventType.MAIL_UPDATED;
 
   constructor(
     public readonly id: string,
