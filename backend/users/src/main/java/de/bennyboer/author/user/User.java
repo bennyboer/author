@@ -17,6 +17,10 @@ import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginCmd;
 import de.bennyboer.author.user.login.LoginFailedEvent;
 import de.bennyboer.author.user.login.UserLockedException;
+import de.bennyboer.author.user.mail.ConfirmMailUpdateCmd;
+import de.bennyboer.author.user.mail.MailUpdateConfirmedEvent;
+import de.bennyboer.author.user.mail.MailUpdateRequestedEvent;
+import de.bennyboer.author.user.mail.RequestMailUpdateCmd;
 import de.bennyboer.author.user.password.ChangePasswordCmd;
 import de.bennyboer.author.user.password.PasswordChangedEvent;
 import de.bennyboer.author.user.remove.RemoveCmd;
@@ -57,6 +61,12 @@ public class User implements Aggregate {
 
     Mail mail;
 
+    @Nullable
+    Mail pendingMail;
+
+    @Nullable
+    MailConfirmationToken mailConfirmationToken;
+
     FirstName firstName;
 
     LastName lastName;
@@ -75,6 +85,8 @@ public class User implements Aggregate {
 
     public static User init() {
         return new User(
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -103,10 +115,6 @@ public class User implements Aggregate {
             throw new IllegalStateException("Cannot apply command to removed User");
         }
 
-        if (!isAllowedAgent(agent, cmd)) {
-            throw new IllegalStateException("Agent is not allowed to apply command");
-        }
-
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
                     getName(),
@@ -127,6 +135,11 @@ public class User implements Aggregate {
             case RenameFirstNameCmd c -> ApplyCommandResult.of(RenamedFirstNameEvent.of(c.getFirstName()));
             case RenameLastNameCmd c -> ApplyCommandResult.of(RenamedLastNameEvent.of(c.getLastName()));
             case ChangePasswordCmd c -> ApplyCommandResult.of(PasswordChangedEvent.of(c.getPassword()));
+            case RequestMailUpdateCmd c -> ApplyCommandResult.of(MailUpdateRequestedEvent.of(
+                    c.getMail(),
+                    MailConfirmationToken.create()
+            ));
+            case ConfirmMailUpdateCmd c -> confirmMailUpdate(c);
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
@@ -158,10 +171,23 @@ public class User implements Aggregate {
                     .withFirstFailedLoginAttemptAt(null);
             case LoginFailedEvent ignored -> handleLoginFailedEvent(metadata.getDate());
             case PasswordChangedEvent e -> withPassword(e.getPassword());
+            case MailUpdateRequestedEvent e -> withPendingMail(e.getMail())
+                    .withMailConfirmationToken(e.getToken());
+            case MailUpdateConfirmedEvent ignored -> withMail(getPendingMail().orElseThrow())
+                    .withPendingMail(null)
+                    .withMailConfirmationToken(null);
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
 
         return updatedUser.withVersion(metadata.getAggregateVersion());
+    }
+
+    public Optional<Mail> getPendingMail() {
+        return Optional.ofNullable(pendingMail);
+    }
+
+    public Optional<MailConfirmationToken> getMailConfirmationToken() {
+        return Optional.ofNullable(mailConfirmationToken);
     }
 
     public boolean isRemoved() {
@@ -205,20 +231,6 @@ public class User implements Aggregate {
         return Optional.ofNullable(removedAt);
     }
 
-    private boolean isAllowedAgent(Agent agent, Command cmd) {
-        if (agent.isSystem()) {
-            return true;
-        }
-
-        if (agent.isAnonymous() && cmd instanceof LoginCmd) {
-            return true;
-        }
-
-        return agent.getUserId()
-                .map(id -> id.equals(this.id))
-                .orElse(false);
-    }
-
     private ApplyCommandResult handleLoginCmd(LoginCmd cmd) {
         if (isLocked(cmd.getNow())) {
             throw new UserLockedException(String.format(
@@ -255,6 +267,29 @@ public class User implements Aggregate {
         }
 
         return result;
+    }
+
+    private ApplyCommandResult confirmMailUpdate(ConfirmMailUpdateCmd c) {
+        if (getPendingMail().isEmpty()) {
+            throw new IllegalStateException("No pending mail");
+        }
+
+        if (getMailConfirmationToken().isEmpty()) {
+            throw new IllegalStateException("No mail confirmation token");
+        }
+
+        Mail pendingMail = getPendingMail().orElseThrow();
+        MailConfirmationToken token = getMailConfirmationToken().orElseThrow();
+
+        if (!pendingMail.equals(c.getMail())) {
+            throw new IllegalStateException("Invalid pending mail");
+        }
+
+        if (!token.equals(c.getToken())) {
+            throw new IllegalStateException("Invalid mail confirmation token");
+        }
+
+        return ApplyCommandResult.of(MailUpdateConfirmedEvent.of());
     }
 
 }

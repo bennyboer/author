@@ -69,6 +69,39 @@ public class UsersRestHandler {
         );
     }
 
+    public void updateMail(Context ctx) {
+        var request = ctx.bodyAsClass(UpdateMailRequest.class);
+        var userId = ctx.pathParam("userId");
+        var version = ctx.queryParamAsClass("version", Long.class).get();
+
+        handle(
+                ctx,
+                agent -> commandFacade.updateMail(userId, version, request.getMail(), agent),
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
+        );
+    }
+
+    public void confirmMail(Context ctx) {
+        var request = ctx.bodyAsClass(ConfirmMailRequest.class);
+        var userId = ctx.pathParam("userId");
+
+        handle(
+                ctx,
+                agent -> commandFacade.confirmMail(userId, request.getMail(), request.getToken(), agent)
+                        .onErrorResume(e -> {
+                            log.warn("Mail confirmation for user {} failed", userId, e);
+
+                            ctx.status(HttpStatus.UNAUTHORIZED);
+                            return Mono.empty();
+                        }),
+                (res) -> {
+                    if (ctx.status() != HttpStatus.UNAUTHORIZED) {
+                        ctx.status(HttpStatus.NO_CONTENT);
+                    }
+                }
+        );
+    }
+
     public void changePassword(Context ctx) {
         var request = ctx.bodyAsClass(ChangePasswordRequest.class);
         var userId = ctx.pathParam("userId");

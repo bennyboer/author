@@ -4,6 +4,7 @@ public enum UserAction {
     READ,
     CREATE,
     UPDATE_USERNAME,
+    UPDATE_MAIL,
     RENAME,
     CHANGE_PASSWORD,
     REMOVE

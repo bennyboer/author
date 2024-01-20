@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 import { Option, WebSocketService } from '../../../shared';
 import {
+  MailUpdateRequestedEvent,
   PasswordChangedEvent,
   RenamedFirstNameEvent,
   RenamedLastNameEvent,
@@ -46,6 +47,10 @@ interface RenameLastNameRequest {
 
 interface ChangePasswordRequest {
   password: string;
+}
+
+interface UpdateMailRequest {
+  mail: string;
 }
 
 type UserId = string;
@@ -94,6 +99,18 @@ export class HttpRemoteUsersService
     };
 
     return this.http.post<void>(this.url(`${id}/username`), request, {
+      params: {
+        version,
+      },
+    });
+  }
+
+  updateMail(id: string, version: number, mail: string): Observable<void> {
+    const request: UpdateMailRequest = {
+      mail,
+    };
+
+    return this.http.post<void>(this.url(`${id}/mail`), request, {
       params: {
         version,
       },
@@ -189,6 +206,8 @@ export class HttpRemoteUsersService
         return new RenamedLastNameEvent(userId, version, payload.lastName);
       case UserEventType.PASSWORD_CHANGED:
         return new PasswordChangedEvent(userId, version, '********');
+      case UserEventType.MAIL_UPDATE_REQUESTED:
+        return new MailUpdateRequestedEvent(userId, version, payload.mail);
       default:
         return {
           type,
@@ -208,6 +227,8 @@ export class HttpRemoteUsersService
         return UserEventType.RENAMED_LAST_NAME;
       case 'PASSWORD_CHANGED':
         return UserEventType.PASSWORD_CHANGED;
+      case 'MAIL_UPDATE_REQUESTED':
+        return UserEventType.MAIL_UPDATE_REQUESTED;
       default:
         return UserEventType.OTHER;
     }

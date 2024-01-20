@@ -127,11 +127,16 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   updateMail(request: EditRequest): void {
-    console.log('updateMail', request.newValue); // TODO
+    this.usersService.updateMail(
+      this.userId,
+      this.userVersion,
+      request.newValue,
+    );
 
-    setTimeout(() => {
-      Math.random() > 0.5 ? request.reject() : request.approve();
-    }, 1000);
+    this.checkUserUpdateSuccess({
+      request,
+      success: this.getMail().pipe(filter((mail) => mail === request.newValue)),
+    });
   }
 
   updatePassword(request: EditRequest): void {

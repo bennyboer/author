@@ -1,5 +1,10 @@
 import { NgModule } from '@angular/core';
-import { UserProfilePage } from './pages';
+import {
+  MailConfirmationFailedPage,
+  MailConfirmationPage,
+  MailConfirmationSuccessPage,
+  UserProfilePage,
+} from './pages';
 import { UsersRoutingModule } from './users-routing.module';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
@@ -30,7 +35,12 @@ import {
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SharedModule } from '../shared/shared.module';
 
-const PAGES = [UserProfilePage];
+const PAGES = [
+  UserProfilePage,
+  MailConfirmationPage,
+  MailConfirmationSuccessPage,
+  MailConfirmationFailedPage,
+];
 
 const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
 
@@ -61,6 +71,11 @@ const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
       useClass: HttpRemoteUsersService,
     },
   ],
-  exports: [UserProfileLinkComponent],
+  exports: [
+    UserProfileLinkComponent,
+    MailConfirmationPage,
+    MailConfirmationSuccessPage,
+    MailConfirmationFailedPage,
+  ],
 })
 export class UsersModule {}

@@ -52,6 +52,7 @@ public class UsersModule extends Module {
                 usersConfig.getTokenGenerator(),
                 config.getAppConfig().getClock()
         );
+        usersConfig.getUserServiceConsumer().accept(userService);
 
         var permissionsRepo = usersConfig.getPermissionsRepo();
         var permissionsEventPublisher = new MessagingAggregatePermissionsEventPublisher(
@@ -84,7 +85,9 @@ public class UsersModule extends Module {
                 new UserCreatedAddPermissionsMsgListener(permissionsFacade),
                 new UserRemovedUpdateLookupMsgListener(syncFacade),
                 new UserRemovedRemovePermissionsMsgListener(permissionsFacade),
-                new UserNameChangedUpdateLookupMsgListener(syncFacade)
+                new UserNameChangedUpdateLookupMsgListener(syncFacade),
+                new UserMailUpdateConfirmedUpdateLookupMsgListener(syncFacade),
+                new UserMailUpdateRequestedSendConfirmationMailMsgListener(syncFacade)
         );
     }
 

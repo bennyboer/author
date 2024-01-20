@@ -124,6 +124,7 @@ export const versionUpdated = createAction(
 export const actions = {
   loadUser,
   updateName,
+  updateMail,
   updateFirstName,
   updateLastName,
   changePassword,

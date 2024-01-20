@@ -30,4 +30,10 @@ export abstract class RemoteUsersService {
     version: number,
     password: string,
   ): Observable<void>;
+
+  abstract updateMail(
+    id: string,
+    version: number,
+    mail: string,
+  ): Observable<void>;
 }

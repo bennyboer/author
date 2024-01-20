@@ -4,10 +4,13 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.users.persistence.lookup.UserLookupRepo;
+import de.bennyboer.author.user.UserService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
+
+import java.util.function.Consumer;
 
 import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
@@ -32,6 +35,10 @@ public class UsersConfig {
     PermissionsRepo permissionsRepo;
 
     UserLookupRepo userLookupRepo;
+
+    @Builder.Default
+    Consumer<UserService> userServiceConsumer = (userService) -> {
+    };
 
     @Value
     @AllArgsConstructor(access = AccessLevel.PRIVATE)

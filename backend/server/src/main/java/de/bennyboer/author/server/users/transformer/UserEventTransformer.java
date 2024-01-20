@@ -7,6 +7,8 @@ import de.bennyboer.author.user.*;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
+import de.bennyboer.author.user.mail.MailUpdateConfirmedEvent;
+import de.bennyboer.author.user.mail.MailUpdateRequestedEvent;
 import de.bennyboer.author.user.password.PasswordChangedEvent;
 import de.bennyboer.author.user.remove.RemovedEvent;
 import de.bennyboer.author.user.rename.RenamedFirstNameEvent;
@@ -32,6 +34,9 @@ public class UserEventTransformer {
             );
             case RenamedLastNameEvent renamedLastNameEvent -> Map.of(
                     "lastName", renamedLastNameEvent.getLastName().getValue()
+            );
+            case MailUpdateRequestedEvent mailUpdateRequestedEvent -> Map.of(
+                    "mail", mailUpdateRequestedEvent.getMail().getValue()
             );
             default -> Map.of();
         };
@@ -66,6 +71,11 @@ public class UserEventTransformer {
             case PasswordChangedEvent passwordChangedEvent -> Map.of(
                     "password", passwordChangedEvent.getPassword().getValue()
             );
+            case MailUpdateRequestedEvent mailUpdateRequestedEvent -> Map.of(
+                    "mail", mailUpdateRequestedEvent.getMail().getValue(),
+                    "token", mailUpdateRequestedEvent.getToken().getValue()
+            );
+            case MailUpdateConfirmedEvent ignoredEvent -> Map.of();
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
             case RemovedEvent ignoredEvent -> Map.of();
@@ -107,6 +117,11 @@ public class UserEventTransformer {
             case PASSWORD_CHANGED -> PasswordChangedEvent.ofStored(
                     Password.of(payload.get("password").toString())
             );
+            case MAIL_UPDATE_REQUESTED -> MailUpdateRequestedEvent.of(
+                    Mail.of(payload.get("mail").toString()),
+                    MailConfirmationToken.of(payload.get("token").toString())
+            );
+            case MAIL_UPDATE_CONFIRMED -> MailUpdateConfirmedEvent.of();
         };
     }
 

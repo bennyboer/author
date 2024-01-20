@@ -19,6 +19,10 @@ public class UsersRestRouting implements EndpointGroup {
         path("/{userId}", () -> {
             get(handler::getUser);
             post("/username", handler::updateUserName);
+            path("/mail", () -> {
+                post(handler::updateMail);
+                post("/confirm", handler::confirmMail, UNAUTHORIZED);
+            });
             post("/password", handler::changePassword);
             post("/rename/firstname", handler::renameFirstName);
             post("/rename/lastname", handler::renameLastName);

@@ -8,16 +8,20 @@ import {
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
+  mailUpdated,
   nameUpdated,
   passwordChanged,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
   updateLastNameSuccess,
+  updateMail,
+  updateMailSuccess,
   updateName,
   updateNameSuccess,
   updatingFirstNameFailed,
   updatingLastNameFailed,
+  updatingMailFailed,
   updatingNameFailed,
   userLoaded,
   versionUpdated,
@@ -176,6 +180,36 @@ export const reducer = createReducer(
         ...userState.user!,
         version: props.version,
         password: props.password,
+      },
+    })),
+  ),
+
+  on(updateMail, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(updateMailSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(updatingMailFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to update mail: ${props.message}`,
+    })),
+  ),
+  on(mailUpdated, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+        mail: props.mail,
       },
     })),
   ),

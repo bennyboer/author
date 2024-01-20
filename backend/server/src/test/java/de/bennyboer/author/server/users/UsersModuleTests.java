@@ -20,8 +20,7 @@ import de.bennyboer.author.server.users.permissions.UserAction;
 import de.bennyboer.author.server.users.persistence.lookup.InMemoryUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.testing.TestClock;
-import de.bennyboer.author.user.User;
-import de.bennyboer.author.user.UserName;
+import de.bennyboer.author.user.*;
 import io.javalin.testtools.HttpClient;
 
 import java.io.IOException;
@@ -34,6 +33,8 @@ public abstract class UsersModuleTests extends ModuleTest {
     protected PermissionsRepo permissionsRepo;
 
     protected TestClock clock;
+
+    private UserService userService;
 
     @Override
     protected AppConfig configure(AppConfig.AppConfigBuilder configBuilder) {
@@ -63,12 +64,19 @@ public abstract class UsersModuleTests extends ModuleTest {
                                     .eventSourcingRepo(eventSourcingRepo)
                                     .permissionsRepo(permissionsRepo)
                                     .userLookupRepo(userLookupRepo)
+                                    .userServiceConsumer(userService -> this.userService = userService)
                                     .build();
 
                             return new UsersModule(moduleConfig, usersConfig);
                         }
                 ))
                 .build();
+    }
+
+    protected String getMailConfirmationToken(String userId) {
+        return userService.get(UserId.of(userId))
+                .map(user -> user.getMailConfirmationToken().map(MailConfirmationToken::getValue).orElseThrow())
+                .block();
     }
 
     protected UserDTO getUserDetails(HttpClient client, String userId, String token) throws IOException {
@@ -109,12 +117,48 @@ public abstract class UsersModuleTests extends ModuleTest {
         );
     }
 
+    protected LoginUserResponse loginUserByMail(HttpClient client, String mail, String password) throws IOException {
+        awaitUserSetupByMail(mail);
+
+        LoginUserRequest request = LoginUserRequest.builder()
+                .mail(mail)
+                .password(password)
+                .build();
+        String requestJson = getJsonMapper().toJsonString(request, LoginUserRequest.class);
+        var response = client.post("/api/users/login", requestJson);
+
+        if (response.code() != 200) {
+            throw new RuntimeException("Could not login user by mail %s. Status code is %d".formatted(
+                    mail,
+                    response.code()
+            ));
+        }
+
+        return getJsonMapper().fromJsonString(
+                response.body().string(),
+                LoginUserResponse.class
+        );
+    }
+
     protected void awaitUserSetup(String userName) {
         UserName name = UserName.of(userName);
 
         awaitUserPresenceInLookupRepo(name);
 
         UserId userId = userLookupRepo.findUserIdByName(name).block();
+        Permission permission = Permission.builder()
+                .user(userId)
+                .isAllowedTo(Action.of(UserAction.READ.name()))
+                .on(Resource.of(ResourceType.of(User.TYPE.getValue()), ResourceId.of(userId.getValue())));
+        awaitPermissionCreation(permission, permissionsRepo);
+    }
+
+    protected void awaitUserSetupByMail(String mail) {
+        Mail userMail = Mail.of(mail);
+
+        awaitUserPresenceInLookupRepoByMail(userMail);
+
+        UserId userId = userLookupRepo.findUserIdByMail(userMail).block();
         Permission permission = Permission.builder()
                 .user(userId)
                 .isAllowedTo(Action.of(UserAction.READ.name()))
@@ -136,6 +180,10 @@ public abstract class UsersModuleTests extends ModuleTest {
 
     protected void awaitUserPresenceInLookupRepo(UserName name) {
         userLookupRepo.awaitUpdate(u -> u.getName().equals(name));
+    }
+
+    protected void awaitUserPresenceInLookupRepoByMail(Mail mail) {
+        userLookupRepo.awaitUpdate(u -> u.getMail().equals(mail));
     }
 
     private void awaitUserRemovalFromLookupRepo(UserId userId) {

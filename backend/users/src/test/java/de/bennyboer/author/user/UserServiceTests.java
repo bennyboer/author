@@ -14,6 +14,7 @@ import org.junit.jupiter.api.function.Executable;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -212,6 +213,41 @@ public class UserServiceTests {
     }
 
     @Test
+    void shouldUpdateMail() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: the mail is updated
+        var userAgent = Agent.user(userId);
+        var newMail = Mail.of("new.mail+test@example.com");
+        userService.updateMail(userId, version, newMail, userAgent).block();
+
+        // then: the mail is pending
+        var user = userService.get(userId).block();
+        assertEquals(Optional.of(newMail), user.getPendingMail());
+
+        // and: a confirmation token is generated
+        var token = user.getMailConfirmationToken();
+        assertTrue(token.isPresent());
+
+        // when: the mail is confirmed
+        userService.confirmMail(userId, newMail, token.get(), Agent.anonymous()).block();
+
+        // then: the mail has changed
+        user = userService.get(userId).block();
+        assertEquals(newMail, user.getMail());
+    }
+
+    @Test
     void shouldRemoveUser() {
         // given: a user
         var userIdAndVersion = userService.create(
@@ -289,97 +325,6 @@ public class UserServiceTests {
         );
         assertEquals(
                 "Cannot apply command to removed User",
-                exception.getMessage()
-        );
-    }
-
-    @Test
-    void shouldNotAllowUpdatingUserNameAsAnotherUser() {
-        // given: a user
-        var userIdAndVersion = userService.create(
-                defaultName,
-                defaultMail,
-                defaultFirstName,
-                defaultLastName,
-                defaultPassword,
-                systemAgent
-        ).block();
-        var userId = userIdAndVersion.getId();
-        var version = userIdAndVersion.getVersion();
-
-        // when: trying to update the user name of the user as another user
-        var userAgent = Agent.user(UserId.create());
-        Executable executable = () -> userService.updateUserName(
-                userId,
-                version,
-                UserName.of("Maximilian Mustermann"),
-                userAgent
-        ).block();
-
-        // then: an exception is thrown
-        var exception = assertThrows(
-                IllegalStateException.class,
-                executable
-        );
-        assertEquals(
-                "Agent is not allowed to apply command",
-                exception.getMessage()
-        );
-    }
-
-    @Test
-    void shouldNotAllowRemovingAsAnotherUser() {
-        // given: a user
-        var userIdAndVersion = userService.create(
-                defaultName,
-                defaultMail,
-                defaultFirstName,
-                defaultLastName,
-                defaultPassword,
-                systemAgent
-        ).block();
-        var userId = userIdAndVersion.getId();
-        var version = userIdAndVersion.getVersion();
-
-        // when: trying to remove the user as another user
-        var userAgent = Agent.user(UserId.create());
-        Executable executable = () -> userService.remove(
-                userId,
-                version,
-                userAgent
-        ).block();
-
-        // then: an exception is thrown
-        var exception = assertThrows(
-                IllegalStateException.class,
-                executable
-        );
-        assertEquals(
-                "Agent is not allowed to apply command",
-                exception.getMessage()
-        );
-    }
-
-    @Test
-    void shouldNotCreateUserWhenNotSystemAgent() {
-        // when: a user is created with a non-system agent
-        var nonSystemAgent = Agent.user(UserId.create());
-        Executable executable = () -> userService.create(
-                defaultName,
-                defaultMail,
-                defaultFirstName,
-                defaultLastName,
-                defaultPassword,
-                nonSystemAgent
-        ).block();
-
-        // then: an exception is thrown
-        var exception = assertThrows(
-                IllegalStateException.class,
-                executable
-        );
-        assertEquals(
-                "Agent is not allowed to apply command",
                 exception.getMessage()
         );
     }

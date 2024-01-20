@@ -63,4 +63,8 @@ export class UsersService {
       actions.changePassword({ id: userId, version, password }),
     );
   }
+
+  updateMail(userId: string, version: number, mail: string): void {
+    this.store.dispatch(actions.updateMail({ id: userId, version, mail }));
+  }
 }

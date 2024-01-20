@@ -13,7 +13,7 @@
 
       <app-editable-field label="E-Mail"
                           hint="Upon changing your E-Mail address you will be sent a link via the new E-Mail address. You need to visit the link to
-    confirm the change. Otherwise the change will be reversed after 24 hours."
+    confirm the change. Until then your old E-Mail address will remain active."
                           [value]="(getMail() | async) || ''"
                           [validators]="[Validators.email, Validators.required]"
                           (editRequested)="updateMail($event)">

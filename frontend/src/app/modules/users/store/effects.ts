@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
+  MailUpdateRequestedEvent,
   PasswordChangedEvent,
   RemoteUsersService,
   RenamedFirstNameEvent,
@@ -16,16 +17,20 @@ import {
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
+  mailUpdated,
   nameUpdated,
   passwordChanged,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
   updateLastNameSuccess,
+  updateMail,
+  updateMailSuccess,
   updateName,
   updateNameSuccess,
   updatingFirstNameFailed,
   updatingLastNameFailed,
+  updatingMailFailed,
   updatingNameFailed,
   userLoaded,
   versionUpdated,
@@ -142,7 +147,24 @@ export class UsersStoreEffects {
     ),
   );
 
-  // TODO Update mail
+  updateMail$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(updateMail),
+      switchMap(({ id, version, mail }) =>
+        this.remoteUsersService.updateMail(id, version, mail).pipe(
+          map((user) => updateMailSuccess({ id })),
+          catchError((error) =>
+            of(
+              updatingMailFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 
   // TODO Update image
 
@@ -179,6 +201,13 @@ export class UsersStoreEffects {
               id: event.id,
               version: event.version,
               password: passwordChangedEvent.password,
+            });
+          case UserEventType.MAIL_UPDATE_REQUESTED:
+            const mailUpdateRequestedEvent = event as MailUpdateRequestedEvent;
+            return mailUpdated({
+              id: event.id,
+              version: event.version,
+              mail: mailUpdateRequestedEvent.mail,
             });
           default:
             return versionUpdated({
