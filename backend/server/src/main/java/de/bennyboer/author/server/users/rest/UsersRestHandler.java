@@ -1,9 +1,6 @@
 package de.bennyboer.author.server.users.rest;
 
-import de.bennyboer.author.server.users.api.requests.LoginUserRequest;
-import de.bennyboer.author.server.users.api.requests.RenameFirstNameRequest;
-import de.bennyboer.author.server.users.api.requests.RenameLastNameRequest;
-import de.bennyboer.author.server.users.api.requests.UpdateUserNameRequest;
+import de.bennyboer.author.server.users.api.requests.*;
 import de.bennyboer.author.server.users.api.responses.LoginUserResponse;
 import de.bennyboer.author.server.users.facade.UsersCommandFacade;
 import de.bennyboer.author.server.users.facade.UsersQueryFacade;
@@ -48,27 +45,39 @@ public class UsersRestHandler {
         );
     }
 
-    public void renameFirstName(Context context) {
-        var request = context.bodyAsClass(RenameFirstNameRequest.class);
-        var userId = context.pathParam("userId");
-        var version = context.queryParamAsClass("version", Long.class).get();
+    public void renameFirstName(Context ctx) {
+        var request = ctx.bodyAsClass(RenameFirstNameRequest.class);
+        var userId = ctx.pathParam("userId");
+        var version = ctx.queryParamAsClass("version", Long.class).get();
 
         handle(
-                context,
+                ctx,
                 agent -> commandFacade.renameFirstName(userId, version, request.getFirstName(), agent),
-                (res) -> context.status(HttpStatus.NO_CONTENT)
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
         );
     }
 
-    public void renameLastName(Context context) {
-        var request = context.bodyAsClass(RenameLastNameRequest.class);
-        var userId = context.pathParam("userId");
-        var version = context.queryParamAsClass("version", Long.class).get();
+    public void renameLastName(Context ctx) {
+        var request = ctx.bodyAsClass(RenameLastNameRequest.class);
+        var userId = ctx.pathParam("userId");
+        var version = ctx.queryParamAsClass("version", Long.class).get();
 
         handle(
-                context,
+                ctx,
                 agent -> commandFacade.renameLastName(userId, version, request.getLastName(), agent),
-                (res) -> context.status(HttpStatus.NO_CONTENT)
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
+        );
+    }
+
+    public void changePassword(Context ctx) {
+        var request = ctx.bodyAsClass(ChangePasswordRequest.class);
+        var userId = ctx.pathParam("userId");
+        var version = ctx.queryParamAsClass("version", Long.class).get();
+
+        handle(
+                ctx,
+                agent -> commandFacade.changePassword(userId, version, request.getPassword(), agent),
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
         );
     }
 

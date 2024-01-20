@@ -14,9 +14,9 @@ import {
   first,
   map,
   Observable,
-  of,
   race,
   ReplaySubject,
+  skip,
   Subject,
   switchMap,
   takeUntil,
@@ -100,7 +100,7 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   getPassword(): Observable<string> {
-    return of('********');
+    return this.user$.pipe(map((user) => user.password));
   }
 
   getFirstName(): Observable<string> {
@@ -135,11 +135,18 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   updatePassword(request: EditRequest): void {
-    console.log('updatePassword', request.newValue); // TODO
+    this.usersService.changePassword(
+      this.userId,
+      this.userVersion,
+      request.newValue,
+    );
 
-    setTimeout(() => {
-      Math.random() > 0.5 ? request.reject() : request.approve();
-    }, 1000);
+    this.checkUserUpdateSuccess({
+      request,
+      success: this.getPassword().pipe(
+        skip(1), // Skip the initial value since it is the same as the old value
+      ),
+    });
   }
 
   updateFirstName(request: EditRequest): void {

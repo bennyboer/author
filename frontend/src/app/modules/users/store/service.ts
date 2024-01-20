@@ -33,6 +33,7 @@ export class UsersService {
             version: u.version,
             name: u.name,
             mail: u.mail,
+            password: u.password,
             firstName: u.firstName,
             lastName: u.lastName,
             imageId: Option.someOrNone(u.imageId),
@@ -54,6 +55,12 @@ export class UsersService {
   updateLastName(userId: string, version: number, lastName: string): void {
     this.store.dispatch(
       actions.updateLastName({ id: userId, version, lastName }),
+    );
+  }
+
+  changePassword(userId: string, version: number, password: string): void {
+    this.store.dispatch(
+      actions.changePassword({ id: userId, version, password }),
     );
   }
 }

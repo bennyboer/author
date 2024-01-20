@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 import { Option, WebSocketService } from '../../../shared';
 import {
+  PasswordChangedEvent,
   RenamedFirstNameEvent,
   RenamedLastNameEvent,
   UserEvent,
@@ -41,6 +42,10 @@ interface RenameFirstNameRequest {
 
 interface RenameLastNameRequest {
   lastName: string;
+}
+
+interface ChangePasswordRequest {
+  password: string;
 }
 
 type UserId = string;
@@ -127,6 +132,22 @@ export class HttpRemoteUsersService
     });
   }
 
+  changePassword(
+    id: string,
+    version: number,
+    password: string,
+  ): Observable<void> {
+    const request: ChangePasswordRequest = {
+      password,
+    };
+
+    return this.http.post<void>(this.url(`${id}/password`), request, {
+      params: {
+        version,
+      },
+    });
+  }
+
   private url(postfix: string): string {
     return `${environment.apiUrl}/users/${postfix}`;
   }
@@ -145,6 +166,7 @@ export class HttpRemoteUsersService
       version,
       name,
       mail,
+      password: '********',
       firstName,
       lastName,
       imageId,
@@ -165,6 +187,8 @@ export class HttpRemoteUsersService
         return new RenamedFirstNameEvent(userId, version, payload.firstName);
       case UserEventType.RENAMED_LAST_NAME:
         return new RenamedLastNameEvent(userId, version, payload.lastName);
+      case UserEventType.PASSWORD_CHANGED:
+        return new PasswordChangedEvent(userId, version, '********');
       default:
         return {
           type,
@@ -182,6 +206,8 @@ export class HttpRemoteUsersService
         return UserEventType.RENAMED_FIRST_NAME;
       case 'RENAMED_LAST_NAME':
         return UserEventType.RENAMED_LAST_NAME;
+      case 'PASSWORD_CHANGED':
+        return UserEventType.PASSWORD_CHANGED;
       default:
         return UserEventType.OTHER;
     }

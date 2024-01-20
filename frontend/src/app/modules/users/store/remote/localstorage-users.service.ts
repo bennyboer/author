@@ -18,6 +18,7 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
         version: 0,
         name: 'TEST_USER_NAME',
         mail: 'default+test@example.com',
+        password: '********',
         firstName: 'Max',
         lastName: 'Mustermann',
         imageId: Option.none(),
@@ -41,6 +42,14 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
     id: string,
     version: number,
     lastName: string,
+  ): Observable<void> {
+    return of();
+  }
+
+  changePassword(
+    id: string,
+    version: number,
+    password: string,
   ): Observable<void> {
     return of();
   }

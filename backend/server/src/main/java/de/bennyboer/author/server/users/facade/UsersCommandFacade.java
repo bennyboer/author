@@ -67,6 +67,14 @@ public class UsersCommandFacade {
                 .then();
     }
 
+    public Mono<Void> changePassword(String userId, Long version, String password, Agent agent) {
+        UserId id = UserId.of(userId);
+
+        return permissionsService.assertHasPermission(agent, CHANGE_PASSWORD, id)
+                .then(userService.changePassword(id, Version.of(version), Password.of(password), agent))
+                .then();
+    }
+
     public Mono<Void> remove(String id, long version, Agent agent) {
         UserId userId = UserId.of(id);
 

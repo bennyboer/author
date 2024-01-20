@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
+  PasswordChangedEvent,
   RemoteUsersService,
   RenamedFirstNameEvent,
   RenamedLastNameEvent,
@@ -8,11 +9,15 @@ import {
   UserNameChangedEvent,
 } from './remote';
 import {
+  changePassword,
+  changePasswordSuccess,
+  changingPasswordFailed,
   firstNameUpdated,
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
   nameUpdated,
+  passwordChanged,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
@@ -41,6 +46,7 @@ export class UsersStoreEffects {
                 version: user.version,
                 name: user.name,
                 mail: user.mail,
+                password: user.password,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 imageId: user.imageId.orElse(null as any as string),
@@ -117,9 +123,26 @@ export class UsersStoreEffects {
     ),
   );
 
-  // TODO Update mail
+  changePassword$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(changePassword),
+      switchMap(({ id, version, password }) =>
+        this.remoteUsersService.changePassword(id, version, password).pipe(
+          map((user) => changePasswordSuccess({ id })),
+          catchError((error) =>
+            of(
+              changingPasswordFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 
-  // TODO Update password
+  // TODO Update mail
 
   // TODO Update image
 
@@ -149,6 +172,13 @@ export class UsersStoreEffects {
               id: event.id,
               version: event.version,
               lastName: renamedLastNameEvent.lastName,
+            });
+          case UserEventType.PASSWORD_CHANGED:
+            const passwordChangedEvent = event as PasswordChangedEvent;
+            return passwordChanged({
+              id: event.id,
+              version: event.version,
+              password: passwordChangedEvent.password,
             });
           default:
             return versionUpdated({

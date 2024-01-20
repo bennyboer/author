@@ -65,21 +65,21 @@ export const lastNameUpdated = createAction(
   props<{ id: string; version: number; lastName: string }>(),
 );
 
-export const updatePassword = createAction(
-  '[User] Update Password',
+export const changePassword = createAction(
+  '[User] Change Password',
   props<{ id: string; version: number; password: string }>(),
 );
-export const updatePasswordSuccess = createAction(
-  '[User] Update Password Success',
+export const changePasswordSuccess = createAction(
+  '[User] Change Password Success',
   props<{ id: string }>(),
 );
-export const updatingPasswordFailed = createAction(
-  '[User] Password Update Error',
+export const changingPasswordFailed = createAction(
+  '[User] Password Change Error',
   props<{ id: string; message: string }>(),
 );
-export const passwordUpdated = createAction(
-  '[User] Password Updated',
-  props<{ id: string; version: number }>(),
+export const passwordChanged = createAction(
+  '[User] Password Changed',
+  props<{ id: string; version: number; password: string }>(),
 );
 
 export const updateMail = createAction(
@@ -126,4 +126,5 @@ export const actions = {
   updateName,
   updateFirstName,
   updateLastName,
+  changePassword,
 };

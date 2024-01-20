@@ -188,6 +188,30 @@ public class UserServiceTests {
     }
 
     @Test
+    void shouldChangePassword() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                Password.of("oldPassword"),
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: the password is changed
+        var userAgent = Agent.user(userId);
+        var newPassword = Password.of("newPassword");
+        userService.changePassword(userId, version, newPassword, userAgent).block();
+
+        // then: we can login with the new password
+        var accessToken = userService.login(userId, newPassword).block();
+        assertNotNull(accessToken);
+    }
+
+    @Test
     void shouldRemoveUser() {
         // given: a user
         var userIdAndVersion = userService.create(

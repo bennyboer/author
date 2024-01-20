@@ -7,6 +7,7 @@ import de.bennyboer.author.user.*;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
+import de.bennyboer.author.user.password.PasswordChangedEvent;
 import de.bennyboer.author.user.remove.RemovedEvent;
 import de.bennyboer.author.user.rename.RenamedFirstNameEvent;
 import de.bennyboer.author.user.rename.RenamedLastNameEvent;
@@ -62,6 +63,9 @@ public class UserEventTransformer {
                     "password", snapshottedEvent.getPassword().getValue(),
                     "createdAt", snapshottedEvent.getCreatedAt().toString()
             );
+            case PasswordChangedEvent passwordChangedEvent -> Map.of(
+                    "password", passwordChangedEvent.getPassword().getValue()
+            );
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
             case RemovedEvent ignoredEvent -> Map.of();
@@ -99,6 +103,9 @@ public class UserEventTransformer {
             );
             case RENAMED_LAST_NAME -> RenamedLastNameEvent.of(
                     LastName.of(payload.get("lastName").toString())
+            );
+            case PASSWORD_CHANGED -> PasswordChangedEvent.ofStored(
+                    Password.of(payload.get("password").toString())
             );
         };
     }

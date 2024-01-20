@@ -24,4 +24,10 @@ export abstract class RemoteUsersService {
     version: number,
     lastName: string,
   ): Observable<void>;
+
+  abstract changePassword(
+    id: string,
+    version: number,
+    password: string,
+  ): Observable<void>;
 }

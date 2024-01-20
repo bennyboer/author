@@ -5,6 +5,7 @@ export class User {
   version: number;
   name: string;
   mail: string;
+  password: string;
   firstName: string;
   lastName: string;
   imageId: Option<string>;
@@ -14,6 +15,7 @@ export class User {
     version: number;
     name: string;
     mail: string;
+    password: string;
     firstName: string;
     lastName: string;
     imageId: Option<string>;
@@ -22,6 +24,7 @@ export class User {
     this.version = props.version;
     this.name = props.name;
     this.mail = props.mail;
+    this.password = props.password;
     this.firstName = props.firstName;
     this.lastName = props.lastName;
     this.imageId = props.imageId;

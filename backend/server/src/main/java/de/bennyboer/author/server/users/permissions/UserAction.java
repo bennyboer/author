@@ -5,5 +5,6 @@ public enum UserAction {
     CREATE,
     UPDATE_USERNAME,
     RENAME,
+    CHANGE_PASSWORD,
     REMOVE
 }

@@ -11,7 +11,8 @@ public enum UserEvent {
     SNAPSHOTTED,
     USERNAME_CHANGED,
     RENAMED_FIRST_NAME,
-    RENAMED_LAST_NAME;
+    RENAMED_LAST_NAME,
+    PASSWORD_CHANGED;
 
     public EventName getName() {
         return EventName.of(name());

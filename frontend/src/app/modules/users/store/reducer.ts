@@ -1,11 +1,15 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialState, State, UserState } from './state';
 import {
+  changePassword,
+  changePasswordSuccess,
+  changingPasswordFailed,
   firstNameUpdated,
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
   nameUpdated,
+  passwordChanged,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
@@ -142,6 +146,36 @@ export const reducer = createReducer(
         ...userState.user!,
         version: props.version,
         lastName: props.lastName,
+      },
+    })),
+  ),
+
+  on(changePassword, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(changePasswordSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(changingPasswordFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to change password: ${props.message}`,
+    })),
+  ),
+  on(passwordChanged, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+        password: props.password,
       },
     })),
   ),
