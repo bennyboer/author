@@ -11,6 +11,9 @@ import {
   mailUpdated,
   nameUpdated,
   passwordChanged,
+  removeUser,
+  removeUserSuccess,
+  removingUserFailed,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
@@ -24,6 +27,7 @@ import {
   updatingMailFailed,
   updatingNameFailed,
   userLoaded,
+  userRemoved,
   versionUpdated,
 } from './actions';
 
@@ -214,7 +218,34 @@ export const reducer = createReducer(
     })),
   ),
 
-  // TODO: Add reducers for other actions.
+  on(removeUser, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(removeUserSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(removingUserFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to remove user: ${props.message}`,
+    })),
+  ),
+  on(userRemoved, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+      },
+    })),
+  ),
 );
 
 const updateUserState = (

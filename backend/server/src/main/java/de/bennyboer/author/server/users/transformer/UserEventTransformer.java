@@ -4,6 +4,7 @@ import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.user.*;
+import de.bennyboer.author.user.anonymize.AnonymizedEvent;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
@@ -17,7 +18,9 @@ import de.bennyboer.author.user.snapshot.SnapshottedEvent;
 import de.bennyboer.author.user.usernamechange.UserNameChangedEvent;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class UserEventTransformer {
 
@@ -63,14 +66,22 @@ public class UserEventTransformer {
             case RenamedLastNameEvent renamedLastNameEvent -> Map.of(
                     "lastName", renamedLastNameEvent.getLastName().getValue()
             );
-            case SnapshottedEvent snapshottedEvent -> Map.of(
-                    "name", snapshottedEvent.getName().getValue(),
-                    "mail", snapshottedEvent.getMail().getValue(),
-                    "firstName", snapshottedEvent.getFirstName().getValue(),
-                    "lastName", snapshottedEvent.getLastName().getValue(),
-                    "password", snapshottedEvent.getPassword().getValue(),
-                    "createdAt", snapshottedEvent.getCreatedAt().toString()
-            );
+            case SnapshottedEvent snapshottedEvent -> {
+                var result = new HashMap<String, Object>(Map.of(
+                        "name", snapshottedEvent.getName().getValue(),
+                        "mail", snapshottedEvent.getMail().getValue(),
+                        "firstName", snapshottedEvent.getFirstName().getValue(),
+                        "lastName", snapshottedEvent.getLastName().getValue(),
+                        "password", snapshottedEvent.getPassword().getValue(),
+                        "createdAt", snapshottedEvent.getCreatedAt().toString()
+                ));
+
+                snapshottedEvent.getPendingMail().ifPresent(it -> result.put("pendingMail", it.getValue()));
+                snapshottedEvent.getToken().ifPresent(it -> result.put("mailConfirmationToken", it.getValue()));
+                snapshottedEvent.getRemovedAt().ifPresent(it -> result.put("removedAt", it.toString()));
+
+                yield result;
+            }
             case PasswordChangedEvent passwordChangedEvent -> Map.of(
                     "password", passwordChangedEvent.getPassword().getValue()
             );
@@ -84,6 +95,7 @@ public class UserEventTransformer {
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
             case RemovedEvent ignoredEvent -> Map.of();
+            case AnonymizedEvent ignoredEvent -> Map.of();
             default -> throw new IllegalArgumentException("Unknown event: " + event.getEventName());
         };
     }
@@ -105,10 +117,15 @@ public class UserEventTransformer {
             case SNAPSHOTTED -> SnapshottedEvent.of(
                     UserName.of(payload.get("name").toString()),
                     Mail.of(payload.get("mail").toString()),
+                    Optional.ofNullable(payload.get("pendingMail")).map(it -> Mail.of(it.toString())).orElse(null),
+                    Optional.ofNullable(payload.get("mailConfirmationToken"))
+                            .map(it -> MailConfirmationToken.of(it.toString()))
+                            .orElse(null),
                     FirstName.of(payload.get("firstName").toString()),
                     LastName.of(payload.get("lastName").toString()),
                     Password.of(payload.get("password").toString()),
-                    Instant.parse(payload.get("createdAt").toString())
+                    Instant.parse(payload.get("createdAt").toString()),
+                    Optional.ofNullable(payload.get("removedAt")).map(it -> Instant.parse(it.toString())).orElse(null)
             );
             case USERNAME_CHANGED -> UserNameChangedEvent.of(
                     UserName.of(payload.get("newName").toString())
@@ -129,6 +146,7 @@ public class UserEventTransformer {
             case MAIL_UPDATE_CONFIRMED -> MailUpdateConfirmedEvent.of(
                     Mail.of(payload.get("mail").toString())
             );
+            case ANONYMIZED -> AnonymizedEvent.of();
         };
     }
 

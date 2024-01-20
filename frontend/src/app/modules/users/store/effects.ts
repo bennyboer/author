@@ -20,6 +20,9 @@ import {
   mailUpdated,
   nameUpdated,
   passwordChanged,
+  removeUser,
+  removeUserSuccess,
+  removingUserFailed,
   updateFirstName,
   updateFirstNameSuccess,
   updateLastName,
@@ -33,9 +36,11 @@ import {
   updatingMailFailed,
   updatingNameFailed,
   userLoaded,
+  userRemoved,
   versionUpdated,
 } from './actions';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, first, map, of, switchMap, tap } from 'rxjs';
+import { LoginService } from '../../login';
 
 @Injectable()
 export class UsersStoreEffects {
@@ -166,7 +171,44 @@ export class UsersStoreEffects {
     ),
   );
 
-  // TODO Update image
+  removeUser$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(removeUser),
+      switchMap(({ id, version }) =>
+        this.remoteUsersService.removeUser(id, version).pipe(
+          map((user) => removeUserSuccess({ id })),
+          catchError((error) =>
+            of(
+              removingUserFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  onLoggedInUserRemovedLogout$ = createEffect(
+    () =>
+      this.actions.pipe(
+        ofType(userRemoved),
+        tap(({ id }) => {
+          this.loginService
+            .getLoggedInUserId()
+            .pipe(first())
+            .subscribe((loggedInUserId) => {
+              if (id === loggedInUserId) {
+                this.loginService.logout();
+              }
+            });
+        }),
+      ),
+    {
+      dispatch: false,
+    },
+  );
 
   events$ = createEffect(() =>
     this.actions.pipe(
@@ -209,6 +251,11 @@ export class UsersStoreEffects {
               version: event.version,
               mail: mailUpdatedEvent.mail,
             });
+          case UserEventType.REMOVED:
+            return userRemoved({
+              id: event.id,
+              version: event.version,
+            });
           default:
             return versionUpdated({
               id: event.id,
@@ -222,5 +269,6 @@ export class UsersStoreEffects {
   constructor(
     private readonly actions: Actions,
     private readonly remoteUsersService: RemoteUsersService,
+    private readonly loginService: LoginService,
   ) {}
 }

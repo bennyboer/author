@@ -15,6 +15,7 @@ import { Option, WebSocketService } from '../../../shared';
 import {
   MailUpdatedEvent,
   PasswordChangedEvent,
+  RemovedEvent,
   RenamedFirstNameEvent,
   RenamedLastNameEvent,
   UserEvent,
@@ -182,6 +183,14 @@ export class HttpRemoteUsersService
     });
   }
 
+  removeUser(id: string, version: number): Observable<void> {
+    return this.http.delete<void>(this.url(`${id}`), {
+      params: {
+        version,
+      },
+    });
+  }
+
   private url(postfix: string): string {
     return `${environment.apiUrl}/users/${postfix}`;
   }
@@ -225,6 +234,8 @@ export class HttpRemoteUsersService
         return new PasswordChangedEvent(userId, version, '********');
       case UserEventType.MAIL_UPDATED:
         return new MailUpdatedEvent(userId, version, payload.mail);
+      case UserEventType.REMOVED:
+        return new RemovedEvent(userId, version);
       default:
         return {
           type,
@@ -247,6 +258,8 @@ export class HttpRemoteUsersService
       case 'MAIL_UPDATE_REQUESTED':
       case 'MAIL_UPDATE_CONFIRMED':
         return UserEventType.MAIL_UPDATED;
+      case 'REMOVED':
+        return UserEventType.REMOVED;
       default:
         return UserEventType.OTHER;
     }

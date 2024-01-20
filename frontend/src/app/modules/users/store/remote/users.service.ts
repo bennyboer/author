@@ -42,4 +42,6 @@ export abstract class RemoteUsersService {
     mail: string,
     token: string,
   ): Observable<void>;
+
+  abstract removeUser(id: string, version: number): Observable<void>;
 }

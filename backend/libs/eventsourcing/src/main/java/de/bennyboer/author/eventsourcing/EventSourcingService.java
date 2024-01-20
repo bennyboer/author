@@ -12,7 +12,6 @@ import de.bennyboer.author.eventsourcing.patch.EventPatcher;
 import de.bennyboer.author.eventsourcing.patch.Patch;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import lombok.AllArgsConstructor;
-import lombok.Value;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,19 +22,18 @@ import java.util.List;
 /**
  * Service to comfortably use the event sourcing framework.
  */
-@Value
 @AllArgsConstructor
 public class EventSourcingService<A extends Aggregate> {
 
-    AggregateType aggregateType;
+    private final AggregateType aggregateType;
 
-    A initialState;
+    private final A initialState;
 
-    EventSourcingRepo repo;
+    private final EventSourcingRepo repo;
 
-    EventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
-    EventPatcher patcher;
+    private final EventPatcher patcher;
 
     public EventSourcingService(
             AggregateType aggregateType,
@@ -80,6 +78,22 @@ public class EventSourcingService<A extends Aggregate> {
     public Mono<Version> dispatchCommand(AggregateId aggregateId, Version version, Command cmd, Agent agent) {
         return aggregateInContainer(aggregateId, version)
                 .flatMap(container -> handleCommandInAggregate(aggregateId, container, cmd, agent));
+    }
+
+    /**
+     * Collapses all events of the aggregate with the given id into a snapshot event.
+     * The resulting snapshot event will be the sole event of the aggregate in the event store.
+     * This may be useful to either reduce the number of events in the event store or to fulfill
+     * privacy requirements like cleaning up personal data.
+     */
+    public Mono<Version> collapseEvents(AggregateId aggregateId, Version version, Agent agent) {
+        return aggregateInContainer(aggregateId, version)
+                .flatMap(container -> snapshot(aggregateId, agent, container))
+                .flatMap(snapshotVersion -> repo.removeEventsByAggregateIdAndTypeUntilVersion(
+                        aggregateId,
+                        aggregateType,
+                        snapshotVersion.decrement()
+                ).thenReturn(snapshotVersion));
     }
 
     private Mono<Version> handleCommandInAggregate(

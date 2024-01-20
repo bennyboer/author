@@ -99,6 +99,23 @@ export const mailUpdated = createAction(
   props<{ id: string; version: number; mail: string }>(),
 );
 
+export const removeUser = createAction(
+  '[User] Remove User',
+  props<{ id: string; version: number }>(),
+);
+export const removeUserSuccess = createAction(
+  '[User] Remove User Success',
+  props<{ id: string }>(),
+);
+export const removingUserFailed = createAction(
+  '[User] User Remove Error',
+  props<{ id: string; message: string }>(),
+);
+export const userRemoved = createAction(
+  '[User] User Removed',
+  props<{ id: string; version: number }>(),
+);
+
 export const updateImage = createAction(
   '[User] Update Image',
   props<{ id: string; version: number; image: File }>(),
@@ -128,4 +145,5 @@ export const actions = {
   updateFirstName,
   updateLastName,
   changePassword,
+  removeUser,
 };

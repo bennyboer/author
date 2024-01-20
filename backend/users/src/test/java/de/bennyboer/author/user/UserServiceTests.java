@@ -4,7 +4,9 @@ import de.bennyboer.author.auth.password.PasswordEncoder;
 import de.bennyboer.author.auth.token.Token;
 import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.eventsourcing.persistence.InMemoryEventSourcingRepo;
 import de.bennyboer.author.eventsourcing.testing.TestEventPublisher;
 import de.bennyboer.author.testing.TestClock;
@@ -22,8 +24,10 @@ public class UserServiceTests {
 
     private final TestClock clock = new TestClock();
 
+    private final EventSourcingRepo eventSourcingRepo = new InMemoryEventSourcingRepo();
+
     private final UserService userService = new UserService(
-            new InMemoryEventSourcingRepo(),
+            eventSourcingRepo,
             new TestEventPublisher(),
             content -> Mono.just(Token.of("TEST_TOKEN")),
             clock
@@ -271,6 +275,49 @@ public class UserServiceTests {
     }
 
     @Test
+    void shouldAnonymizeUserOnRemove() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                UserName.of("MaxMuster"),
+                Mail.of("max.mustermann+test@example.com"),
+                FirstName.of("Max"),
+                LastName.of("Mustermann"),
+                Password.of("password"),
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // and: a pending mail update
+        var newMail = Mail.of("max.mustermann+test@example.com");
+        version = userService.updateMail(userId, version, newMail, Agent.user(userId)).block();
+
+        // when: the user is removed
+        var userAgent = Agent.user(userId);
+        userService.remove(userId, version, userAgent).block();
+
+        // then: the user is gone
+        var user = userService.get(userId).block();
+        assertNull(user);
+
+        // and: the user is anonymized in the event store and all events are gone except the last one
+        var events = eventSourcingRepo.findEventsByAggregateIdAndType(
+                AggregateId.of(userId.getValue()),
+                User.TYPE,
+                Version.zero()
+        ).collectList().block();
+        assertEquals(1, events.size());
+        var event = events.stream().findFirst().orElseThrow();
+        var aggregate = User.init();
+        aggregate = aggregate.apply(event.getEvent(), event.getMetadata());
+        assertEquals(UserName.of("ANONYMIZED"), aggregate.getName());
+        assertEquals(Mail.of("anonymized+ignored@existing.page"), aggregate.getMail());
+        assertTrue(aggregate.getPendingMail().isEmpty());
+        assertEquals(FirstName.of("ANONYMIZED"), aggregate.getFirstName());
+        assertEquals(LastName.of("ANONYMIZED"), aggregate.getLastName());
+    }
+
+    @Test
     void shouldNotAcceptOtherCommandBeforeCreating() {
         UserId userId = UserId.create();
 
@@ -484,6 +531,57 @@ public class UserServiceTests {
         // and: the user is not locked anymore
         user = userService.get(userId).block();
         assertFalse(user.isLocked());
+    }
+
+    @Test
+    void shouldCreateSnapshot() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: updating the user name a few times
+        for (int i = 0; i <= 100; i++) {
+            var userAgent = Agent.user(userIdAndVersion.getId());
+            version = userService.updateUserName(
+                    userId,
+                    version,
+                    UserName.of("Max Mustermann " + i),
+                    userAgent
+            ).block();
+        }
+
+        // then: a snapshot is created
+        var events = eventSourcingRepo.findEventsByAggregateIdAndType(
+                AggregateId.of(userIdAndVersion.getId().getValue()),
+                User.TYPE,
+                Version.zero()
+        ).collectList().block();
+        var snapshot = events.stream()
+                .filter(event -> event.getMetadata().isSnapshot())
+                .findFirst()
+                .orElseThrow();
+        assertEquals(UserEvent.SNAPSHOTTED.getName(), snapshot.getEvent().getEventName());
+
+        // when: applying another event
+        var userAgent = Agent.user(userIdAndVersion.getId());
+        version = userService.updateUserName(
+                userId,
+                version,
+                UserName.of("Final Max Mustermann"),
+                userAgent
+        ).block();
+
+        // then: the event is applied to the snapshot
+        var finalUser = userService.get(userId, version).block();
+        assertEquals(UserName.of("Final Max Mustermann"), finalUser.getName());
     }
 
 }

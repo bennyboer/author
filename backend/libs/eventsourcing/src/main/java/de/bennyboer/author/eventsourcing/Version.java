@@ -23,8 +23,20 @@ public class Version implements Comparable<Version> {
         return new Version(value + 1);
     }
 
+    public Version decrement() {
+        if (isZero()) {
+            throw new IllegalStateException("Version must be greater than 0");
+        }
+        
+        return new Version(value - 1);
+    }
+
     public boolean isPreviousTo(Version other) {
         return value == other.value - 1;
+    }
+
+    public boolean isZero() {
+        return value == 0;
     }
 
     @Override

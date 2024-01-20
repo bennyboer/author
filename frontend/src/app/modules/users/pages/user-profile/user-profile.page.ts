@@ -185,7 +185,8 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   deleteUserProfile(password: string): void {
-    console.log('deleteUserProfile', password); // TODO
+    // TODO Password is currently only used for confirmation - we don't actually check it - might be good it we did
+    this.usersService.removeUser(this.userId, this.userVersion);
   }
 
   openImageChooserDialog(): void {

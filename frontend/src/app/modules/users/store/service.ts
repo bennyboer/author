@@ -42,6 +42,12 @@ export class UsersService {
     );
   }
 
+  hasUser(id: string): Observable<boolean> {
+    return this.store
+      .select(selectors.user(id))
+      .pipe(map((user) => user.isSome()));
+  }
+
   updateUserName(userId: string, version: number, name: string): void {
     this.store.dispatch(actions.updateName({ id: userId, version, name }));
   }
@@ -66,5 +72,9 @@ export class UsersService {
 
   updateMail(userId: string, version: number, mail: string): void {
     this.store.dispatch(actions.updateMail({ id: userId, version, mail }));
+  }
+
+  removeUser(userId: string, version: number): void {
+    this.store.dispatch(actions.removeUser({ id: userId, version }));
   }
 }

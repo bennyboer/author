@@ -1,9 +1,9 @@
 package de.bennyboer.author.eventsourcing.sample;
 
-import de.bennyboer.author.eventsourcing.Version;
-import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.EventPublisher;
 import de.bennyboer.author.eventsourcing.EventSourcingService;
+import de.bennyboer.author.eventsourcing.Version;
+import de.bennyboer.author.eventsourcing.aggregate.AggregateId;
 import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;

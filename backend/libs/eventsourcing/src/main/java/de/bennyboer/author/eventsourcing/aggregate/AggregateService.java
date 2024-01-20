@@ -22,6 +22,10 @@ public abstract class AggregateService<A extends Aggregate, ID> {
                 .filter(this::isNotRemoved);
     }
 
+    public Mono<Version> collapseEvents(ID id, Version version, Agent agent) {
+        return eventSourcingService.collapseEvents(toAggregateId(id), version, agent);
+    }
+
     protected abstract AggregateId toAggregateId(ID id);
 
     protected abstract boolean isRemoved(A aggregate);

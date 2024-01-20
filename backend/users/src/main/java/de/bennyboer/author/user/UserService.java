@@ -89,7 +89,8 @@ public class UserService extends AggregateService<User, UserId> {
     }
 
     public Mono<Version> remove(UserId id, Version version, Agent agent) {
-        return dispatchCommand(id, version, agent, RemoveCmd.of());
+        return dispatchCommand(id, version, agent, RemoveCmd.of())
+                .flatMap(v -> collapseEvents(id, v, agent));
     }
 
     public Mono<AccessToken> login(UserId userId, Password password) {

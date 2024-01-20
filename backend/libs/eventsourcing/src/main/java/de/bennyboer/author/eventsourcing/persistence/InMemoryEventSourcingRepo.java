@@ -100,13 +100,8 @@ public class InMemoryEventSourcingRepo implements EventSourcingRepo {
             AggregateType type,
             Version fromVersion
     ) {
-        return getEvents(AggregateIdAndType.of(aggregateId, type))
-                .map(events -> events.subList(
-                        (int) fromVersion.getValue(),
-                        events.size()
-                ))
-                .map(Flux::fromIterable)
-                .orElse(Flux.empty());
+        return findEventsByAggregateIdAndType(aggregateId, type)
+                .filter(event -> event.getMetadata().getAggregateVersion().compareTo(fromVersion) >= 0);
     }
 
     @Override
@@ -116,13 +111,24 @@ public class InMemoryEventSourcingRepo implements EventSourcingRepo {
             Version fromVersion,
             Version version
     ) {
-        return getEvents(AggregateIdAndType.of(aggregateId, type))
-                .map(events -> events.subList(
-                        (int) fromVersion.getValue(),
-                        Math.min((int) version.getValue() + 1, events.size())
-                ))
-                .map(Flux::fromIterable)
-                .orElse(Flux.empty());
+        return findEventsByAggregateIdAndType(aggregateId, type, fromVersion)
+                .filter(event -> event.getMetadata().getAggregateVersion().compareTo(version) <= 0);
+    }
+
+    @Override
+    public Mono<Void> removeEventsByAggregateIdAndTypeUntilVersion(
+            AggregateId aggregateId,
+            AggregateType aggregateType,
+            Version version
+    ) {
+        return Mono.fromRunnable(() -> {
+            var events = eventsLookup.get(AggregateIdAndType.of(aggregateId, aggregateType));
+            if (events == null) {
+                return;
+            }
+
+            events.removeIf(event -> event.getMetadata().getAggregateVersion().compareTo(version) <= 0);
+        });
     }
 
     private Flux<EventWithMetadata> findEventsByAggregateIdAndType(

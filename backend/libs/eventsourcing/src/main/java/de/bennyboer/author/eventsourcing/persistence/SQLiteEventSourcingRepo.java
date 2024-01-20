@@ -179,6 +179,26 @@ public class SQLiteEventSourcingRepo extends SQLiteRepository implements EventSo
     }
 
     @Override
+    public Mono<Void> removeEventsByAggregateIdAndTypeUntilVersion(
+            AggregateId aggregateId,
+            AggregateType aggregateType,
+            Version version
+    ) {
+        String sql = """
+                DELETE FROM events
+                WHERE aggregate_id = ?
+                AND aggregate_type = ?
+                AND aggregate_version <= ?
+                """;
+
+        return update(sql, statement -> {
+            statement.setString(1, aggregateId.getValue());
+            statement.setString(2, aggregateType.getValue());
+            statement.setLong(3, version.getValue());
+        }).then();
+    }
+
+    @Override
     protected void initialize(Connection connection) throws SQLException {
         createEventsTableAndIndices(connection);
     }

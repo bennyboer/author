@@ -14,7 +14,8 @@ public enum UserEvent {
     MAIL_UPDATE_CONFIRMED,
     RENAMED_FIRST_NAME,
     RENAMED_LAST_NAME,
-    PASSWORD_CHANGED;
+    PASSWORD_CHANGED,
+    ANONYMIZED;
 
     public EventName getName() {
         return EventName.of(name());

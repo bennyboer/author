@@ -61,4 +61,8 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
   confirmMail(userId: string, mail: string, token: string): Observable<void> {
     return of();
   }
+
+  removeUser(id: string, version: number): Observable<void> {
+    return of();
+  }
 }

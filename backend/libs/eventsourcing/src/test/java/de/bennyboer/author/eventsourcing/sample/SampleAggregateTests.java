@@ -245,4 +245,26 @@ public abstract class SampleAggregateTests {
         assertFalse(aggregate.isDeleted());
     }
 
+    @Test
+    void shouldCollapseEvents() {
+        var id = "SAMPLE_ID";
+
+        // given: an aggregate that underwent multiple changes
+        var version = eventSourcingService.create(id, "Test title", "Test description", testAgent).block();
+        version = eventSourcingService.updateTitle(id, version, "New title", testAgent).block();
+        version = eventSourcingService.updateDescription(id, version, "New description", testAgent).block();
+        version = eventSourcingService.updateTitle(id, version, "Newer title", testAgent).block();
+
+        // when: collapsing the events
+        eventSourcingService.collapseEvents(id, version, testAgent).block();
+
+        // then: there is only a single snapshot event in the event store
+        var events = repo.findEventsByAggregateIdAndType(AggregateId.of(id), SampleAggregate.TYPE, Version.zero())
+                .collectList()
+                .block();
+        assertEquals(1, events.size());
+        var event = events.get(0);
+        assertTrue(event.getMetadata().isSnapshot());
+    }
+
 }

@@ -35,4 +35,13 @@ public interface EventSourcingRepo {
             Version untilVersion
     );
 
+    /**
+     * Removes all events of the aggregate with the given id and type until the given version (inclusive).
+     */
+    Mono<Void> removeEventsByAggregateIdAndTypeUntilVersion(
+            AggregateId aggregateId,
+            AggregateType aggregateType,
+            Version version
+    );
+
 }

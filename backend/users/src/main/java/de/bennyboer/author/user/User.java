@@ -11,6 +11,7 @@ import de.bennyboer.author.eventsourcing.command.SnapshotCmd;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.metadata.EventMetadata;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
+import de.bennyboer.author.user.anonymize.AnonymizedEvent;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.create.CreatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
@@ -41,6 +42,7 @@ import lombok.With;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 @Value
 @With(AccessLevel.PRIVATE)
@@ -112,17 +114,23 @@ public class User implements Aggregate {
         }
 
         if (isRemoved()) {
-            throw new IllegalStateException("Cannot apply command to removed User");
+            var exceptions = Set.of(SnapshotCmd.class);
+            if (!exceptions.contains(cmd.getClass())) {
+                throw new IllegalStateException("Cannot apply command to removed User");
+            }
         }
 
         return switch (cmd) {
             case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
                     getName(),
                     getMail(),
+                    getPendingMail().orElse(null),
+                    getMailConfirmationToken().orElse(null),
                     getFirstName(),
                     getLastName(),
                     getPassword(),
-                    getCreatedAt()
+                    getCreatedAt(),
+                    getRemovedAt().orElse(null)
             ));
             case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(
                     c.getName(),
@@ -140,7 +148,7 @@ public class User implements Aggregate {
                     MailConfirmationToken.create()
             ));
             case ConfirmMailUpdateCmd c -> confirmMailUpdate(c);
-            case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
+            case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of(), AnonymizedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
         };
@@ -152,10 +160,13 @@ public class User implements Aggregate {
             case SnapshottedEvent e -> withId(UserId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
                     .withMail(e.getMail())
+                    .withPendingMail(e.getPendingMail().orElse(null))
+                    .withMailConfirmationToken(e.getToken().orElse(null))
                     .withFirstName(e.getFirstName())
                     .withLastName(e.getLastName())
                     .withPassword(e.getPassword())
-                    .withCreatedAt(e.getCreatedAt());
+                    .withCreatedAt(e.getCreatedAt())
+                    .withRemovedAt(e.getRemovedAt().orElse(null));
             case CreatedEvent e -> withId(UserId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
                     .withMail(e.getMail())
@@ -176,6 +187,11 @@ public class User implements Aggregate {
             case MailUpdateConfirmedEvent ignored -> withMail(getPendingMail().orElseThrow())
                     .withPendingMail(null)
                     .withMailConfirmationToken(null);
+            case AnonymizedEvent ignored -> withName(getName().anonymized())
+                    .withMail(getMail().anonymized())
+                    .withPendingMail(null)
+                    .withFirstName(getFirstName().anonymized())
+                    .withLastName(getLastName().anonymized());
             default -> throw new IllegalArgumentException("Unknown event " + event.getClass().getSimpleName());
         };
 
