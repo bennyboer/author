@@ -44,4 +44,16 @@ export class UsersService {
   updateUserName(userId: string, version: number, name: string): void {
     this.store.dispatch(actions.updateName({ id: userId, version, name }));
   }
+
+  updateFirstName(userId: string, version: number, firstName: string): void {
+    this.store.dispatch(
+      actions.updateFirstName({ id: userId, version, firstName }),
+    );
+  }
+
+  updateLastName(userId: string, version: number, lastName: string): void {
+    this.store.dispatch(
+      actions.updateLastName({ id: userId, version, lastName }),
+    );
+  }
 }

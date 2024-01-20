@@ -24,3 +24,7 @@ This class will remove the subscript sizing at the bottom of a mat-form-field.
 .remove-subscript-sizing {
   margin-bottom: -1.25em;
 }
+
+app-editable-field .mat-mdc-form-field-infix {
+  width: auto;
+}

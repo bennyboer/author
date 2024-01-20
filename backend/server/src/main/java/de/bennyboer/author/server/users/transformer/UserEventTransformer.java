@@ -26,6 +26,12 @@ public class UserEventTransformer {
             case UserNameChangedEvent userNameChangedEvent -> Map.of(
                     "newName", userNameChangedEvent.getNewName().getValue()
             );
+            case RenamedFirstNameEvent renamedFirstNameEvent -> Map.of(
+                    "firstName", renamedFirstNameEvent.getFirstName().getValue()
+            );
+            case RenamedLastNameEvent renamedLastNameEvent -> Map.of(
+                    "lastName", renamedLastNameEvent.getLastName().getValue()
+            );
             default -> Map.of();
         };
     }

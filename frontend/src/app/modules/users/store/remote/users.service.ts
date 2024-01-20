@@ -7,9 +7,21 @@ export abstract class RemoteUsersService {
 
   abstract getUser(id: string): Observable<User>;
 
-  abstract renameUser(
+  abstract updateUserName(
     id: string,
     version: number,
     name: string,
+  ): Observable<void>;
+
+  abstract updateFirstName(
+    id: string,
+    version: number,
+    firstName: string,
+  ): Observable<void>;
+
+  abstract updateLastName(
+    id: string,
+    version: number,
+    lastName: string,
   ): Observable<void>;
 }

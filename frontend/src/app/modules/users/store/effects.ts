@@ -2,15 +2,25 @@ import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
   RemoteUsersService,
+  RenamedFirstNameEvent,
+  RenamedLastNameEvent,
   UserEventType,
   UserNameChangedEvent,
 } from './remote';
 import {
+  firstNameUpdated,
+  lastNameUpdated,
   loadingUserFailed,
   loadUser,
   nameUpdated,
+  updateFirstName,
+  updateFirstNameSuccess,
+  updateLastName,
+  updateLastNameSuccess,
   updateName,
   updateNameSuccess,
+  updatingFirstNameFailed,
+  updatingLastNameFailed,
   updatingNameFailed,
   userLoaded,
   versionUpdated,
@@ -54,7 +64,7 @@ export class UsersStoreEffects {
     this.actions.pipe(
       ofType(updateName),
       switchMap(({ id, version, name }) =>
-        this.remoteUsersService.renameUser(id, version, name).pipe(
+        this.remoteUsersService.updateUserName(id, version, name).pipe(
           map((user) => updateNameSuccess({ id })),
           catchError((error) =>
             of(
@@ -69,13 +79,49 @@ export class UsersStoreEffects {
     ),
   );
 
-  // TODO Update image
+  updateFirstName$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(updateFirstName),
+      switchMap(({ id, version, firstName }) =>
+        this.remoteUsersService.updateFirstName(id, version, firstName).pipe(
+          map((user) => updateFirstNameSuccess({ id })),
+          catchError((error) =>
+            of(
+              updatingFirstNameFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  updateLastName$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(updateLastName),
+      switchMap(({ id, version, lastName }) =>
+        this.remoteUsersService.updateLastName(id, version, lastName).pipe(
+          map((user) => updateLastNameSuccess({ id })),
+          catchError((error) =>
+            of(
+              updatingLastNameFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 
   // TODO Update mail
 
   // TODO Update password
 
-  // TODO Rename (first name, last name)
+  // TODO Update image
 
   events$ = createEffect(() =>
     this.actions.pipe(
@@ -89,6 +135,20 @@ export class UsersStoreEffects {
               id: event.id,
               version: event.version,
               name: userNameChangedEvent.name,
+            });
+          case UserEventType.RENAMED_FIRST_NAME:
+            const renamedFirstNameEvent = event as RenamedFirstNameEvent;
+            return firstNameUpdated({
+              id: event.id,
+              version: event.version,
+              firstName: renamedFirstNameEvent.firstName,
+            });
+          case UserEventType.RENAMED_LAST_NAME:
+            const renamedLastNameEvent = event as RenamedLastNameEvent;
+            return lastNameUpdated({
+              id: event.id,
+              version: event.version,
+              lastName: renamedLastNameEvent.lastName,
             });
           default:
             return versionUpdated({

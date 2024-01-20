@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { NavigationService } from '../../../../services';
 import { ActivatedRoute } from '@angular/router';
-import { Option } from '../../../shared';
+import { EditRequest, Option } from '../../../shared';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { UsersService } from '../../store';
 import {
@@ -23,7 +23,6 @@ import {
   tap,
 } from 'rxjs';
 import { User } from '../../models';
-import { EditRequest } from '../../../shared/components/editable-field/editable-field.component';
 
 @Component({
   selector: 'app-user-profile-page',
@@ -119,18 +118,12 @@ export class UserProfilePage implements OnInit, OnDestroy {
       request.newValue,
     );
 
-    const success$ = this.getUserName().pipe(
-      filter((name) => name === request.newValue),
-      tap(() => request.approve()),
-    );
-    const failure$ = this.usersService.isError(this.userId).pipe(
-      filter((isError) => isError),
-      tap(() => request.reject()),
-    );
-
-    race([success$, failure$])
-      .pipe(first(), takeUntil(this.destroy$))
-      .subscribe();
+    this.checkUserUpdateSuccess({
+      request,
+      success: this.getUserName().pipe(
+        filter((name) => name === request.newValue),
+      ),
+    });
   }
 
   updateMail(request: EditRequest): void {
@@ -150,19 +143,33 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   updateFirstName(request: EditRequest): void {
-    console.log('updateFirstName', request.newValue); // TODO
+    this.usersService.updateFirstName(
+      this.userId,
+      this.userVersion,
+      request.newValue,
+    );
 
-    setTimeout(() => {
-      Math.random() > 0.5 ? request.reject() : request.approve();
-    }, 1000);
+    this.checkUserUpdateSuccess({
+      request,
+      success: this.getFirstName().pipe(
+        filter((firstName) => firstName === request.newValue),
+      ),
+    });
   }
 
   updateLastName(request: EditRequest): void {
-    console.log('updateLastName', request.newValue); // TODO
+    this.usersService.updateLastName(
+      this.userId,
+      this.userVersion,
+      request.newValue,
+    );
 
-    setTimeout(() => {
-      Math.random() > 0.5 ? request.reject() : request.approve();
-    }, 1000);
+    this.checkUserUpdateSuccess({
+      request,
+      success: this.getLastName().pipe(
+        filter((lastName) => lastName === request.newValue),
+      ),
+    });
   }
 
   deleteUserProfile(password: string): void {
@@ -171,5 +178,22 @@ export class UserProfilePage implements OnInit, OnDestroy {
 
   openImageChooserDialog(): void {
     console.log('openImageChooserDialog'); // TODO
+  }
+
+  private checkUserUpdateSuccess(props: {
+    request: EditRequest;
+    success: Observable<unknown>;
+  }): void {
+    const { request, success } = props;
+
+    const success$ = success.pipe(tap(() => request.approve()));
+    const failure$ = this.usersService.isError(this.userId).pipe(
+      filter((isError) => isError),
+      tap(() => request.reject()),
+    );
+
+    race([success$, failure$])
+      .pipe(first(), takeUntil(this.destroy$))
+      .subscribe();
   }
 }

@@ -12,7 +12,13 @@ import { User } from '../../models';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 import { Option, WebSocketService } from '../../../shared';
-import { UserEvent, UserEventType, UserNameChangedEvent } from './events';
+import {
+  RenamedFirstNameEvent,
+  RenamedLastNameEvent,
+  UserEvent,
+  UserEventType,
+  UserNameChangedEvent,
+} from './events';
 import { EventMessage } from '../../../shared/services';
 
 interface UserDTO {
@@ -25,8 +31,16 @@ interface UserDTO {
   imageId?: string;
 }
 
-interface RenameUserRequest {
+interface UpdateUserNameRequest {
   name: string;
+}
+
+interface RenameFirstNameRequest {
+  firstName: string;
+}
+
+interface RenameLastNameRequest {
+  lastName: string;
 }
 
 type UserId = string;
@@ -69,12 +83,44 @@ export class HttpRemoteUsersService
       .pipe(map((user) => this.mapToInternalUser(user)));
   }
 
-  renameUser(id: UserId, version: number, name: string): Observable<void> {
-    const request: RenameUserRequest = {
+  updateUserName(id: UserId, version: number, name: string): Observable<void> {
+    const request: UpdateUserNameRequest = {
       name,
     };
 
     return this.http.post<void>(this.url(`${id}/username`), request, {
+      params: {
+        version,
+      },
+    });
+  }
+
+  updateFirstName(
+    id: UserId,
+    version: number,
+    firstName: string,
+  ): Observable<void> {
+    const request: RenameFirstNameRequest = {
+      firstName,
+    };
+
+    return this.http.post<void>(this.url(`${id}/rename/firstname`), request, {
+      params: {
+        version,
+      },
+    });
+  }
+
+  updateLastName(
+    id: UserId,
+    version: number,
+    lastName: string,
+  ): Observable<void> {
+    const request: RenameLastNameRequest = {
+      lastName,
+    };
+
+    return this.http.post<void>(this.url(`${id}/rename/lastname`), request, {
       params: {
         version,
       },
@@ -115,6 +161,10 @@ export class HttpRemoteUsersService
     switch (type) {
       case UserEventType.USERNAME_CHANGED:
         return new UserNameChangedEvent(userId, version, payload.newName);
+      case UserEventType.RENAMED_FIRST_NAME:
+        return new RenamedFirstNameEvent(userId, version, payload.firstName);
+      case UserEventType.RENAMED_LAST_NAME:
+        return new RenamedLastNameEvent(userId, version, payload.lastName);
       default:
         return {
           type,
@@ -128,6 +178,10 @@ export class HttpRemoteUsersService
     switch (eventName) {
       case 'USERNAME_CHANGED':
         return UserEventType.USERNAME_CHANGED;
+      case 'RENAMED_FIRST_NAME':
+        return UserEventType.RENAMED_FIRST_NAME;
+      case 'RENAMED_LAST_NAME':
+        return UserEventType.RENAMED_LAST_NAME;
       default:
         return UserEventType.OTHER;
     }

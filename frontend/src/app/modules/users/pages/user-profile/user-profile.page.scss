@@ -30,6 +30,10 @@ h1 {
   display: flex;
   flex-direction: row;
   gap: 20px;
+
+  & > * {
+    flex-basis: 100%;
+  }
 }
 
 .delete-user-profile-form-container {

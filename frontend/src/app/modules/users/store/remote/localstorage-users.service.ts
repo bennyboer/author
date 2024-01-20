@@ -25,7 +25,23 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
     );
   }
 
-  renameUser(id: string, version: number, name: string): Observable<void> {
+  updateUserName(id: string, version: number, name: string): Observable<void> {
+    return of();
+  }
+
+  updateFirstName(
+    id: string,
+    version: number,
+    firstName: string,
+  ): Observable<void> {
+    return of();
+  }
+
+  updateLastName(
+    id: string,
+    version: number,
+    lastName: string,
+  ): Observable<void> {
     return of();
   }
 }

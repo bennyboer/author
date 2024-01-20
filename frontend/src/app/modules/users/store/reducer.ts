@@ -1,11 +1,19 @@
 import { createReducer, on } from '@ngrx/store';
 import { initialState, State, UserState } from './state';
 import {
+  firstNameUpdated,
+  lastNameUpdated,
   loadingUserFailed,
   loadUser,
   nameUpdated,
+  updateFirstName,
+  updateFirstNameSuccess,
+  updateLastName,
+  updateLastNameSuccess,
   updateName,
   updateNameSuccess,
+  updatingFirstNameFailed,
+  updatingLastNameFailed,
   updatingNameFailed,
   userLoaded,
   versionUpdated,
@@ -74,6 +82,66 @@ export const reducer = createReducer(
         ...userState.user!,
         version: props.version,
         name: props.name,
+      },
+    })),
+  ),
+
+  on(updateFirstName, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(updateFirstNameSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(updatingFirstNameFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to update first name: ${props.message}`,
+    })),
+  ),
+  on(firstNameUpdated, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+        firstName: props.firstName,
+      },
+    })),
+  ),
+
+  on(updateLastName, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(updateLastNameSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(updatingLastNameFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to update last name: ${props.message}`,
+    })),
+  ),
+  on(lastNameUpdated, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+        lastName: props.lastName,
       },
     })),
   ),

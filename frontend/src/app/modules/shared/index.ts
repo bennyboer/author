@@ -4,6 +4,8 @@ export {
   CanvasMouseListener,
   RenderingRoutine,
   CanvasMouseEvent,
+  EditableFieldComponent,
+  EditRequest,
 } from './components';
 export { Option, Anchor, Size, Bounds } from './util';
 export { WebSocketService } from './services';
