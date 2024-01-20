@@ -23,6 +23,8 @@ import {
   tap,
 } from 'rxjs';
 import { User } from '../../models';
+import { MatDialog } from '@angular/material/dialog';
+import { ImageChooserDialog } from '../../dialogs';
 
 @Component({
   selector: 'app-user-profile-page',
@@ -47,6 +49,7 @@ export class UserProfilePage implements OnInit, OnDestroy {
 
   constructor(
     private readonly route: ActivatedRoute,
+    private readonly dialog: MatDialog,
     private readonly navigationService: NavigationService,
     private readonly usersService: UsersService,
   ) {}
@@ -190,7 +193,8 @@ export class UserProfilePage implements OnInit, OnDestroy {
   }
 
   openImageChooserDialog(): void {
-    console.log('openImageChooserDialog'); // TODO
+    const dialogRef = this.dialog.open(ImageChooserDialog);
+    // TODO Update image once selected
   }
 
   private checkUserUpdateSuccess(props: {

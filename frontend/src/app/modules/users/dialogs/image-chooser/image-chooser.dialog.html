@@ -1,0 +1,24 @@
+<h1 mat-dialog-title>Choose image</h1>
+<form [formGroup]="formGroup">
+  <div mat-dialog-content>
+    <input #fileInput class="hidden" type="file" accept="image/png, image/jpeg" (change)="onImageSelected($event)">
+    <div class="drop-container" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)" (click)="fileInput.click()">
+      <div class="drop-message" *ngIf="!formGroup.get('imageFile')?.valid">
+        <mat-icon>cloud_upload</mat-icon>
+        <p>Drop image here or click to upload</p>
+      </div>
+      <div class="drop-preview" *ngIf="formGroup.get('imageFile')?.valid">
+        <img [src]="getImageUrl() | async" width="256">
+      </div>
+    </div>
+  </div>
+
+  <mat-progress-bar [class.visible]="loading$ | async" mode="indeterminate"></mat-progress-bar>
+  <div mat-dialog-actions align="center">
+    <button mat-button mat-dialog-close>Close</button>
+    <button mat-button color="accent" (click)="updateImage()" [disabled]="!formGroup.valid" type="submit">
+      Update
+    </button>
+  </div>
+</form>

@@ -1,0 +1,33 @@
+:host {
+  &.drag-over {
+    .drop-container {
+      border-color: var(--accent-color);
+      background-color: var(--low-contrast-color-1);
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.drop-container {
+  border: 2px dashed var(--contrast-color-1);
+  border-radius: 5px;
+  padding: 20px;
+  margin: 10px;
+  text-align: center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--low-contrast-color-1);
+  }
+}
+
+mat-progress-bar {
+  visibility: hidden;
+
+  &.visible {
+    visibility: visible;
+  }
+}

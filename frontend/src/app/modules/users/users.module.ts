@@ -34,6 +34,7 @@ import {
 } from './components';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SharedModule } from '../shared/shared.module';
+import { ImageChooserDialog } from './dialogs';
 
 const PAGES = [
   UserProfilePage,
@@ -43,6 +44,8 @@ const PAGES = [
 ];
 
 const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
+
+const DIALOGS = [ImageChooserDialog];
 
 @NgModule({
   imports: [
@@ -63,7 +66,7 @@ const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
     MatProgressBarModule,
     MatProgressSpinnerModule,
   ],
-  declarations: [...PAGES, ...COMPONENTS],
+  declarations: [...PAGES, ...COMPONENTS, ...DIALOGS],
   providers: [
     UsersService,
     {
@@ -71,11 +74,6 @@ const COMPONENTS = [UserProfileLinkComponent, UserProfileImageComponent];
       useClass: HttpRemoteUsersService,
     },
   ],
-  exports: [
-    UserProfileLinkComponent,
-    MailConfirmationPage,
-    MailConfirmationSuccessPage,
-    MailConfirmationFailedPage,
-  ],
+  exports: [UserProfileLinkComponent],
 })
 export class UsersModule {}
