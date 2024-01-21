@@ -2,11 +2,15 @@ package de.bennyboer.author.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import de.bennyboer.author.assets.Asset;
 import de.bennyboer.author.auth.keys.KeyPair;
 import de.bennyboer.author.auth.keys.KeyPairs;
 import de.bennyboer.author.auth.token.*;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.Project;
+import de.bennyboer.author.server.assets.AssetsConfig;
+import de.bennyboer.author.server.assets.AssetsModule;
+import de.bennyboer.author.server.assets.transformer.AssetEventTransformer;
 import de.bennyboer.author.server.projects.ProjectsConfig;
 import de.bennyboer.author.server.projects.ProjectsModule;
 import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
@@ -130,7 +134,8 @@ public class App {
                 .modules(List.of(
                         (moduleConfig) -> configureUsersModule(moduleConfig, tokenGenerator),
                         App::configureProjectsModule,
-                        App::configureStructureModule
+                        App::configureStructureModule,
+                        App::configureAssetsModule
                 ))
                 .build();
 
@@ -138,6 +143,22 @@ public class App {
 
         Javalin javalin = app.createJavalin();
         javalin.start(config.getHost(), config.getPort());
+    }
+
+    private static AssetsModule configureAssetsModule(ModuleConfig moduleConfig) {
+        var eventSerializer = new JsonMapperEventSerializer(
+                moduleConfig.getJsonMapper(),
+                AssetEventTransformer::toSerialized,
+                AssetEventTransformer::fromSerialized
+        );
+        var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Asset.TYPE, eventSerializer);
+
+        AssetsConfig assetsConfig = AssetsConfig.builder()
+                .eventSourcingRepo(eventSourcingRepo)
+                .permissionsRepo(RepoFactory.createPermissionsRepo("assets"))
+                .build();
+
+        return new AssetsModule(moduleConfig, assetsConfig);
     }
 
     private static StructureModule configureStructureModule(ModuleConfig moduleConfig) {

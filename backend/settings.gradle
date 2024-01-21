@@ -9,6 +9,7 @@ plugins {
 
 rootProject.name = 'backend'
 include(
+        'assets',
         'projects',
         'server',
         'structure',
