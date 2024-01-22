@@ -60,6 +60,7 @@ public class MessagingAggregatePermissionsEventPublisher implements PermissionsE
             TextMessage textMessage = ctx.createTextMessage(json);
 
             try {
+                textMessage.setStringProperty("messageType", "AggregatePermissionEventMessage");
                 textMessage.setStringProperty("userId", message.getUserId());
                 textMessage.setStringProperty("action", message.getAction());
             } catch (JMSException e) {

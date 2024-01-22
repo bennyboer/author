@@ -1,11 +1,12 @@
-package de.bennyboer.author.project.snapshot;
+package de.bennyboer.author.assets.snapshot;
 
+import de.bennyboer.author.assets.AssetEvent;
+import de.bennyboer.author.assets.Content;
+import de.bennyboer.author.assets.Owner;
 import de.bennyboer.author.eventsourcing.Version;
 import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.eventsourcing.event.SnapshotEvent;
-import de.bennyboer.author.project.ProjectEvent;
-import de.bennyboer.author.project.ProjectName;
 import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,18 +23,30 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
 
     private static final Version VERSION = Version.zero();
 
-    ProjectName name;
+    @Nullable
+    Content content;
+
+    Owner owner;
 
     Instant createdAt;
 
     @Nullable
     Instant removedAt;
 
-    public static SnapshottedEvent of(ProjectName name, Instant createdAt, @Nullable Instant removedAt) {
-        checkNotNull(name, "Project name must be given");
+    public static SnapshottedEvent of(
+            @Nullable Content content,
+            Owner owner,
+            Instant createdAt,
+            @Nullable Instant removedAt
+    ) {
+        checkNotNull(owner, "Owner must be given");
         checkNotNull(createdAt, "Created at must be given");
 
-        return new SnapshottedEvent(name, createdAt, removedAt);
+        return new SnapshottedEvent(content, owner, createdAt, removedAt);
+    }
+
+    public Optional<Content> getContent() {
+        return Optional.ofNullable(content);
     }
 
     public Optional<Instant> getRemovedAt() {
@@ -42,7 +55,7 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
 
     @Override
     public EventName getEventName() {
-        return ProjectEvent.SNAPSHOTTED.getName();
+        return AssetEvent.SNAPSHOTTED.getName();
     }
 
     @Override

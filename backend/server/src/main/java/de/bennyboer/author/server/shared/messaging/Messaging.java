@@ -150,6 +150,7 @@ public class Messaging {
 
         List<String> parts = new ArrayList<>();
 
+        parts.add("messageType = 'AggregateEventMessage'");
         aggregateId.ifPresent(id -> parts.add(String.format("aggregateId = '%s'", id.getValue())));
         eventName.ifPresent(name -> parts.add(String.format("eventName = '%s'", name.getValue())));
 
@@ -165,6 +166,7 @@ public class Messaging {
 
         List<String> parts = new ArrayList<>();
 
+        parts.add("messageType = 'AggregatePermissionEventMessage'");
         userId.ifPresent(id -> parts.add(String.format("userId = '%s'", id.getValue())));
         aggregateId.ifPresent(id -> parts.add(String.format("aggregateId = '%s'", id.getValue())));
         action.ifPresent(a -> parts.add(String.format("action = '%s'", a.getName())));

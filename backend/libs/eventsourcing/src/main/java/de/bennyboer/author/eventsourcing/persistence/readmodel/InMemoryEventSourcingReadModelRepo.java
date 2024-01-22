@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 public abstract class InMemoryEventSourcingReadModelRepo<ID, T> implements EventSourcingReadModelRepo<ID, T> {
 
     private final List<Awaiter<T>> updateAwaiters = new ArrayList<>();
+
     private final List<Awaiter<ID>> removalAwaiters = new ArrayList<>();
 
     protected final Map<ID, T> lookup = new HashMap<>();
@@ -37,8 +38,8 @@ public abstract class InMemoryEventSourcingReadModelRepo<ID, T> implements Event
 
     public void awaitUpdate(Predicate<T> predicate, Duration timeout) {
         Awaiter<T> awaiter = Awaiter.of(predicate);
-        synchronized (updateAwaiters) {
-            synchronized (lookup) {
+        synchronized (lookup) {
+            synchronized (updateAwaiters) {
                 boolean isAlreadyFulfilled = lookup.values()
                         .stream()
                         .anyMatch(predicate);
@@ -62,8 +63,8 @@ public abstract class InMemoryEventSourcingReadModelRepo<ID, T> implements Event
 
     public void awaitRemoval(ID id, Duration timeout) {
         Awaiter<ID> awaiter = Awaiter.of(id::equals);
-        synchronized (removalAwaiters) {
-            synchronized (lookup) {
+        synchronized (lookup) {
+            synchronized (removalAwaiters) {
                 boolean isAlreadyFulfilled = get(id).block() == null;
                 if (isAlreadyFulfilled) {
                     return;

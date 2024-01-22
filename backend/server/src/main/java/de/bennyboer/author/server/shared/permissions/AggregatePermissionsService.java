@@ -48,6 +48,10 @@ public abstract class AggregatePermissionsService<ID, A> {
         return hasPermission(agent, toAction(action), Resource.ofType(getResourceType()));
     }
 
+    public Mono<Void> removePermission(Permission permission) {
+        return permissionsService.removePermission(permission);
+    }
+
     public Mono<Void> removePermissionsByResource(ID id) {
         return permissionsService.removePermissionsByResource(toResource(id));
     }

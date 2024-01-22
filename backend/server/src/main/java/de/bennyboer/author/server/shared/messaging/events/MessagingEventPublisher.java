@@ -46,6 +46,7 @@ public class MessagingEventPublisher implements EventPublisher {
 
         TextMessage textMessage = ctx.createTextMessage(json);
         try {
+            textMessage.setStringProperty("messageType", "AggregateEventMessage");
             textMessage.setStringProperty("aggregateId", event.getMetadata().getAggregateId().getValue());
             textMessage.setStringProperty("eventName", event.getEvent().getEventName().getValue());
         } catch (JMSException e) {

@@ -11,7 +11,9 @@ import de.bennyboer.author.project.rename.RenamedEvent;
 import de.bennyboer.author.project.snapshot.SnapshottedEvent;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class ProjectEventTransformer {
 
@@ -36,10 +38,16 @@ public class ProjectEventTransformer {
             case RenamedEvent renamedEvent -> Map.of(
                     "newName", renamedEvent.getNewName().getValue()
             );
-            case SnapshottedEvent snapshottedEvent -> Map.of(
-                    "name", snapshottedEvent.getName().getValue(),
-                    "createdAt", snapshottedEvent.getCreatedAt()
-            );
+            case SnapshottedEvent snapshottedEvent -> {
+                var result = new HashMap<String, Object>(Map.of(
+                        "name", snapshottedEvent.getName().getValue(),
+                        "createdAt", snapshottedEvent.getCreatedAt()
+                ));
+
+                snapshottedEvent.getRemovedAt().ifPresent(removedAt -> result.put("removedAt", removedAt));
+
+                yield result;
+            }
             default -> throw new IllegalArgumentException("Unknown event type: " + event.getClass().getName());
         };
     }
@@ -51,10 +59,16 @@ public class ProjectEventTransformer {
             case CREATED -> CreatedEvent.of(ProjectName.of(serialized.get("name").toString()));
             case REMOVED -> RemovedEvent.of();
             case RENAMED -> RenamedEvent.of(ProjectName.of(serialized.get("newName").toString()));
-            case SNAPSHOTTED -> SnapshottedEvent.of(
-                    ProjectName.of(serialized.get("name").toString()),
-                    Instant.parse(serialized.get("createdAt").toString())
-            );
+            case SNAPSHOTTED -> {
+                ProjectName name = ProjectName.of(serialized.get("name").toString());
+                Instant createdAt = Instant.parse(serialized.get("createdAt").toString());
+                Instant removedAt = Optional.ofNullable(serialized.get("removedAt"))
+                        .map(Object::toString)
+                        .map(Instant::parse)
+                        .orElse(null);
+
+                yield SnapshottedEvent.of(name, createdAt, removedAt);
+            }
         };
     }
 

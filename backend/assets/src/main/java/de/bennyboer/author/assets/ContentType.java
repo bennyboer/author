@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+import java.util.Locale;
+
 import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 /**
@@ -18,9 +20,17 @@ public class ContentType {
 
     String subType;
 
-    public static ContentType of(String type, String subType) {
-        checkNotNull(type, "Type must not be null");
-        checkNotNull(subType, "Sub type must not be null");
+    public static ContentType fromMimeType(String mimeType) {
+        checkNotNull(mimeType, "MIME type must not be null");
+
+        String[] parts = mimeType.split("/");
+
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid MIME type: %s".formatted(mimeType));
+        }
+
+        String type = parts[0].toLowerCase(Locale.ROOT);
+        String subType = parts[1].toLowerCase(Locale.ROOT);
 
         return new ContentType(type, subType);
     }

@@ -10,11 +10,11 @@ import static de.bennyboer.author.common.Preconditions.checkNotNull;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Content {
 
-    byte[] data;
+    String data;
 
     ContentType type;
 
-    public static Content of(byte[] data, ContentType type) {
+    public static Content of(String data, ContentType type) {
         checkNotNull(data, "Data must be given");
         checkNotNull(type, "Type must be given");
 

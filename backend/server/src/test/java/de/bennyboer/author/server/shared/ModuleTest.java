@@ -186,6 +186,7 @@ public abstract class ModuleTest {
         String json = jsonMapper.toJsonString(message, AggregateEventMessage.class);
         TextMessage textMessage = messaging.getContext().createTextMessage(json);
         try {
+            textMessage.setStringProperty("messageType", "AggregateEventMessage");
             textMessage.setStringProperty("aggregateId", message.getAggregateId());
             textMessage.setStringProperty("eventName", message.getEventName());
         } catch (JMSException e) {

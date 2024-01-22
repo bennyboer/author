@@ -14,10 +14,10 @@ public class AssetsRestRouting implements EndpointGroup {
 
     @Override
     public void addEndpoints() {
+        post(handler::createAsset);
         path("/{assetId}", () -> {
             get(handler::getAsset);
             get("/content", handler::getAssetContent);
-            post(handler::createAsset);
             delete(handler::removeAsset);
         });
     }

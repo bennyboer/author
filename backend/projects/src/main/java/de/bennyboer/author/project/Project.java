@@ -62,7 +62,11 @@ public class Project implements Aggregate {
         }
 
         return switch (cmd) {
-            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(getName(), getCreatedAt()));
+            case SnapshotCmd ignored -> ApplyCommandResult.of(SnapshottedEvent.of(
+                    getName(),
+                    getCreatedAt(),
+                    getRemovedAt().orElse(null)
+            ));
             case CreateCmd c -> ApplyCommandResult.of(CreatedEvent.of(c.getName()));
             case RenameCmd c -> ApplyCommandResult.of(RenamedEvent.of(c.getNewName()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of());
@@ -75,7 +79,8 @@ public class Project implements Aggregate {
         var updatedProject = switch (event) {
             case SnapshottedEvent e -> withId(ProjectId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
-                    .withCreatedAt(e.getCreatedAt());
+                    .withCreatedAt(e.getCreatedAt())
+                    .withRemovedAt(e.getRemovedAt().orElse(null));
             case CreatedEvent e -> withId(ProjectId.of(metadata.getAggregateId().getValue()))
                     .withName(e.getName())
                     .withCreatedAt(metadata.getDate());

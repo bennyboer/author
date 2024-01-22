@@ -9,6 +9,8 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.assets.facade.AssetsCommandFacade;
 import de.bennyboer.author.server.assets.facade.AssetsPermissionsFacade;
 import de.bennyboer.author.server.assets.facade.AssetsQueryFacade;
+import de.bennyboer.author.server.assets.facade.AssetsSyncFacade;
+import de.bennyboer.author.server.assets.messaging.*;
 import de.bennyboer.author.server.assets.permissions.AssetsPermissionsService;
 import de.bennyboer.author.server.assets.rest.AssetsRestHandler;
 import de.bennyboer.author.server.assets.rest.AssetsRestRouting;
@@ -36,8 +38,12 @@ public class AssetsModule extends Module {
 
     private final AssetsPermissionsFacade permissionsFacade;
 
+    private final AssetsSyncFacade syncFacade;
+
     public AssetsModule(ModuleConfig config, AssetsConfig assetsConfig) {
         super(config);
+
+        var lookupRepo = assetsConfig.getAssetLookupRepo();
 
         var eventSourcingRepo = assetsConfig.getEventSourcingRepo();
         var assetsService = new AssetsService(eventSourcingRepo, getEventPublisher());
@@ -50,8 +56,9 @@ public class AssetsModule extends Module {
         var assetsPermissionsService = new AssetsPermissionsService(permissionsRepo, permissionsEventPublisher);
 
         queryFacade = new AssetsQueryFacade(assetsService, assetsPermissionsService);
-        commandFacade = new AssetsCommandFacade(assetsService, assetsPermissionsService);
+        commandFacade = new AssetsCommandFacade(assetsService, assetsPermissionsService, lookupRepo);
         permissionsFacade = new AssetsPermissionsFacade(assetsPermissionsService);
+        syncFacade = new AssetsSyncFacade(assetsService, lookupRepo);
     }
 
     @Override
@@ -69,9 +76,14 @@ public class AssetsModule extends Module {
 
     @Override
     protected List<AggregateEventMessageListener> createMessageListeners() {
-        return List.of();
-        // TODO Add message listener that creates permissions for an user that just created an asset
-        // TODO Add message listener that removes all assets of an user when the user is deleted
+        return List.of(
+                new UserCreatedAddPermissionToCreateAssetsMsgListener(permissionsFacade),
+                new UserRemovedRemoveCreatePermissionMsgListener(permissionsFacade),
+                new AssetCreatedAddPermissionForCreatorMsgListener(permissionsFacade),
+                new AssetRemovedRemovePermissionsMsgListener(permissionsFacade),
+                new UserRemovedRemoveOwnedAssetsMsgListener(commandFacade),
+                new AssetUpdatedUpdateInLookupMsgListener(syncFacade)
+        );
     }
 
     @Override
