@@ -82,7 +82,8 @@ public class AssetsModule extends Module {
                 new AssetCreatedAddPermissionForCreatorMsgListener(permissionsFacade),
                 new AssetRemovedRemovePermissionsMsgListener(permissionsFacade),
                 new UserRemovedRemoveOwnedAssetsMsgListener(commandFacade),
-                new AssetUpdatedUpdateInLookupMsgListener(syncFacade)
+                new AssetUpdatedUpdateInLookupMsgListener(syncFacade),
+                new UserImageUpdatedRemoveOldImageAssetMsgListener(commandFacade)
         );
     }
 

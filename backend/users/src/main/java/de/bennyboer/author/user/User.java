@@ -155,7 +155,10 @@ public class User implements Aggregate {
                     MailConfirmationToken.create()
             ));
             case ConfirmMailUpdateCmd c -> confirmMailUpdate(c);
-            case UpdateImageCmd c -> ApplyCommandResult.of(ImageUpdatedEvent.of(c.getImageId()));
+            case UpdateImageCmd c -> ApplyCommandResult.of(ImageUpdatedEvent.of(
+                    c.getImageId(),
+                    getImageId().orElse(null)
+            ));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of(), AnonymizedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());

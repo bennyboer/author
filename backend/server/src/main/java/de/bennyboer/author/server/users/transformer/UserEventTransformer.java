@@ -45,9 +45,15 @@ public class UserEventTransformer {
             case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
                     "mail", mailUpdateConfirmedEvent.getMail().getValue()
             );
-            case ImageUpdatedEvent imageUpdatedEvent -> Map.of(
-                    "imageId", imageUpdatedEvent.getImageId().getValue()
-            );
+            case ImageUpdatedEvent imageUpdatedEvent -> {
+                var result = new HashMap<String, Object>(Map.of(
+                        "imageId", imageUpdatedEvent.getImageId().getValue()
+                ));
+
+                imageUpdatedEvent.getOldImageId().ifPresent(it -> result.put("oldImageId", it.getValue()));
+
+                yield result;
+            }
             default -> Map.of();
         };
     }
@@ -97,9 +103,15 @@ public class UserEventTransformer {
             case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
                     "mail", mailUpdateConfirmedEvent.getMail().getValue()
             );
-            case ImageUpdatedEvent imageUpdatedEvent -> Map.of(
-                    "imageId", imageUpdatedEvent.getImageId().getValue()
-            );
+            case ImageUpdatedEvent imageUpdatedEvent -> {
+                var result = new HashMap<String, Object>(Map.of(
+                        "imageId", imageUpdatedEvent.getImageId().getValue()
+                ));
+
+                imageUpdatedEvent.getOldImageId().ifPresent(it -> result.put("oldImageId", it.getValue()));
+
+                yield result;
+            }
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
             case RemovedEvent ignoredEvent -> Map.of();
@@ -156,7 +168,8 @@ public class UserEventTransformer {
                     Mail.of(payload.get("mail").toString())
             );
             case IMAGE_UPDATED -> ImageUpdatedEvent.of(
-                    ImageId.of(payload.get("imageId").toString())
+                    ImageId.of(payload.get("imageId").toString()),
+                    Optional.ofNullable(payload.get("oldImageId")).map(it -> ImageId.of(it.toString())).orElse(null)
             );
             case ANONYMIZED -> AnonymizedEvent.of();
         };

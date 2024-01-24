@@ -5,9 +5,12 @@ import de.bennyboer.author.eventsourcing.event.Event;
 import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.user.ImageId;
 import de.bennyboer.author.user.UserEvent;
+import jakarta.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+
+import java.util.Optional;
 
 import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
@@ -19,10 +22,17 @@ public class ImageUpdatedEvent implements Event {
 
     ImageId imageId;
 
-    public static ImageUpdatedEvent of(ImageId imageId) {
+    @Nullable
+    ImageId oldImageId;
+
+    public static ImageUpdatedEvent of(ImageId imageId, @Nullable ImageId oldImageId) {
         checkNotNull(imageId, "Image ID must be given");
 
-        return new ImageUpdatedEvent(imageId);
+        return new ImageUpdatedEvent(imageId, oldImageId);
+    }
+
+    public Optional<ImageId> getOldImageId() {
+        return Optional.ofNullable(oldImageId);
     }
 
     @Override

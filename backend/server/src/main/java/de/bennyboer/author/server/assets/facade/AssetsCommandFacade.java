@@ -34,6 +34,10 @@ public class AssetsCommandFacade {
         return assetsService.remove(AssetId.of(assetId), Version.of(version), agent).then();
     }
 
+    public Mono<Void> removeLatest(AssetId assetId, Agent agent) {
+        return assetsService.removeLatest(assetId, agent).then();
+    }
+
     public Mono<Void> removeOwnedAssets(UserId userId, Agent agent) {
         return lookupRepo.findAssetsOwnedBy(Owner.of(userId))
                 .flatMap(asset -> assetsService.removeLatest(asset.getId(), agent))
