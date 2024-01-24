@@ -42,6 +42,14 @@ export class UsersService {
     );
   }
 
+  getUserImageId(id: string): Observable<Option<string>> {
+    return this.store.select(selectors.user(id)).pipe(
+      filter((user) => user.isSome()),
+      map((user) => user.orElseThrow()!),
+      map((user) => Option.someOrNone(user.imageId)),
+    );
+  }
+
   hasUser(id: string): Observable<boolean> {
     return this.store
       .select(selectors.user(id))
@@ -76,5 +84,9 @@ export class UsersService {
 
   removeUser(userId: string, version: number): void {
     this.store.dispatch(actions.removeUser({ id: userId, version }));
+  }
+
+  updateImage(userId: string, version: number, imageId: string): void {
+    this.store.dispatch(actions.updateImage({ id: userId, version, imageId }));
   }
 }

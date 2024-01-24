@@ -17,7 +17,6 @@ public class AssetsRestRouting implements EndpointGroup {
         post(handler::createAsset);
         path("/{assetId}", () -> {
             get(handler::getAsset);
-            get("/content", handler::getAssetContent);
             delete(handler::removeAsset);
         });
     }

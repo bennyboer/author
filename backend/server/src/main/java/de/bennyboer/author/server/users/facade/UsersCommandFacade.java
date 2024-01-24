@@ -75,6 +75,14 @@ public class UsersCommandFacade {
                 .then();
     }
 
+    public Mono<Void> updateImage(String userId, Long version, String imageId, Agent agent) {
+        UserId id = UserId.of(userId);
+
+        return permissionsService.assertHasPermission(agent, UPDATE_IMAGE, id)
+                .then(userService.updateImage(id, Version.of(version), ImageId.of(imageId), agent))
+                .then();
+    }
+
     public Mono<Void> confirmMail(String userId, String mail, String mailConfirmationToken, Agent agent) {
         UserId id = UserId.of(userId);
 

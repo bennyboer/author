@@ -2,9 +2,9 @@
   <mat-icon>edit</mat-icon>
 </div>
 
-@if (getImageUrl() | async; as imageUrl) {
-  @if (imageUrl.isSome()) {
-    <img src="{{ imageUrl.orElseThrow() }}" [width]="diameter" [height]="diameter"/>
+@if (imageId$ | async; as imageId) {
+  @if (imageId.isSome()) {
+    <app-asset [assetId]="imageId.orElseThrow()" [width]="diameter" [height]="diameter"></app-asset>
   } @else {
     <mat-icon [style.width.px]="diameter * 0.75"
               [style.height.px]="diameter * 0.75"

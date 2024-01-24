@@ -37,6 +37,9 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
 
     Password password;
 
+    @Nullable
+    ImageId imageId;
+
     Instant createdAt;
 
     @Nullable
@@ -50,6 +53,7 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
             FirstName firstName,
             LastName lastName,
             Password password,
+            @Nullable ImageId imageId,
             Instant createdAt,
             @Nullable Instant removedAt
     ) {
@@ -68,6 +72,7 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
                 firstName,
                 lastName,
                 password,
+                imageId,
                 createdAt,
                 removedAt
         );
@@ -83,6 +88,10 @@ public class SnapshottedEvent implements Event, SnapshotEvent {
 
     public Optional<Instant> getRemovedAt() {
         return Optional.ofNullable(removedAt);
+    }
+
+    public Optional<ImageId> getImageId() {
+        return Optional.ofNullable(imageId);
     }
 
     @Override

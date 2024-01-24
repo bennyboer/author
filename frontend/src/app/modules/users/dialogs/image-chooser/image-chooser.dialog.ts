@@ -2,20 +2,29 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostBinding,
+  Inject,
   OnDestroy,
   OnInit,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
   BehaviorSubject,
+  delay,
   filter,
   map,
   Observable,
+  race,
   ReplaySubject,
   Subject,
+  Subscriber,
+  switchMap,
   takeUntil,
+  tap,
+  throwError,
 } from 'rxjs';
-import { Option } from '../../../shared';
+import { AssetsService, Option } from '../../../shared';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { UsersService } from '../../store';
 
 @Component({
   selector: 'app-user-image-chooser-dialog',
@@ -36,6 +45,17 @@ export class ImageChooserDialog implements OnInit, OnDestroy {
   private readonly destroy$: Subject<void> = new Subject<void>();
 
   private isDraggedOver: boolean = false;
+
+  constructor(
+    private readonly dialogRef: MatDialogRef<ImageChooserDialog>,
+    @Inject(MAT_DIALOG_DATA)
+    private readonly data: {
+      userId: string;
+      version: number;
+    },
+    private readonly assetsService: AssetsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   ngOnInit(): void {
     const imageFile$ = this.formGroup.valueChanges.pipe(
@@ -65,12 +85,46 @@ export class ImageChooserDialog implements OnInit, OnDestroy {
     return this.file$.pipe(map((file) => URL.createObjectURL(file)));
   }
 
-  updateImage(): void {
-    // TODO Base64 encode image
-    // TODO Send image to server (new assets module) -> Response is an asset ID
-    // TODO Send asset ID to users module as new user image ID
+  updateImage() {
+    this.loading$.next(true);
+    const imageFile: File = this.formGroup.value.imageFile;
 
-    console.log('updateImage', this.formGroup.value);
+    this.toBase64(imageFile)
+      .pipe(
+        switchMap((content) => {
+          const contentType = imageFile.type;
+          return this.assetsService.create(content, contentType);
+        }),
+        tap((assetId) =>
+          this.usersService.updateImage(
+            this.data.userId,
+            this.data.version,
+            assetId,
+          ),
+        ),
+        switchMap((assetId) => {
+          const success$ = this.usersService
+            .getUserImageId(this.data.userId)
+            .pipe(
+              filter((imageId) =>
+                imageId.map((iId) => iId === assetId).orElse(false),
+              ),
+            );
+          const failure$ = this.usersService.isError(this.data.userId).pipe(
+            filter((isError) => isError),
+            switchMap(() =>
+              throwError(() => new Error('Failed to update image')),
+            ),
+          );
+
+          return race([success$, failure$]);
+        }),
+        delay(1000), // Avoid flickering
+        tap({
+          complete: () => this.loading$.next(false),
+        }),
+      )
+      .subscribe(() => this.dialogRef.close());
   }
 
   onImageSelected(event: Event): void {
@@ -98,5 +152,19 @@ export class ImageChooserDialog implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     this.isDraggedOver = false;
+  }
+
+  private toBase64(file: File): Observable<string> {
+    return new Observable((subscriber: Subscriber<string>) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        subscriber.next(reader.result as string);
+        subscriber.complete();
+      };
+      reader.onerror = (error) => subscriber.error(error);
+    }).pipe(
+      map((base64ImageWithHeader) => base64ImageWithHeader.split(',')[1]),
+    );
   }
 }

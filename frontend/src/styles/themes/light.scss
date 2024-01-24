@@ -45,6 +45,8 @@ $core-theme: mat.define-light-theme((
 :root {
   --text-color: black;
   --text-color-rgb: 0, 0, 0;
+  --text-contrast-color: white;
+  --text-contrast-color-rgb: 255, 255, 255;
   --accent-color: #33FFCC;
   --low-contrast-color-1: #F5F5F5;
   --low-contrast-color-2: #F0F0F0;

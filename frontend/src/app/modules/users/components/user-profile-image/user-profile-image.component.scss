@@ -6,6 +6,7 @@
   align-items: center;
   border-radius: 50%;
   background-color: var(--low-contrast-color-3);
+  overflow: hidden;
 
   &.editable {
     cursor: pointer;
@@ -36,6 +37,7 @@
     width: 48px;
     height: 48px;
     color: var(--text-color);
+    text-shadow: 0 0 6px rgba(var(--text-contrast-color-rgb), 0.2);
   }
 }
 

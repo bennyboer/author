@@ -118,7 +118,7 @@ export const userRemoved = createAction(
 
 export const updateImage = createAction(
   '[User] Update Image',
-  props<{ id: string; version: number; image: File }>(),
+  props<{ id: string; version: number; imageId: string }>(),
 );
 export const updateImageSuccess = createAction(
   '[User] Update Image Success',
@@ -142,6 +142,7 @@ export const actions = {
   loadUser,
   updateName,
   updateMail,
+  updateImage,
   updateFirstName,
   updateLastName,
   changePassword,

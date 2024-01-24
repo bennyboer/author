@@ -44,4 +44,10 @@ export abstract class RemoteUsersService {
   ): Observable<void>;
 
   abstract removeUser(id: string, version: number): Observable<void>;
+
+  abstract updateImage(
+    id: string,
+    version: number,
+    imageId: string,
+  ): Observable<void>;
 }

@@ -65,4 +65,8 @@ export class LocalstorageRemoteUsersService extends RemoteUsersService {
   removeUser(id: string, version: number): Observable<void> {
     return of();
   }
+
+  updateImage(id: string, version: number, imageId: string): Observable<void> {
+    return of();
+  }
 }

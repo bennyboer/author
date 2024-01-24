@@ -52,25 +52,4 @@ public class QueryAssetsTests extends AssetsModuleTests {
         });
     }
 
-    @Test
-    void shouldQueryAssetContent() {
-        JavalinTest.test(getJavalin(), (server, client) -> {
-            // given: a user is created that is allowed to create assets
-            userIsCreatedThatIsAllowedToCreateAssets();
-
-            // and: the user has an asset
-            var assetId = createAssetAndAwaitCreation(client, "Test Asset", "text/plain", correctToken);
-
-            // when: the asset content is queried
-            var response = getAssetContent(client, assetId, correctToken);
-
-            // then: the status code is 200
-            assertThat(response.getStatusCode()).isEqualTo(200);
-
-            // and: the asset content is returned
-            assertThat(response.getContent()).isEqualTo("Test Asset");
-            assertThat(response.getContentType()).isEqualTo("text/plain");
-        });
-    }
-
 }

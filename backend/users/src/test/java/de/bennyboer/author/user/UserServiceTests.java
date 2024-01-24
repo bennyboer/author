@@ -145,6 +145,30 @@ public class UserServiceTests {
     }
 
     @Test
+    void shouldUpdateImage() {
+        // given: a user
+        var userIdAndVersion = userService.create(
+                defaultName,
+                defaultMail,
+                defaultFirstName,
+                defaultLastName,
+                defaultPassword,
+                systemAgent
+        ).block();
+        var userId = userIdAndVersion.getId();
+        var version = userIdAndVersion.getVersion();
+
+        // when: the image is updated
+        var userAgent = Agent.user(userId);
+        var newImageId = ImageId.of("newImageId");
+        userService.updateImage(userId, version, newImageId, userAgent).block();
+
+        // then: the image has changed
+        var user = userService.get(userId).block();
+        assertEquals(Optional.of(newImageId), user.getImageId());
+    }
+
+    @Test
     void shouldUpdateFirstName() {
         // given: a user
         var userIdAndVersion = userService.create(

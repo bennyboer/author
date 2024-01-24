@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments';
 import { Option, WebSocketService } from '../../../shared';
 import {
+  ImageUpdatedEvent,
   MailUpdatedEvent,
   PasswordChangedEvent,
   RemovedEvent,
@@ -52,6 +53,10 @@ interface ChangePasswordRequest {
 
 interface UpdateMailRequest {
   mail: string;
+}
+
+interface UpdateImageRequest {
+  imageId: string;
 }
 
 interface ConfirmMailRequest {
@@ -167,6 +172,18 @@ export class HttpRemoteUsersService
     });
   }
 
+  updateImage(id: string, version: number, imageId: string): Observable<void> {
+    const request: UpdateImageRequest = {
+      imageId,
+    };
+
+    return this.http.post<void>(this.url(`${id}/image`), request, {
+      params: {
+        version,
+      },
+    });
+  }
+
   changePassword(
     id: string,
     version: number,
@@ -234,6 +251,8 @@ export class HttpRemoteUsersService
         return new PasswordChangedEvent(userId, version, '********');
       case UserEventType.MAIL_UPDATED:
         return new MailUpdatedEvent(userId, version, payload.mail);
+      case UserEventType.IMAGE_UPDATED:
+        return new ImageUpdatedEvent(userId, version, payload.imageId);
       case UserEventType.REMOVED:
         return new RemovedEvent(userId, version);
       default:
@@ -258,6 +277,8 @@ export class HttpRemoteUsersService
       case 'MAIL_UPDATE_REQUESTED':
       case 'MAIL_UPDATE_CONFIRMED':
         return UserEventType.MAIL_UPDATED;
+      case 'IMAGE_UPDATED':
+        return UserEventType.IMAGE_UPDATED;
       case 'REMOVED':
         return UserEventType.REMOVED;
       default:

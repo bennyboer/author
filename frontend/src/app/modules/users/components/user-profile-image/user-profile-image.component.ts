@@ -8,8 +8,9 @@ import {
   OnDestroy,
   Output,
 } from '@angular/core';
-import { Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { ReplaySubject, Subject, switchMap } from 'rxjs';
 import { Option } from '../../../shared';
+import { UsersService } from '../../store';
 
 @Component({
   selector: 'app-user-profile-image',
@@ -33,6 +34,11 @@ export class UserProfileImageComponent implements OnDestroy {
   readonly clicked: EventEmitter<void> = new EventEmitter<void>();
 
   private readonly userId$: Subject<string> = new ReplaySubject<string>(1);
+  readonly imageId$ = this.userId$.pipe(
+    switchMap((userId) => this.usersService.getUserImageId(userId)),
+  );
+
+  constructor(private readonly usersService: UsersService) {}
 
   ngOnDestroy(): void {
     this.userId$.complete();
@@ -58,9 +64,5 @@ export class UserProfileImageComponent implements OnDestroy {
     if (this.editable) {
       this.clicked.emit();
     }
-  }
-
-  getImageUrl(): Observable<Option<string>> {
-    return of(Option.none<string>()); // TODO Get image URL from user
   }
 }

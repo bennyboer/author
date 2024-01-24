@@ -10,6 +10,7 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.server.assets.AssetsConfig;
 import de.bennyboer.author.server.assets.AssetsModule;
+import de.bennyboer.author.server.assets.persistence.lookup.SQLiteAssetLookupRepo;
 import de.bennyboer.author.server.assets.transformer.AssetEventTransformer;
 import de.bennyboer.author.server.projects.ProjectsConfig;
 import de.bennyboer.author.server.projects.ProjectsModule;
@@ -40,7 +41,6 @@ import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
-import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.javalin.security.RouteRole;
 import lombok.Getter;
 
@@ -102,12 +102,17 @@ public class App {
 
                     config.plugins.enableCors(cors -> {
                         // TODO Restrict to frontend host and only allow for DEV build
-                        cors.add(CorsPluginConfig::anyHost);
+                        cors.add(corsConfig -> {
+                            corsConfig.anyHost();
+                            corsConfig.exposeHeader("Location");
+                        });
                     });
 
                     config.jsonMapper(jsonMapper);
 
                     config.accessManager(App::handleIfPermitted);
+
+                    config.http.maxRequestSize = 16 * 1024 * 1024;
                 })
                 .get("/", ctx -> ctx.result("Hello World")) // TODO Maybe serve frontend here?
                 .ws("/ws", ws -> {
@@ -156,6 +161,7 @@ public class App {
         AssetsConfig assetsConfig = AssetsConfig.builder()
                 .eventSourcingRepo(eventSourcingRepo)
                 .permissionsRepo(RepoFactory.createPermissionsRepo("assets"))
+                .assetLookupRepo(RepoFactory.createReadModelRepo(SQLiteAssetLookupRepo::new))
                 .build();
 
         return new AssetsModule(moduleConfig, assetsConfig);

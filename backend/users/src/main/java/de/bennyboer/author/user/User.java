@@ -14,6 +14,8 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.user.anonymize.AnonymizedEvent;
 import de.bennyboer.author.user.create.CreateCmd;
 import de.bennyboer.author.user.create.CreatedEvent;
+import de.bennyboer.author.user.image.ImageUpdatedEvent;
+import de.bennyboer.author.user.image.UpdateImageCmd;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginCmd;
 import de.bennyboer.author.user.login.LoginFailedEvent;
@@ -80,6 +82,9 @@ public class User implements Aggregate {
     @Nullable
     Instant firstFailedLoginAttemptAt;
 
+    @Nullable
+    ImageId imageId;
+
     Instant createdAt;
 
     @Nullable
@@ -97,6 +102,7 @@ public class User implements Aggregate {
                 null,
                 null,
                 0L,
+                null,
                 null,
                 null,
                 null
@@ -129,6 +135,7 @@ public class User implements Aggregate {
                     getFirstName(),
                     getLastName(),
                     getPassword(),
+                    getImageId().orElse(null),
                     getCreatedAt(),
                     getRemovedAt().orElse(null)
             ));
@@ -148,6 +155,7 @@ public class User implements Aggregate {
                     MailConfirmationToken.create()
             ));
             case ConfirmMailUpdateCmd c -> confirmMailUpdate(c);
+            case UpdateImageCmd c -> ApplyCommandResult.of(ImageUpdatedEvent.of(c.getImageId()));
             case RemoveCmd ignored -> ApplyCommandResult.of(RemovedEvent.of(), AnonymizedEvent.of());
             case LoginCmd c -> handleLoginCmd(c);
             default -> throw new IllegalArgumentException("Unknown command " + cmd.getClass().getSimpleName());
@@ -165,6 +173,7 @@ public class User implements Aggregate {
                     .withFirstName(e.getFirstName())
                     .withLastName(e.getLastName())
                     .withPassword(e.getPassword())
+                    .withImageId(e.getImageId().orElse(null))
                     .withCreatedAt(e.getCreatedAt())
                     .withRemovedAt(e.getRemovedAt().orElse(null));
             case CreatedEvent e -> withId(UserId.of(metadata.getAggregateId().getValue()))
@@ -187,6 +196,7 @@ public class User implements Aggregate {
             case MailUpdateConfirmedEvent ignored -> withMail(getPendingMail().orElseThrow())
                     .withPendingMail(null)
                     .withMailConfirmationToken(null);
+            case ImageUpdatedEvent e -> withImageId(e.getImageId());
             case AnonymizedEvent ignored -> withName(getName().anonymized())
                     .withMail(getMail().anonymized())
                     .withPendingMail(null)
@@ -196,6 +206,10 @@ public class User implements Aggregate {
         };
 
         return updatedUser.withVersion(metadata.getAggregateVersion());
+    }
+
+    public Optional<ImageId> getImageId() {
+        return Optional.ofNullable(imageId);
     }
 
     public Optional<Mail> getPendingMail() {

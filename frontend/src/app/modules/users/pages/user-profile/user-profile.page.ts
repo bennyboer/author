@@ -187,14 +187,22 @@ export class UserProfilePage implements OnInit, OnDestroy {
     });
   }
 
+  private updateImage(imageId: string): void {
+    this.usersService.updateImage(this.userId, this.userVersion, imageId);
+  }
+
   deleteUserProfile(password: string): void {
     // TODO Password is currently only used for confirmation - we don't actually check it - might be good it we did
     this.usersService.removeUser(this.userId, this.userVersion);
   }
 
   openImageChooserDialog(): void {
-    const dialogRef = this.dialog.open(ImageChooserDialog);
-    // TODO Update image once selected
+    this.dialog.open(ImageChooserDialog, {
+      data: {
+        userId: this.userId,
+        version: this.userVersion,
+      },
+    });
   }
 
   private checkUserUpdateSuccess(props: {

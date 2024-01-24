@@ -6,6 +6,7 @@ import de.bennyboer.author.eventsourcing.event.EventName;
 import de.bennyboer.author.user.*;
 import de.bennyboer.author.user.anonymize.AnonymizedEvent;
 import de.bennyboer.author.user.create.CreatedEvent;
+import de.bennyboer.author.user.image.ImageUpdatedEvent;
 import de.bennyboer.author.user.login.LoggedInEvent;
 import de.bennyboer.author.user.login.LoginFailedEvent;
 import de.bennyboer.author.user.mail.MailUpdateConfirmedEvent;
@@ -44,6 +45,9 @@ public class UserEventTransformer {
             case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
                     "mail", mailUpdateConfirmedEvent.getMail().getValue()
             );
+            case ImageUpdatedEvent imageUpdatedEvent -> Map.of(
+                    "imageId", imageUpdatedEvent.getImageId().getValue()
+            );
             default -> Map.of();
         };
     }
@@ -79,6 +83,7 @@ public class UserEventTransformer {
                 snapshottedEvent.getPendingMail().ifPresent(it -> result.put("pendingMail", it.getValue()));
                 snapshottedEvent.getToken().ifPresent(it -> result.put("mailConfirmationToken", it.getValue()));
                 snapshottedEvent.getRemovedAt().ifPresent(it -> result.put("removedAt", it.toString()));
+                snapshottedEvent.getImageId().ifPresent(it -> result.put("imageId", it.getValue()));
 
                 yield result;
             }
@@ -91,6 +96,9 @@ public class UserEventTransformer {
             );
             case MailUpdateConfirmedEvent mailUpdateConfirmedEvent -> Map.of(
                     "mail", mailUpdateConfirmedEvent.getMail().getValue()
+            );
+            case ImageUpdatedEvent imageUpdatedEvent -> Map.of(
+                    "imageId", imageUpdatedEvent.getImageId().getValue()
             );
             case LoggedInEvent ignoredEvent -> Map.of();
             case LoginFailedEvent ignoredEvent -> Map.of();
@@ -124,6 +132,7 @@ public class UserEventTransformer {
                     FirstName.of(payload.get("firstName").toString()),
                     LastName.of(payload.get("lastName").toString()),
                     Password.of(payload.get("password").toString()),
+                    Optional.ofNullable(payload.get("imageId")).map(it -> ImageId.of(it.toString())).orElse(null),
                     Instant.parse(payload.get("createdAt").toString()),
                     Optional.ofNullable(payload.get("removedAt")).map(it -> Instant.parse(it.toString())).orElse(null)
             );
@@ -145,6 +154,9 @@ public class UserEventTransformer {
             );
             case MAIL_UPDATE_CONFIRMED -> MailUpdateConfirmedEvent.of(
                     Mail.of(payload.get("mail").toString())
+            );
+            case IMAGE_UPDATED -> ImageUpdatedEvent.of(
+                    ImageId.of(payload.get("imageId").toString())
             );
             case ANONYMIZED -> AnonymizedEvent.of();
         };

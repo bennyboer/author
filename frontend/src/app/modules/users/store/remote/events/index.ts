@@ -6,3 +6,4 @@ export { RenamedLastNameEvent } from './renamed-last-name';
 export { PasswordChangedEvent } from './password-changed';
 export { MailUpdatedEvent } from './mail-updated';
 export { RemovedEvent } from './removed';
+export { ImageUpdatedEvent } from './image-updated';

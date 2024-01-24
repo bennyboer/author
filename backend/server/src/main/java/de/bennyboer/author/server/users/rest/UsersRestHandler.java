@@ -81,6 +81,18 @@ public class UsersRestHandler {
         );
     }
 
+    public void updateImage(Context ctx) {
+        var request = ctx.bodyAsClass(UpdateImageRequest.class);
+        var userId = ctx.pathParam("userId");
+        var version = ctx.queryParamAsClass("version", Long.class).get();
+
+        handle(
+                ctx,
+                agent -> commandFacade.updateImage(userId, version, request.getImageId(), agent),
+                (res) -> ctx.status(HttpStatus.NO_CONTENT)
+        );
+    }
+
     public void confirmMail(Context ctx) {
         var request = ctx.bodyAsClass(ConfirmMailRequest.class);
         var userId = ctx.pathParam("userId");

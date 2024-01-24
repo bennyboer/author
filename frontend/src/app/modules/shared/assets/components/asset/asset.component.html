@@ -1,0 +1,3 @@
+<mat-progress-spinner *ngIf="loading$ | async" [diameter]="16"></mat-progress-spinner>
+
+<img *ngIf="asset$ | async as asset" [src]="asset.toDataUri()" [width]="width" [height]="height">

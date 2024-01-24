@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import {
+  ImageUpdatedEvent,
   MailUpdatedEvent,
   PasswordChangedEvent,
   RemoteUsersService,
@@ -14,6 +15,7 @@ import {
   changePasswordSuccess,
   changingPasswordFailed,
   firstNameUpdated,
+  imageUpdated,
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
@@ -25,6 +27,8 @@ import {
   removingUserFailed,
   updateFirstName,
   updateFirstNameSuccess,
+  updateImage,
+  updateImageSuccess,
   updateLastName,
   updateLastNameSuccess,
   updateMail,
@@ -32,6 +36,7 @@ import {
   updateName,
   updateNameSuccess,
   updatingFirstNameFailed,
+  updatingImageFailed,
   updatingLastNameFailed,
   updatingMailFailed,
   updatingNameFailed,
@@ -190,6 +195,25 @@ export class UsersStoreEffects {
     ),
   );
 
+  updateImage$ = createEffect(() =>
+    this.actions.pipe(
+      ofType(updateImage),
+      switchMap(({ id, version, imageId }) =>
+        this.remoteUsersService.updateImage(id, version, imageId).pipe(
+          map((user) => updateImageSuccess({ id })),
+          catchError((error) =>
+            of(
+              updatingImageFailed({
+                id,
+                message: error.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   onLoggedInUserRemovedLogout$ = createEffect(
     () =>
       this.actions.pipe(
@@ -250,6 +274,13 @@ export class UsersStoreEffects {
               id: event.id,
               version: event.version,
               mail: mailUpdatedEvent.mail,
+            });
+          case UserEventType.IMAGE_UPDATED:
+            const imageUpdatedEvent = event as ImageUpdatedEvent;
+            return imageUpdated({
+              id: event.id,
+              version: event.version,
+              imageId: imageUpdatedEvent.imageId,
             });
           case UserEventType.REMOVED:
             return userRemoved({

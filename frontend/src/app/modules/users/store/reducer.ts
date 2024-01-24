@@ -5,6 +5,7 @@ import {
   changePasswordSuccess,
   changingPasswordFailed,
   firstNameUpdated,
+  imageUpdated,
   lastNameUpdated,
   loadingUserFailed,
   loadUser,
@@ -16,6 +17,8 @@ import {
   removingUserFailed,
   updateFirstName,
   updateFirstNameSuccess,
+  updateImage,
+  updateImageSuccess,
   updateLastName,
   updateLastNameSuccess,
   updateMail,
@@ -23,6 +26,7 @@ import {
   updateName,
   updateNameSuccess,
   updatingFirstNameFailed,
+  updatingImageFailed,
   updatingLastNameFailed,
   updatingMailFailed,
   updatingNameFailed,
@@ -243,6 +247,36 @@ export const reducer = createReducer(
       user: {
         ...userState.user!,
         version: props.version,
+      },
+    })),
+  ),
+
+  on(updateImage, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: true,
+    })),
+  ),
+  on(updateImageSuccess, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+    })),
+  ),
+  on(updatingImageFailed, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      loading: false,
+      errorMessage: `Failed to update image: ${props.message}`,
+    })),
+  ),
+  on(imageUpdated, (state, props) =>
+    updateUserState(state, props.id, (userState) => ({
+      ...userState,
+      user: {
+        ...userState.user!,
+        version: props.version,
+        imageId: props.imageId,
       },
     })),
   ),

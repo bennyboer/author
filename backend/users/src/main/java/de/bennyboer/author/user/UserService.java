@@ -12,6 +12,7 @@ import de.bennyboer.author.eventsourcing.aggregate.AggregateService;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.eventsourcing.persistence.EventSourcingRepo;
 import de.bennyboer.author.user.create.CreateCmd;
+import de.bennyboer.author.user.image.UpdateImageCmd;
 import de.bennyboer.author.user.login.LoginCmd;
 import de.bennyboer.author.user.mail.ConfirmMailUpdateCmd;
 import de.bennyboer.author.user.mail.RequestMailUpdateCmd;
@@ -82,6 +83,10 @@ public class UserService extends AggregateService<User, UserId> {
 
     public Mono<Version> confirmMail(UserId userId, Mail mail, MailConfirmationToken token, Agent agent) {
         return dispatchCommandToLatest(userId, agent, ConfirmMailUpdateCmd.of(mail, token));
+    }
+
+    public Mono<Version> updateImage(UserId id, Version version, ImageId imageId, Agent agent) {
+        return dispatchCommand(id, version, agent, UpdateImageCmd.of(imageId));
     }
 
     public Mono<Version> changePassword(UserId id, Version version, Password password, Agent agent) {

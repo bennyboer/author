@@ -53,20 +53,4 @@ public class AssetsRestHandler {
         );
     }
 
-    public void getAssetContent(Context ctx) {
-        var assetId = ctx.pathParam("assetId");
-
-        handle(
-                ctx,
-                (agent) -> queryFacade.getAsset(assetId, agent).singleOptional(),
-                asset -> asset.ifPresentOrElse(
-                        a -> {
-                            ctx.contentType(a.getContentType());
-                            ctx.result(a.getContent());
-                        },
-                        () -> ctx.status(HttpStatus.NOT_FOUND)
-                )
-        );
-    }
-
 }
