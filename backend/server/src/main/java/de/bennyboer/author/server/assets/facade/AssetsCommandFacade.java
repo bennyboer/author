@@ -32,13 +32,15 @@ public class AssetsCommandFacade {
     }
 
     public Mono<Void> remove(String assetId, long version, Agent agent) {
-        return permissionsService.assertHasPermission(agent, REMOVE)
-                .then(assetsService.remove(AssetId.of(assetId), Version.of(version), agent))
+        AssetId aId = AssetId.of(assetId);
+
+        return permissionsService.assertHasPermission(agent, REMOVE, aId)
+                .then(assetsService.remove(aId, Version.of(version), agent))
                 .then();
     }
 
     public Mono<Void> removeLatest(AssetId assetId, Agent agent) {
-        return permissionsService.assertHasPermission(agent, REMOVE)
+        return permissionsService.assertHasPermission(agent, REMOVE, assetId)
                 .then(assetsService.removeLatest(assetId, agent))
                 .then();
     }
