@@ -7,8 +7,8 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.modules.Module;
-import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.modules.AppPlugin;
+import de.bennyboer.author.server.shared.modules.PluginConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.users.facade.*;
 import de.bennyboer.author.server.users.messaging.*;
@@ -18,7 +18,8 @@ import de.bennyboer.author.server.users.rest.UsersRestRouting;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.user.User;
 import de.bennyboer.author.user.UserService;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Map;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
-public class UsersModule extends Module {
+public class UsersPlugin extends AppPlugin {
 
     private final UsersConfig.DefaultUserDetails defaultUserDetails;
 
@@ -40,7 +41,7 @@ public class UsersModule extends Module {
 
     private final UsersPermissionsFacade permissionsFacade;
 
-    public UsersModule(ModuleConfig config, UsersConfig usersConfig) {
+    public UsersPlugin(PluginConfig config, UsersConfig usersConfig) {
         super(config);
 
         this.defaultUserDetails = usersConfig.getDefaultUserDetails();
@@ -71,11 +72,11 @@ public class UsersModule extends Module {
     }
 
     @Override
-    public void apply(Javalin javalin) {
+    public void onStart(@NotNull JavalinConfig config) {
         var restHandler = new UsersRestHandler(queryFacade, commandFacade);
         var restRouting = new UsersRestRouting(restHandler);
 
-        javalin.routes(() -> path("/api/users", restRouting));
+        config.router.apiBuilder(() -> path("/api/users", restRouting));
     }
 
     @Override

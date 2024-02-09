@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AddNodeTests extends StructureModuleTests {
+public class AddNodeTests extends StructurePluginTests {
 
     @Test
     void shouldAddNode() {

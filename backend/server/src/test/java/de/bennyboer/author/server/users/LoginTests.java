@@ -11,7 +11,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatException;
 
-public class LoginTests extends UsersModuleTests {
+public class LoginTests extends UsersPluginTests {
 
     @Test
     void shouldLoginViaUserName() {

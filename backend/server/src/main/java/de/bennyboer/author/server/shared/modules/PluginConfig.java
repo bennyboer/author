@@ -12,7 +12,7 @@ import static de.bennyboer.author.common.Preconditions.checkNotNull;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ModuleConfig {
+public class PluginConfig {
 
     Messaging messaging;
 
@@ -22,7 +22,7 @@ public class ModuleConfig {
 
     AppConfig appConfig;
 
-    public static ModuleConfig of(
+    public static PluginConfig of(
             Messaging messaging,
             JsonMapper jsonMapper,
             WebSocketService webSocketService,
@@ -33,7 +33,7 @@ public class ModuleConfig {
         checkNotNull(webSocketService, "WebSocketService must be given");
         checkNotNull(appConfig, "App config must be given");
 
-        return new ModuleConfig(messaging, jsonMapper, webSocketService, appConfig);
+        return new PluginConfig(messaging, jsonMapper, webSocketService, appConfig);
     }
 
 }

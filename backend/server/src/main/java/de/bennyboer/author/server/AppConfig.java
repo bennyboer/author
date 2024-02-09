@@ -4,7 +4,7 @@ import de.bennyboer.author.auth.token.TokenGenerator;
 import de.bennyboer.author.auth.token.TokenVerifier;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.server.shared.http.HttpApi;
-import de.bennyboer.author.server.shared.modules.ModuleInstaller;
+import de.bennyboer.author.server.shared.modules.PluginInstaller;
 import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.user.User;
 import lombok.AccessLevel;
@@ -48,7 +48,7 @@ public class AppConfig {
 
     TokenVerifier tokenVerifier;
 
-    List<ModuleInstaller> modules;
+    List<PluginInstaller> plugins;
 
     public URL getHostUrl() {
         String protocol = isSecure ? "https" : "http";

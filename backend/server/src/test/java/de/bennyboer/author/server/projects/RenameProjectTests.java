@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RenameProjectTests extends ProjectsModuleTests {
+public class RenameProjectTests extends ProjectsPluginTests {
 
     @Test
     void shouldRenameProject() {

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CreateStructureTests extends StructureModuleTests {
+public class CreateStructureTests extends StructurePluginTests {
 
     @Test
     void shouldCreateStructureWhenProjectIsCreated() {

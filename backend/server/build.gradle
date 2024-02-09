@@ -13,10 +13,10 @@ dependencies {
     implementation project(':structure')
     implementation project(':users')
 
-    implementation 'io.javalin:javalin-bundle:5.6.3'
+    implementation 'io.javalin:javalin-bundle:6.0.1'
 
-    implementation 'org.apache.activemq:artemis-server:2.31.2'
-    implementation 'org.apache.activemq:artemis-jms-client:2.31.2'
+    implementation 'org.apache.activemq:artemis-server:2.32.0'
+    implementation 'org.apache.activemq:artemis-jms-client:2.32.0'
 
     implementation 'commons-validator:commons-validator:1.8.0'
 

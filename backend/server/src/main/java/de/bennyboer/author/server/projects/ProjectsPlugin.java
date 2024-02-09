@@ -18,10 +18,11 @@ import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.modules.Module;
-import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.modules.AppPlugin;
+import de.bennyboer.author.server.shared.modules.PluginConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.Map;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
-public class ProjectsModule extends Module {
+public class ProjectsPlugin extends AppPlugin {
 
     private final ProjectsQueryFacade queryFacade;
 
@@ -39,7 +40,7 @@ public class ProjectsModule extends Module {
 
     private final ProjectsSyncFacade syncFacade;
 
-    public ProjectsModule(ModuleConfig config, ProjectsConfig projectsConfig) {
+    public ProjectsPlugin(PluginConfig config, ProjectsConfig projectsConfig) {
         super(config);
 
         var eventSourcingRepo = projectsConfig.getEventSourcingRepo();
@@ -61,11 +62,11 @@ public class ProjectsModule extends Module {
     }
 
     @Override
-    public void apply(Javalin javalin) {
+    public void onStart(@NotNull JavalinConfig config) {
         var restHandler = new ProjectsRestHandler(queryFacade, commandFacade);
         var restRouting = new ProjectsRestRouting(restHandler);
 
-        javalin.routes(() -> path("/api/projects", restRouting));
+        config.router.apiBuilder(() -> path("/api/projects", restRouting));
     }
 
     @Override

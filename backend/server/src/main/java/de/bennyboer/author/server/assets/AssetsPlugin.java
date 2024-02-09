@@ -18,10 +18,10 @@ import de.bennyboer.author.server.assets.transformer.AssetEventTransformer;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.modules.Module;
-import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.modules.AppPlugin;
+import de.bennyboer.author.server.shared.modules.PluginConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
@@ -30,7 +30,7 @@ import java.util.Map;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
-public class AssetsModule extends Module {
+public class AssetsPlugin extends AppPlugin {
 
     private final AssetsQueryFacade queryFacade;
 
@@ -40,7 +40,7 @@ public class AssetsModule extends Module {
 
     private final AssetsSyncFacade syncFacade;
 
-    public AssetsModule(ModuleConfig config, AssetsConfig assetsConfig) {
+    public AssetsPlugin(PluginConfig config, AssetsConfig assetsConfig) {
         super(config);
 
         var lookupRepo = assetsConfig.getAssetLookupRepo();
@@ -62,11 +62,11 @@ public class AssetsModule extends Module {
     }
 
     @Override
-    public void apply(@NotNull Javalin javalin) {
+    public void onStart(@NotNull JavalinConfig config) {
         var restHandler = new AssetsRestHandler(queryFacade, commandFacade);
         var restRouting = new AssetsRestRouting(restHandler);
 
-        javalin.routes(() -> path("/api/assets", restRouting));
+        config.router.apiBuilder(() -> path("/api/assets", restRouting));
     }
 
     @Override

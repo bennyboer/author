@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class QueryUserTests extends UsersModuleTests {
+public class QueryUserTests extends UsersPluginTests {
 
     @Test
     void shouldGetUserDetails() {

@@ -16,7 +16,7 @@ public class SessionId {
     public static SessionId of(WsContext ctx) {
         checkNotNull(ctx, "Context must be given");
 
-        return new SessionId(ctx.getSessionId());
+        return new SessionId(ctx.sessionId());
     }
 
     @Override

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class QueryAssetsTests extends AssetsModuleTests {
+public class QueryAssetsTests extends AssetsPluginTests {
 
     @Test
     void shouldQueryAsset() {

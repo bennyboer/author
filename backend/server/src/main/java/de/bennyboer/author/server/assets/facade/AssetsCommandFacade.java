@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
 import static de.bennyboer.author.server.assets.permissions.AssetAction.CREATE;
+import static de.bennyboer.author.server.assets.permissions.AssetAction.REMOVE;
 
 @AllArgsConstructor
 public class AssetsCommandFacade {
@@ -31,11 +32,15 @@ public class AssetsCommandFacade {
     }
 
     public Mono<Void> remove(String assetId, long version, Agent agent) {
-        return assetsService.remove(AssetId.of(assetId), Version.of(version), agent).then();
+        return permissionsService.assertHasPermission(agent, REMOVE)
+                .then(assetsService.remove(AssetId.of(assetId), Version.of(version), agent))
+                .then();
     }
 
     public Mono<Void> removeLatest(AssetId assetId, Agent agent) {
-        return assetsService.removeLatest(assetId, agent).then();
+        return permissionsService.assertHasPermission(agent, REMOVE)
+                .then(assetsService.removeLatest(assetId, agent))
+                .then();
     }
 
     public Mono<Void> removeOwnedAssets(UserId userId, Agent agent) {

@@ -10,7 +10,7 @@ import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.project.ProjectEvent;
 import de.bennyboer.author.server.AppConfig;
-import de.bennyboer.author.server.shared.ModuleTest;
+import de.bennyboer.author.server.shared.PluginTest;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
@@ -37,14 +37,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StructureModuleTests extends ModuleTest {
+public class StructurePluginTests extends PluginTest {
 
     protected InMemoryStructureLookupRepo structureLookupRepo;
+
     protected PermissionsRepo permissionsRepo;
 
     protected final String correctToken = "correctToken";
+
     protected final String incorrectToken = "incorrectToken";
+
     protected final UserId userId = UserId.of("USER_ID");
+
     protected final Map<String, String> projectNameLookupByProjectId = new HashMap<>();
 
     @Override
@@ -64,7 +68,7 @@ public class StructureModuleTests extends ModuleTest {
         return configBuilder
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .modules(List.of(
+                .plugins(List.of(
                         (moduleConfig) -> {
                             var eventSerializer = new JsonMapperEventSerializer(
                                     moduleConfig.getJsonMapper(),
@@ -92,7 +96,7 @@ public class StructureModuleTests extends ModuleTest {
                                     .projectDetailsService(projectDetailsService)
                                     .build();
 
-                            return new StructureModule(moduleConfig, structureConfig);
+                            return new StructurePlugin(moduleConfig, structureConfig);
                         }
                 ))
                 .build();

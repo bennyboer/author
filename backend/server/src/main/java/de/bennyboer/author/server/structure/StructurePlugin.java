@@ -6,8 +6,8 @@ import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageListener;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.permissions.MessagingAggregatePermissionsEventPublisher;
-import de.bennyboer.author.server.shared.modules.Module;
-import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.modules.AppPlugin;
+import de.bennyboer.author.server.shared.modules.PluginConfig;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
 import de.bennyboer.author.server.structure.facade.StructureCommandFacade;
 import de.bennyboer.author.server.structure.facade.StructurePermissionsFacade;
@@ -21,7 +21,8 @@ import de.bennyboer.author.server.structure.transformer.StructureEventTransforme
 import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.structure.StructureId;
 import de.bennyboer.author.structure.StructureService;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.Map;
 
 import static io.javalin.apibuilder.ApiBuilder.path;
 
-public class StructureModule extends Module {
+public class StructurePlugin extends AppPlugin {
 
     private final StructureCommandFacade commandFacade;
 
@@ -39,7 +40,7 @@ public class StructureModule extends Module {
 
     private final StructurePermissionsFacade permissionsFacade;
 
-    public StructureModule(ModuleConfig config, StructureConfig structureConfig) {
+    public StructurePlugin(PluginConfig config, StructureConfig structureConfig) {
         super(config);
 
         var eventSourcingRepo = structureConfig.getEventSourcingRepo();
@@ -53,7 +54,7 @@ public class StructureModule extends Module {
         var structurePermissionsService = new StructurePermissionsService(permissionsRepo, permissionsEventPublisher);
 
         var lookupRepo = structureConfig.getStructureLookupRepo();
-        
+
         var projectDetailsService = structureConfig.getProjectDetailsService();
 
         commandFacade = new StructureCommandFacade(structureService, structurePermissionsService);
@@ -63,11 +64,11 @@ public class StructureModule extends Module {
     }
 
     @Override
-    public void apply(Javalin javalin) {
+    public void onStart(@NotNull JavalinConfig config) {
         var restHandler = new StructureRestHandler(queryFacade, commandFacade);
         var restRouting = new StructureRestRouting(restHandler);
 
-        javalin.routes(() -> path("/api/structures", restRouting));
+        config.router.apiBuilder(() -> path("/api/structures", restRouting));
     }
 
     @Override

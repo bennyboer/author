@@ -9,36 +9,36 @@ import de.bennyboer.author.auth.token.*;
 import de.bennyboer.author.eventsourcing.event.metadata.agent.Agent;
 import de.bennyboer.author.project.Project;
 import de.bennyboer.author.server.assets.AssetsConfig;
-import de.bennyboer.author.server.assets.AssetsModule;
+import de.bennyboer.author.server.assets.AssetsPlugin;
 import de.bennyboer.author.server.assets.persistence.lookup.SQLiteAssetLookupRepo;
 import de.bennyboer.author.server.assets.transformer.AssetEventTransformer;
 import de.bennyboer.author.server.projects.ProjectsConfig;
-import de.bennyboer.author.server.projects.ProjectsModule;
+import de.bennyboer.author.server.projects.ProjectsPlugin;
 import de.bennyboer.author.server.projects.persistence.lookup.SQLiteProjectLookupRepo;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
 import de.bennyboer.author.server.shared.http.Auth;
 import de.bennyboer.author.server.shared.http.security.Role;
 import de.bennyboer.author.server.shared.messaging.Messaging;
-import de.bennyboer.author.server.shared.modules.Module;
-import de.bennyboer.author.server.shared.modules.ModuleConfig;
+import de.bennyboer.author.server.shared.modules.AppPlugin;
+import de.bennyboer.author.server.shared.modules.PluginConfig;
 import de.bennyboer.author.server.shared.permissions.MissingPermissionException;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.shared.websocket.WebSocketService;
 import de.bennyboer.author.server.structure.StructureConfig;
-import de.bennyboer.author.server.structure.StructureModule;
+import de.bennyboer.author.server.structure.StructurePlugin;
 import de.bennyboer.author.server.structure.external.project.ProjectDetailsHttpService;
 import de.bennyboer.author.server.structure.persistence.lookup.SQLiteStructureLookupRepo;
 import de.bennyboer.author.server.structure.transformer.StructureEventTransformer;
 import de.bennyboer.author.server.users.UsersConfig;
-import de.bennyboer.author.server.users.UsersModule;
+import de.bennyboer.author.server.users.UsersPlugin;
 import de.bennyboer.author.server.users.persistence.lookup.SQLiteUserLookupRepo;
 import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.user.User;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
+import io.javalin.http.UnauthorizedResponse;
 import io.javalin.json.JavalinJackson;
 import io.javalin.json.JsonMapper;
 import io.javalin.security.RouteRole;
@@ -88,34 +88,32 @@ public class App {
         var webSocketService = new WebSocketService(messaging);
 
         return Javalin.create(config -> {
-                    ModuleConfig moduleConfig = ModuleConfig.of(
+                    config.http.maxRequestSize = 16 * 1024 * 1024;
+                    config.useVirtualThreads = true;
+                    config.jsonMapper(jsonMapper);
+
+                    config.bundledPlugins.enableCors(cors -> {
+                        // TODO Restrict to frontend host and only allow for DEV build
+                        cors.addRule(corsConfig -> {
+                            corsConfig.anyHost();
+                            corsConfig.exposeHeader("Location");
+                        });
+                    });
+
+                    PluginConfig pluginConfig = PluginConfig.of(
                             messaging,
                             jsonMapper,
                             webSocketService,
                             appConfig
                     );
 
-                    for (var moduleInstaller : appConfig.getModules()) {
-                        Module module = moduleInstaller.install(moduleConfig);
-                        config.plugins.register(module);
+                    for (var moduleInstaller : appConfig.getPlugins()) {
+                        AppPlugin plugin = moduleInstaller.install(pluginConfig);
+                        config.registerPlugin(plugin);
                     }
-
-                    config.plugins.enableCors(cors -> {
-                        // TODO Restrict to frontend host and only allow for DEV build
-                        cors.add(corsConfig -> {
-                            corsConfig.anyHost();
-                            corsConfig.exposeHeader("Location");
-                        });
-                    });
-
-                    config.jsonMapper(jsonMapper);
-
-                    config.accessManager(App::handleIfPermitted);
-
-                    config.http.maxRequestSize = 16 * 1024 * 1024;
                 })
-                .get("/", ctx -> ctx.result("Hello World")) // TODO Maybe serve frontend here?
-                .ws("/ws", ws -> {
+                .beforeMatched(App::checkIfAuthorized)
+                .ws("/ws", ws -> { // TODO Replace by SSE in every module - this can be removed then
                     ws.onConnect(webSocketService::onConnect);
                     ws.onClose(webSocketService::onClose);
                     ws.onError(webSocketService::onError);
@@ -136,7 +134,7 @@ public class App {
         AppConfig config = AppConfig.builder()
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .modules(List.of(
+                .plugins(List.of(
                         (moduleConfig) -> configureUsersModule(moduleConfig, tokenGenerator),
                         App::configureProjectsModule,
                         App::configureStructureModule,
@@ -150,9 +148,9 @@ public class App {
         javalin.start(config.getHost(), config.getPort());
     }
 
-    private static AssetsModule configureAssetsModule(ModuleConfig moduleConfig) {
+    private static AssetsPlugin configureAssetsModule(PluginConfig pluginConfig) {
         var eventSerializer = new JsonMapperEventSerializer(
-                moduleConfig.getJsonMapper(),
+                pluginConfig.getJsonMapper(),
                 AssetEventTransformer::toSerialized,
                 AssetEventTransformer::fromSerialized
         );
@@ -164,21 +162,21 @@ public class App {
                 .assetLookupRepo(RepoFactory.createReadModelRepo(SQLiteAssetLookupRepo::new))
                 .build();
 
-        return new AssetsModule(moduleConfig, assetsConfig);
+        return new AssetsPlugin(pluginConfig, assetsConfig);
     }
 
-    private static StructureModule configureStructureModule(ModuleConfig moduleConfig) {
+    private static StructurePlugin configureStructureModule(PluginConfig pluginConfig) {
         var eventSerializer = new JsonMapperEventSerializer(
-                moduleConfig.getJsonMapper(),
+                pluginConfig.getJsonMapper(),
                 StructureEventTransformer::toSerialized,
                 StructureEventTransformer::fromSerialized
         );
         var eventSourcingRepo = RepoFactory.createEventSourcingRepo(Structure.TYPE, eventSerializer);
 
         var projectDetailsService = new ProjectDetailsHttpService(
-                moduleConfig.getAppConfig().getHostUrl(),
-                moduleConfig.getAppConfig().getHttpApi(),
-                moduleConfig.getJsonMapper()
+                pluginConfig.getAppConfig().getHostUrl(),
+                pluginConfig.getAppConfig().getHttpApi(),
+                pluginConfig.getJsonMapper()
         );
 
         StructureConfig structureConfig = StructureConfig.builder()
@@ -188,12 +186,12 @@ public class App {
                 .projectDetailsService(projectDetailsService)
                 .build();
 
-        return new StructureModule(moduleConfig, structureConfig);
+        return new StructurePlugin(pluginConfig, structureConfig);
     }
 
-    private static ProjectsModule configureProjectsModule(ModuleConfig moduleConfig) {
+    private static ProjectsPlugin configureProjectsModule(PluginConfig pluginConfig) {
         var eventSerializer = new JsonMapperEventSerializer(
-                moduleConfig.getJsonMapper(),
+                pluginConfig.getJsonMapper(),
                 ProjectEventTransformer::toSerialized,
                 ProjectEventTransformer::fromSerialized
         );
@@ -205,12 +203,12 @@ public class App {
                 .projectLookupRepo(RepoFactory.createReadModelRepo(SQLiteProjectLookupRepo::new))
                 .build();
 
-        return new ProjectsModule(moduleConfig, projectsConfig);
+        return new ProjectsPlugin(pluginConfig, projectsConfig);
     }
 
-    private static UsersModule configureUsersModule(ModuleConfig moduleConfig, TokenGenerator tokenGenerator) {
+    private static UsersPlugin configureUsersModule(PluginConfig pluginConfig, TokenGenerator tokenGenerator) {
         var eventSerializer = new JsonMapperEventSerializer(
-                moduleConfig.getJsonMapper(),
+                pluginConfig.getJsonMapper(),
                 UserEventTransformer::toSerialized,
                 UserEventTransformer::fromSerialized
         );
@@ -223,20 +221,19 @@ public class App {
                 .userLookupRepo(RepoFactory.createReadModelRepo(SQLiteUserLookupRepo::new))
                 .build();
 
-        return new UsersModule(moduleConfig, usersConfig);
+        return new UsersPlugin(pluginConfig, usersConfig);
     }
 
-    private static void handleIfPermitted(Handler handler, Context ctx, Set<? extends RouteRole> permittedRoles)
-            throws Exception {
+    private static void checkIfAuthorized(Context ctx) {
         Set<Role> defaultRoles = Set.of(Role.AUTHORIZED); // We require authorization by default
-        Set<? extends RouteRole> roles = permittedRoles.isEmpty() ? defaultRoles : permittedRoles;
+        Set<RouteRole> permittedRoles = ctx.routeRoles();
+        Set<? extends RouteRole> requiredRoles = permittedRoles.isEmpty() ? defaultRoles : permittedRoles;
 
         /*
         If the route is permitted for unauthorized use or the agent is a system agent, we allow the request through.
          */
         Agent agent = Auth.toAgent(ctx).block();
-        if (roles.contains(UNAUTHORIZED) || agent.isSystem()) {
-            handler.handle(ctx);
+        if (requiredRoles.contains(UNAUTHORIZED) || agent.isSystem()) {
             return;
         }
 
@@ -245,11 +242,8 @@ public class App {
          */
         boolean isUserAgent = agent.getUserId().isPresent();
         if (!isUserAgent) {
-            ctx.status(401).result("Unauthorized");
-            return;
+            throw new UnauthorizedResponse();
         }
-
-        handler.handle(ctx);
     }
 
 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class QueryProjectsTests extends ProjectsModuleTests {
+public class QueryProjectsTests extends ProjectsPluginTests {
 
     @Test
     void shouldQueryAccessibleProjects() {

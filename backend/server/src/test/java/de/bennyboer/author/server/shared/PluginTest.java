@@ -40,7 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public abstract class ModuleTest {
+public abstract class PluginTest {
 
     @Getter
     private final Messaging messaging;
@@ -51,7 +51,7 @@ public abstract class ModuleTest {
     @Getter
     private final Javalin javalin;
 
-    public ModuleTest() {
+    public PluginTest() {
         RepoFactory.setTestingProfile(true);
 
         var builder = AppConfig.builder()

@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UpdateUserImageTests extends UsersModuleTests {
+public class UpdateUserImageTests extends UsersPluginTests {
 
     @Test
     void shouldUpdateImage() {

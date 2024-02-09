@@ -17,7 +17,7 @@ import de.bennyboer.author.server.projects.api.requests.RenameProjectRequest;
 import de.bennyboer.author.server.projects.permissions.ProjectAction;
 import de.bennyboer.author.server.projects.persistence.lookup.InMemoryProjectLookupRepo;
 import de.bennyboer.author.server.projects.transformer.ProjectEventTransformer;
-import de.bennyboer.author.server.shared.ModuleTest;
+import de.bennyboer.author.server.shared.PluginTest;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
@@ -31,14 +31,18 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
-public class ProjectsModuleTests extends ModuleTest {
+public class ProjectsPluginTests extends PluginTest {
 
     protected InMemoryProjectLookupRepo projectLookupRepo;
+
     protected PermissionsRepo permissionsRepo;
 
     protected final String correctToken = "correctToken";
+
     protected final String correctTokenForAnotherUser = "correctToken2";
+
     protected final String incorrectToken = "incorrectToken";
+
     protected final UserId userId = UserId.of("USER_ID");
 
     @Override
@@ -60,7 +64,7 @@ public class ProjectsModuleTests extends ModuleTest {
         return configBuilder
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .modules(List.of(
+                .plugins(List.of(
                         (moduleConfig) -> {
                             var eventSerializer = new JsonMapperEventSerializer(
                                     moduleConfig.getJsonMapper(),
@@ -75,7 +79,7 @@ public class ProjectsModuleTests extends ModuleTest {
                                     .projectLookupRepo(projectLookupRepo)
                                     .build();
 
-                            return new ProjectsModule(moduleConfig, projectsConfig);
+                            return new ProjectsPlugin(moduleConfig, projectsConfig);
                         }
                 ))
                 .build();

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RenameNodeTests extends StructureModuleTests {
+public class RenameNodeTests extends StructurePluginTests {
 
     @Test
     void shouldRenameNode() {

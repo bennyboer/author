@@ -10,7 +10,7 @@ import de.bennyboer.author.common.UserId;
 import de.bennyboer.author.permissions.*;
 import de.bennyboer.author.permissions.repo.PermissionsRepo;
 import de.bennyboer.author.server.AppConfig;
-import de.bennyboer.author.server.shared.ModuleTest;
+import de.bennyboer.author.server.shared.PluginTest;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
 import de.bennyboer.author.server.users.api.UserDTO;
@@ -26,7 +26,7 @@ import io.javalin.testtools.HttpClient;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class UsersModuleTests extends ModuleTest {
+public abstract class UsersPluginTests extends PluginTest {
 
     protected InMemoryUserLookupRepo userLookupRepo;
 
@@ -50,7 +50,7 @@ public abstract class UsersModuleTests extends ModuleTest {
                 .clock(clock)
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .modules(List.of(
+                .plugins(List.of(
                         (moduleConfig) -> {
                             var eventSerializer = new JsonMapperEventSerializer(
                                     moduleConfig.getJsonMapper(),
@@ -67,7 +67,7 @@ public abstract class UsersModuleTests extends ModuleTest {
                                     .userServiceConsumer(userService -> this.userService = userService)
                                     .build();
 
-                            return new UsersModule(moduleConfig, usersConfig);
+                            return new UsersPlugin(moduleConfig, usersConfig);
                         }
                 ))
                 .build();

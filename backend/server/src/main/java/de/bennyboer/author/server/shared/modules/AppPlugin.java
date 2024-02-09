@@ -5,30 +5,32 @@ import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessageL
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventPayloadTransformer;
 import de.bennyboer.author.server.shared.messaging.events.MessagingEventPublisher;
 import de.bennyboer.author.server.shared.websocket.subscriptions.events.AggregateEventPermissionChecker;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.plugin.Plugin;
-import io.javalin.plugin.PluginLifecycleInit;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-public abstract class Module implements Plugin, PluginLifecycleInit {
+public abstract class AppPlugin extends Plugin<Void> {
 
-    private final ModuleConfig config;
+    private final PluginConfig config;
+
     private final MessagingEventPublisher eventPublisher;
 
-    protected Module(ModuleConfig config) {
+    protected AppPlugin(PluginConfig config) {
         this.config = config;
         this.eventPublisher = new MessagingEventPublisher(config.getMessaging(), config.getJsonMapper());
     }
 
     @Override
-    public void init(Javalin javalin) {
+    public void onInitialize(@NotNull JavalinConfig config) {
         this.initializeModule();
-        javalin.events(event -> {
+
+        config.events(event -> {
             event.serverStarted(() -> onServerStarted().block());
             event.serverStopped(() -> onServerStopped().block());
         });

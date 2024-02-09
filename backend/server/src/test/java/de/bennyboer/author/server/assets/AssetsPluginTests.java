@@ -15,7 +15,7 @@ import de.bennyboer.author.server.assets.api.requests.CreateAssetRequest;
 import de.bennyboer.author.server.assets.permissions.AssetAction;
 import de.bennyboer.author.server.assets.persistence.lookup.InMemoryAssetLookupRepo;
 import de.bennyboer.author.server.assets.transformer.AssetEventTransformer;
-import de.bennyboer.author.server.shared.ModuleTest;
+import de.bennyboer.author.server.shared.PluginTest;
 import de.bennyboer.author.server.shared.messaging.events.AggregateEventMessage;
 import de.bennyboer.author.server.shared.persistence.JsonMapperEventSerializer;
 import de.bennyboer.author.server.shared.persistence.RepoFactory;
@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
-public class AssetsModuleTests extends ModuleTest {
+public class AssetsPluginTests extends PluginTest {
 
     protected InMemoryAssetLookupRepo assetLookupRepo;
 
@@ -59,7 +59,7 @@ public class AssetsModuleTests extends ModuleTest {
         return configBuilder
                 .tokenGenerator(tokenGenerator)
                 .tokenVerifier(tokenVerifier)
-                .modules(List.of(
+                .plugins(List.of(
                         (moduleConfig) -> {
                             var eventSerializer = new JsonMapperEventSerializer(
                                     moduleConfig.getJsonMapper(),
@@ -74,7 +74,7 @@ public class AssetsModuleTests extends ModuleTest {
                                     .assetLookupRepo(assetLookupRepo)
                                     .build();
 
-                            return new AssetsModule(moduleConfig, assetsConfig);
+                            return new AssetsPlugin(moduleConfig, assetsConfig);
                         }
                 ))
                 .build();

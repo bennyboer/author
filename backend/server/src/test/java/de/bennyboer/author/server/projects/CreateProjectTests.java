@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CreateProjectTests extends ProjectsModuleTests {
+public class CreateProjectTests extends ProjectsPluginTests {
 
     @Test
     void shouldCreateProject() {

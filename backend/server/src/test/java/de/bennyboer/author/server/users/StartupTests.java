@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StartupTests extends UsersModuleTests {
+public class StartupTests extends UsersPluginTests {
 
     @Test
     void shouldCreateDefaultUserOnStartupWithoutPersistentUsers() {

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RemoveUserTests extends UsersModuleTests {
+public class RemoveUserTests extends UsersPluginTests {
 
     @Test
     void shouldRemoveUser() {
