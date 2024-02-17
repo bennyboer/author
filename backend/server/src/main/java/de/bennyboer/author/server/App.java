@@ -37,6 +37,8 @@ import de.bennyboer.author.server.users.transformer.UserEventTransformer;
 import de.bennyboer.author.structure.Structure;
 import de.bennyboer.author.user.User;
 import io.javalin.Javalin;
+import io.javalin.community.ssl.SslPlugin;
+import io.javalin.community.ssl.TlsConfig;
 import io.javalin.http.Context;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.json.JavalinJackson;
@@ -99,6 +101,19 @@ public class App {
                             corsConfig.exposeHeader("Location");
                         });
                     });
+
+                    config.registerPlugin(new SslPlugin(conf -> {
+                        conf.insecure = false;
+                        conf.secure = true;
+                        conf.http2 = true;
+                        conf.redirect = true;
+                        conf.tlsConfig = TlsConfig.MODERN;
+                        conf.pemFromClasspath(
+                                "/keys/cert.pem",
+                                "/keys/key.pem",
+                                "password"
+                        ); // TODO Generate cert and private key file using openssh and provide passwort - via config!
+                    }));
 
                     PluginConfig pluginConfig = PluginConfig.of(
                             messaging,

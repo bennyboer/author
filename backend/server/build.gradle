@@ -13,7 +13,9 @@ dependencies {
     implementation project(':structure')
     implementation project(':users')
 
-    implementation 'io.javalin:javalin-bundle:6.0.1'
+    def javalinVersion = '6.0.1'
+    implementation "io.javalin:javalin-bundle:${javalinVersion}"
+    implementation "io.javalin.community.ssl:ssl-plugin:${javalinVersion}"
 
     implementation 'org.apache.activemq:artemis-server:2.32.0'
     implementation 'org.apache.activemq:artemis-jms-client:2.32.0'
